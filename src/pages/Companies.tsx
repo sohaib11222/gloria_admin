@@ -1,0 +1,612 @@
+import React, { useState, useEffect } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Download } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
+import { Button } from '../components/ui/Button'
+import { Badge } from '../components/ui/Badge'
+import { Select } from '../components/ui/Select'
+import { Input } from '../components/ui/Input'
+import { Modal } from '../components/ui/Modal'
+import { Loader } from '../components/ui/Loader'
+import { companiesApi, Company } from '../api/companies'
+import { branchImportApi } from '../api/whitelist'
+import { formatDate } from '../lib/utils'
+import toast from 'react-hot-toast'
+
+interface CompanyDetailModalProps {
+  company: Company | null
+  isOpen: boolean
+  onClose: () => void
+}
+
+interface CompanyFormModalProps {
+  company: Company | null
+  isOpen: boolean
+  onClose: () => void
+  onSave: () => void
+}
+
+const CompanyFormModal: React.FC<CompanyFormModalProps> = ({ company, isOpen, onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    companyName: '',
+    email: '',
+    type: 'AGENT' as 'AGENT' | 'SOURCE',
+    password: '',
+    adapterType: 'mock',
+    grpcEndpoint: '',
+    status: 'ACTIVE' as 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED',
+  })
+
+  useEffect(() => {
+    if (company) {
+      setFormData({
+        companyName: company.companyName || '',
+        email: company.email || '',
+        type: company.type || 'AGENT',
+        password: '',
+        adapterType: company.adapterType || 'mock',
+        grpcEndpoint: company.grpcEndpoint || '',
+        status: company.status || 'ACTIVE',
+      })
+    } else {
+      setFormData({
+        companyName: '',
+        email: '',
+        type: 'AGENT',
+        password: '',
+        adapterType: 'mock',
+        grpcEndpoint: '',
+        status: 'ACTIVE',
+      })
+    }
+  }, [company, isOpen])
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => companiesApi.createCompany(data),
+    onSuccess: () => {
+      toast.success('Company created successfully')
+      onSave()
+      onClose()
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to create company')
+    },
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => companiesApi.updateCompanyDetails(id, data),
+    onSuccess: () => {
+      toast.success('Company updated successfully')
+      onSave()
+      onClose()
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to update company')
+    },
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.companyName || !formData.email || (!company && !formData.password)) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    const dataToSend: any = {
+      companyName: formData.companyName,
+      email: formData.email,
+      type: formData.type,
+      adapterType: formData.adapterType,
+      status: formData.status,
+    }
+
+    if (formData.password) {
+      dataToSend.password = formData.password
+    }
+
+    if (formData.grpcEndpoint) {
+      dataToSend.grpcEndpoint = formData.grpcEndpoint
+    }
+
+    if (company) {
+      updateMutation.mutate({ id: company.id, data: dataToSend })
+    } else {
+      createMutation.mutate(dataToSend)
+    }
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={company ? 'Edit Company' : 'Create Company'}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Company Name"
+            value={formData.companyName}
+            onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+            required
+          />
+          <Input
+            label="Email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            required
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={formData.type}
+              onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+            >
+              <option value="AGENT">Agent</option>
+              <option value="SOURCE">Source</option>
+            </select>
+          </div>
+          <Input
+            label="Password"
+            type="password"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            required={!company}
+            helperText={company ? 'Leave blank to keep current password' : undefined}
+          />
+        </div>
+
+        {formData.type === 'SOURCE' && (
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Adapter Type</label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={formData.adapterType}
+                onChange={(e) => setFormData({ ...formData, adapterType: e.target.value as any })}
+              >
+                <option value="mock">Mock</option>
+                <option value="grpc">gRPC</option>
+                <option value="http">HTTP</option>
+              </select>
+            </div>
+            <Input
+              label="gRPC Endpoint"
+              placeholder="localhost:51062"
+              value={formData.grpcEndpoint}
+              onChange={(e) => setFormData({ ...formData, grpcEndpoint: e.target.value })}
+              helperText="Format: host:port"
+            />
+          </div>
+        )}
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+          <select
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={formData.status}
+            onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+          >
+            <option value="ACTIVE">Active</option>
+            <option value="PENDING_VERIFICATION">Pending Verification</option>
+            <option value="SUSPENDED">Suspended</option>
+          </select>
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={onClose} type="button">
+            Cancel
+          </Button>
+          <Button type="submit" loading={createMutation.isPending || updateMutation.isPending}>
+            {company ? 'Update' : 'Create'}
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
+
+const CompanyDetailModal: React.FC<CompanyDetailModalProps> = ({ company, isOpen, onClose }) => {
+  if (!company) return null
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={`Company Details - ${company.companyName}`} size="lg">
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium text-gray-700">Company Name</label>
+            <p className="text-sm text-gray-900">{company.companyName}</p>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700">Email</label>
+            <p className="text-sm text-gray-900">{company.email}</p>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700">Type</label>
+            <p className="text-sm text-gray-900">{company.type}</p>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700">Status</label>
+            <Badge variant={company.status === 'ACTIVE' ? 'success' : company.status === 'PENDING_VERIFICATION' ? 'warning' : 'danger'}>
+              {company.status}
+            </Badge>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700">Adapter Type</label>
+            <p className="text-sm text-gray-900">{company.adapterType || 'N/A'}</p>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700">gRPC Endpoint</label>
+            <p className="text-sm text-gray-900">{company.grpcEndpoint || 'Not configured'}</p>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700">Created At</label>
+            <p className="text-sm text-gray-900">{formatDate(company.createdAt)}</p>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700">Updated At</label>
+            <p className="text-sm text-gray-900">{formatDate(company.updatedAt)}</p>
+          </div>
+        </div>
+
+        {company.users && company.users.length > 0 && (
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Users</h4>
+            <div className="space-y-2">
+              {company.users.map((user) => (
+                <div key={user.id} className="p-3 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{user.email}</p>
+                      <p className="text-xs text-gray-500">Role: {user.role}</p>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      Created: {formatDate(user.createdAt)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {company.agentAgreements && company.agentAgreements.length > 0 && (
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Agent Agreements</h4>
+            <p className="text-sm text-gray-600">{company.agentAgreements.length} agreement(s)</p>
+          </div>
+        )}
+
+        {company.sourceAgreements && company.sourceAgreements.length > 0 && (
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Source Agreements</h4>
+            <p className="text-sm text-gray-600">{company.sourceAgreements.length} agreement(s)</p>
+          </div>
+        )}
+
+        {company.sourceLocations && company.sourceLocations.length > 0 && (
+          <div>
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Source Locations</h4>
+            <p className="text-sm text-gray-600">{company.sourceLocations.length} location(s)</p>
+          </div>
+        )}
+      </div>
+    </Modal>
+  )
+}
+
+export default function Companies() {
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [companyToEdit, setCompanyToEdit] = useState<Company | null>(null)
+  const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null)
+  const [filterType, setFilterType] = useState<'ALL' | 'SOURCE' | 'AGENT'>('ALL')
+  const [filterStatus, setFilterStatus] = useState<'ALL' | 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED'>('ALL')
+
+  const queryClient = useQueryClient()
+
+  const { data: companies, isLoading } = useQuery({
+    queryKey: ['companies'],
+    queryFn: () => companiesApi.listCompanies(),
+  })
+
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED' }) =>
+      companiesApi.updateCompanyStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] })
+      toast.success('Company status updated successfully')
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to update company status')
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => companiesApi.deleteCompany(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] })
+      toast.success('Company deleted successfully')
+      setCompanyToDelete(null)
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to delete company')
+    },
+  })
+
+  const importBranchesMutation = useMutation({
+    mutationFn: (sourceId: string) => branchImportApi.importBranches(sourceId),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] })
+      toast.success(
+        `Branches imported successfully: ${data.imported} new, ${data.updated} updated, ${data.total} total`,
+        { duration: 5000 }
+      )
+    },
+    onError: (error: any) => {
+      const errorData = error.response?.data
+      const errorCode = errorData?.error
+      const errorMessage = errorData?.message || 'Failed to import branches'
+      
+      // Handle specific error codes with helpful messages
+      let userMessage = errorMessage
+      if (errorCode === 'NOT_APPROVED') {
+        userMessage = 'Source must be approved before importing branches. Please approve the source first.'
+      } else if (errorCode === 'EMAIL_NOT_VERIFIED') {
+        userMessage = 'Source email must be verified before importing branches.'
+      } else if (errorCode === 'HTTP_ENDPOINT_NOT_CONFIGURED') {
+        userMessage = 'Source HTTP endpoint must be configured before importing branches.'
+      } else if (errorCode === 'COMPANY_CODE_MISSING') {
+        userMessage = 'Source company code is missing. Please verify the source registration.'
+      } else if (errorCode === 'WHITELIST_VIOLATION') {
+        userMessage = 'Source endpoint is not whitelisted. Please add it to the IP whitelist first.'
+      } else if (errorCode === 'VALIDATION_FAILED') {
+        const errorCount = errorData?.errors?.length || 0
+        userMessage = `${errorCount} branch(es) failed validation. Check the details below.`
+        // Show validation errors in console for debugging
+        if (errorData?.errors) {
+          console.error('Branch validation errors:', errorData.errors)
+        }
+      } else if (errorCode === 'COMPANY_CODE_MISMATCH') {
+        userMessage = `Company code mismatch: ${errorMessage}`
+      } else if (errorCode === 'NO_BRANCHES') {
+        userMessage = 'No branches found in supplier response. Check supplier endpoint configuration.'
+      } else if (errorCode === 'TIMEOUT') {
+        userMessage = 'Supplier endpoint timeout after 30s. Check network connectivity and endpoint availability.'
+      } else if (errorCode === 'SUPPLIER_ERROR') {
+        userMessage = `Supplier endpoint error: ${errorMessage}`
+      }
+      
+      toast.error(userMessage, { duration: 6000 })
+    },
+  })
+
+  const handleStatusChange = (companyId: string, newStatus: 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED') => {
+    updateStatusMutation.mutate({ id: companyId, status: newStatus })
+  }
+
+  const handleCompanyClick = (company: Company) => {
+    setSelectedCompany(company)
+    setIsDetailModalOpen(true)
+  }
+
+  const handleEditClick = (company: Company) => {
+    setCompanyToEdit(company)
+    setIsEditModalOpen(true)
+  }
+
+  const handleDeleteClick = (company: Company) => {
+    setCompanyToDelete(company)
+  }
+
+  const confirmDelete = () => {
+    if (companyToDelete) {
+      deleteMutation.mutate(companyToDelete.id)
+    }
+  }
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['companies'] })
+  }
+
+  const filteredCompanies = companies?.data?.filter((company) => {
+    const typeMatch = filterType === 'ALL' || company.type === filterType
+    const statusMatch = filterStatus === 'ALL' || company.status === filterStatus
+    return typeMatch && statusMatch
+  }) || []
+
+  if (isLoading) {
+    return <Loader className="min-h-96" />
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Companies</h1>
+        <p className="mt-2 text-gray-600">
+          Manage all companies (sources and agents)
+        </p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>All Companies</CardTitle>
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={handleRefresh}>
+                Refresh
+              </Button>
+              <Button onClick={() => setIsCreateModalOpen(true)}>
+                Create Company
+              </Button>
+            </div>
+          </div>
+          <div className="flex space-x-4 mt-4">
+            <div className="flex-1">
+              <Select
+                label="Filter by Type"
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value as any)}
+                options={[
+                  { value: 'ALL', label: 'All Types' },
+                  { value: 'SOURCE', label: 'Sources' },
+                  { value: 'AGENT', label: 'Agents' },
+                ]}
+              />
+            </div>
+            <div className="flex-1">
+              <Select
+                label="Filter by Status"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value as any)}
+                options={[
+                  { value: 'ALL', label: 'All Statuses' },
+                  { value: 'ACTIVE', label: 'Active' },
+                  { value: 'PENDING_VERIFICATION', label: 'Pending Verification' },
+                  { value: 'SUSPENDED', label: 'Suspended' },
+                ]}
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {filteredCompanies.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredCompanies.map((company) => (
+                    <tr key={company.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{company.companyName}</div>
+                          <div className="text-sm text-gray-500">{company.email}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Badge variant={company.type === 'SOURCE' ? 'info' : 'default'}>{company.type}</Badge>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <Badge variant={company.status === 'ACTIVE' ? 'success' : company.status === 'PENDING_VERIFICATION' ? 'warning' : 'danger'}>{company.status}</Badge>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(company.createdAt)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center space-x-2">
+                          <Button size="sm" variant="secondary" onClick={() => handleCompanyClick(company)}>
+                            View
+                          </Button>
+                          <Button size="sm" variant="primary" onClick={() => handleEditClick(company)}>
+                            Edit
+                          </Button>
+                          {company.type === 'SOURCE' && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                // Check prerequisites before importing
+                                if (company.status !== 'ACTIVE') {
+                                  toast.error('Source must be ACTIVE to import branches')
+                                  return
+                                }
+                                // Note: Backend will check approvalStatus, emailVerified, httpEndpoint, companyCode
+                                importBranchesMutation.mutate(company.id)
+                              }}
+                              loading={importBranchesMutation.isPending}
+                              title={
+                                company.status !== 'ACTIVE'
+                                  ? 'Source must be ACTIVE to import branches'
+                                  : 'Import branches from supplier endpoint. Requires: APPROVED status, verified email, configured HTTP endpoint, and company code.'
+                              }
+                              disabled={company.status !== 'ACTIVE'}
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <select
+                            value={company.status}
+                            onChange={(e) => handleStatusChange(company.id, e.target.value as any)}
+                            disabled={updateStatusMutation.isPending}
+                            className="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <option value="ACTIVE">Active</option>
+                            <option value="PENDING_VERIFICATION">Pending Verification</option>
+                            <option value="SUSPENDED">Suspended</option>
+                          </select>
+                          <Button size="sm" variant="danger" onClick={() => handleDeleteClick(company)}>
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">No companies found</div>
+          )}
+        </CardContent>
+      </Card>
+
+      <CompanyDetailModal
+        company={selectedCompany}
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false)
+          setSelectedCompany(null)
+        }}
+      />
+
+      <CompanyFormModal
+        company={null}
+        isOpen={isCreateModalOpen}
+        onClose={() => {
+          setIsCreateModalOpen(false)
+        }}
+        onSave={handleRefresh}
+      />
+
+      <CompanyFormModal
+        company={companyToEdit}
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setCompanyToEdit(null)
+        }}
+        onSave={handleRefresh}
+      />
+
+      <Modal
+        isOpen={!!companyToDelete}
+        onClose={() => setCompanyToDelete(null)}
+        title="Delete Company"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-700">
+            Are you sure you want to delete <strong>{companyToDelete?.companyName}</strong>? This action cannot be undone.
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setCompanyToDelete(null)} type="button">
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={confirmDelete} loading={deleteMutation.isPending}>
+              Delete
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  )
+}
