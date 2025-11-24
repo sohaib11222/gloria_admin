@@ -1,5 +1,5 @@
 import { httpClient } from './http.js'
-import { MW } from './routes'
+import { MW } from './routes.js'
 
 // Types
 export interface UiConfig {

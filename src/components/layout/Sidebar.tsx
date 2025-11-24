@@ -18,6 +18,29 @@ export const Sidebar: React.FC = () => {
           const Icon = Icons[item.icon as keyof typeof Icons] as React.ComponentType<{ className?: string }>
           const isActive = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)
           
+          // Open docs in new tab
+          if (item.path === '/docs') {
+            return (
+              <a
+                key={item.path}
+                href="/docs-fullscreen"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  'flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                )}
+              >
+                <Icon className={cn(
+                  'mr-3 h-5 w-5 transition-transform duration-200 text-gray-500 group-hover:text-blue-600'
+                )} />
+                {item.label}
+                <svg className="ml-auto h-3 w-3 text-gray-400 group-hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            )
+          }
+          
           return (
             <Link
               key={item.path}

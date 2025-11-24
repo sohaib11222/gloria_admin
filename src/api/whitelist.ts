@@ -35,6 +35,7 @@ export const whitelistApi = {
         const response = await http.get('/admin/ip-whitelist')
         return response.data?.items || response.data || []
       } catch {
+        console.error('Failed to fetch whitelist:', error)
         throw error
       }
     }

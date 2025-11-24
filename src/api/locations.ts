@@ -12,10 +12,20 @@ export interface Location {
 }
 
 export interface LocationListResponse {
-  data: Location[]
-  total: number
-  page: number
-  limit: number
+  data?: Location[]
+  items?: Array<{
+    unlocode: string
+    place?: string
+    name?: string
+    country: string
+    iata_code?: string
+    latitude?: number
+    longitude?: number
+  }>
+  total?: number
+  page?: number
+  limit?: number
+  next_cursor?: string
 }
 
 export const locationsApi = {

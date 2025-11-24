@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { X, Bell, Check } from 'lucide-react'
 import http from '../lib/http'
 import { cn } from '../lib/utils'
@@ -15,6 +16,7 @@ interface Notification {
 }
 
 export const NotificationsDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  const queryClient = useQueryClient()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
@@ -27,51 +29,64 @@ export const NotificationsDrawer: React.FC<{ isOpen: boolean; onClose: () => voi
   const loadNotifications = async () => {
     setIsLoading(true)
     try {
-      // Try backend first
-      const { data } = await http.get('/admin/notifications')
-      setNotifications(data.items || [])
-    } catch (error) {
-      // Fallback to mock data
-      setNotifications([
-        {
-          id: '1',
-          type: 'agreement',
-          title: 'New agreement awaiting approval',
-          message: 'Agent: Acme Travel, Source: CarCo',
-          timestamp: new Date().toISOString(),
-          read: false,
-          actionUrl: '/agreements-management',
-        },
-        {
-          id: '2',
-          type: 'health',
-          title: 'Source moved to backoff',
-          message: 'SlowRate source excluded for 15 minutes',
-          timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-          read: false,
-          actionUrl: '/health',
-        },
-        {
-          id: '3',
-          type: 'company',
-          title: 'New company registered',
-          message: 'Type: SOURCE, Status: ACTIVE',
-          timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-          read: true,
-          actionUrl: '/companies',
-        },
-      ])
+      // Fetch from backend
+      const { data } = await http.get('/admin/notifications', {
+        params: { limit: 50 }
+      })
+      
+      // Handle response format: { items: [...] } or { data: { items: [...] } }
+      const items = data?.items || data?.data?.items || data || []
+      
+      // Ensure all notifications have required fields
+      const formattedNotifications = items.map((notif: any) => ({
+        id: notif.id || `notif-${Date.now()}-${Math.random()}`,
+        type: notif.type || 'system',
+        title: notif.title || 'Notification',
+        message: notif.message || '',
+        timestamp: notif.timestamp || notif.createdAt || new Date().toISOString(),
+        read: notif.read !== undefined ? notif.read : !!notif.readAt,
+        actionUrl: notif.actionUrl || notif.action_url,
+      }))
+      
+      setNotifications(formattedNotifications)
+    } catch (error: any) {
+      console.error('Error loading notifications:', error)
+      // On error, show empty state instead of mock data
+      setNotifications([])
     } finally {
       setIsLoading(false)
     }
   }
 
-  const markAsRead = (id: string) => {
+  const markAsRead = async (id: string) => {
+    // Optimistically update UI
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+    
+    // Try to mark as read on backend (for database notifications)
+    try {
+      await http.post(`/admin/notifications/${id}/read`)
+      // Invalidate queries to refresh notification count in Topbar
+      queryClient.invalidateQueries({ queryKey: ['notifications-count'] })
+    } catch (error) {
+      console.error('Error marking notification as read:', error)
+      // Revert on error
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: false } : n))
+    }
   }
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
+    // Optimistically update UI
     setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    
+    // Mark all unread notifications as read on backend
+    const unreadIds = notifications.filter(n => !n.read).map(n => n.id)
+    try {
+      await Promise.all(unreadIds.map(id => http.post(`/admin/notifications/${id}/read`).catch(() => {})))
+      // Invalidate queries to refresh notification count in Topbar
+      queryClient.invalidateQueries({ queryKey: ['notifications-count'] })
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error)
+    }
   }
 
   const unreadCount = notifications.filter(n => !n.read).length
@@ -148,9 +163,15 @@ export const NotificationsDrawer: React.FC<{ isOpen: boolean; onClose: () => voi
                 <button
                   key={notification.id}
                   onClick={() => {
-                    markAsRead(notification.id)
+                    if (!notification.read) {
+                      markAsRead(notification.id)
+                    }
                     if (notification.actionUrl) {
-                      window.location.href = notification.actionUrl
+                      // Use React Router navigation instead of window.location
+                      const path = notification.actionUrl.startsWith('/') 
+                        ? notification.actionUrl 
+                        : `/${notification.actionUrl}`
+                      window.location.href = path
                       onClose()
                     }
                   }}

@@ -48,8 +48,13 @@ export const companiesApi = {
         email: it.email,
         type: it.type,
         status: it.status,
+        approvalStatus: it.approvalStatus,
+        emailVerified: it.emailVerified,
+        companyCode: it.companyCode,
         adapterType: it.adapterType,
         grpcEndpoint: it.grpcEndpoint,
+        httpEndpoint: it.httpEndpoint,
+        whitelistedDomains: it.whitelistedDomains,
         createdAt: it.createdAt,
         updatedAt: it.updatedAt,
         users: it.users,
@@ -72,7 +77,7 @@ export const companiesApi = {
   listSources: async (): Promise<CompanyListResponse> => {
     const response = await http.get(MW.companies.list());
     const items = (response.data?.items ?? response.data ?? []) as any[];
-    const mapped: Company[] = items
+      const mapped: Company[] = items
       .filter((it: any) => it.type === "SOURCE")
       .map((it: any) => ({
         id: it.id,
@@ -80,8 +85,13 @@ export const companiesApi = {
         email: it.email,
         type: it.type,
         status: it.status,
+        approvalStatus: it.approvalStatus,
+        emailVerified: it.emailVerified,
+        companyCode: it.companyCode,
         adapterType: it.adapterType,
         grpcEndpoint: it.grpcEndpoint,
+        httpEndpoint: it.httpEndpoint,
+        whitelistedDomains: it.whitelistedDomains,
         createdAt: it.createdAt,
         updatedAt: it.updatedAt,
         users: it.users,
@@ -205,5 +215,16 @@ export const companiesApi = {
   }> => {
     const response = await http.post(`/admin/sources/${sourceId}/import-branches`);
     return response.data;
+  },
+
+  // Approval endpoints
+  approveCompany: async (id: string): Promise<Company> => {
+    const response = await http.post(`/admin/companies/${id}/approve`);
+    return response.data.company;
+  },
+
+  rejectCompany: async (id: string, reason?: string): Promise<Company> => {
+    const response = await http.post(`/admin/companies/${id}/reject`, reason ? { reason } : {});
+    return response.data.company;
   },
 };

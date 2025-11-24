@@ -21,6 +21,8 @@ import { Copy as CopyButton } from '../components/ui/Copy'
 import { availabilityApi } from '../api/availability'
 import { AvailabilitySchema, type AvailabilityForm } from '../lib/validators'
 import { formatDate } from '../lib/utils'
+import { unlocodesApi, type UNLocode } from '../api/unlocodes'
+import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 
 interface AvailabilityOffer {
@@ -43,15 +45,71 @@ export default function AvailabilityTester() {
   const [offers, setOffers] = useState<AvailabilityOffer[]>([])
   const [isPolling, setIsPolling] = useState(false)
   const [pollingStatus, setPollingStatus] = useState<string>('')
+  const [locationSearch, setLocationSearch] = useState({ pickup: '', dropoff: '' })
+
+  // Fetch all UN/LOCODEs for dropdown
+  const { data: locationsData, isLoading: isLoadingLocations } = useQuery({
+    queryKey: ['unlocodes', 'all'],
+    queryFn: async () => {
+      // Fetch all locations with a high limit
+      const result = await unlocodesApi.list({ limit: 1000 })
+      return result.items
+    },
+  })
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
+    watch,
   } = useForm<AvailabilityForm>({
     resolver: zodResolver(AvailabilitySchema),
   })
+
+  const pickupUnlocode = watch('pickup_unlocode')
+  const dropoffUnlocode = watch('dropoff_unlocode')
+
+  // Filter locations based on search
+  const filteredPickupLocations = locationsData?.filter((loc) => {
+    if (!locationSearch.pickup) return true
+    const search = locationSearch.pickup.toLowerCase()
+    return (
+      loc.unlocode.toLowerCase().includes(search) ||
+      loc.place.toLowerCase().includes(search) ||
+      loc.country.toLowerCase().includes(search) ||
+      (loc.iataCode && loc.iataCode.toLowerCase().includes(search))
+    )
+  }) || []
+
+  const filteredDropoffLocations = locationsData?.filter((loc) => {
+    if (!locationSearch.dropoff) return true
+    const search = locationSearch.dropoff.toLowerCase()
+    return (
+      loc.unlocode.toLowerCase().includes(search) ||
+      loc.place.toLowerCase().includes(search) ||
+      loc.country.toLowerCase().includes(search) ||
+      (loc.iataCode && loc.iataCode.toLowerCase().includes(search))
+    )
+  }) || []
+
+  // Create options for Select components
+  const pickupOptions = [
+    { value: '', label: '-- Select Pickup Location --' },
+    ...filteredPickupLocations.map((loc) => ({
+      value: loc.unlocode,
+      label: `${loc.unlocode} - ${loc.place}, ${loc.country}${loc.iataCode ? ` (${loc.iataCode})` : ''}`,
+    })),
+  ]
+
+  const dropoffOptions = [
+    { value: '', label: '-- Select Dropoff Location --' },
+    ...filteredDropoffLocations.map((loc) => ({
+      value: loc.unlocode,
+      label: `${loc.unlocode} - ${loc.place}, ${loc.country}${loc.iataCode ? ` (${loc.iataCode})` : ''}`,
+    })),
+  ]
 
   const submitMutation = useMutation({
     mutationFn: availabilityApi.submit,
@@ -123,7 +181,16 @@ export default function AvailabilityTester() {
   }, [isPolling])
 
   const onSubmit = (data: AvailabilityForm) => {
-    submitMutation.mutate(data)
+    // Convert datetime-local format to ISO-8601 format
+    const payload = {
+      ...data,
+      pickup_iso: new Date(data.pickup_iso).toISOString(),
+      dropoff_iso: new Date(data.dropoff_iso).toISOString(),
+      driver_age: 30, // Default driver age
+      residency_country: 'US', // Default residency
+      vehicle_classes: [], // Empty by default
+    }
+    submitMutation.mutate(payload)
   }
 
   const handleReset = () => {
@@ -131,6 +198,7 @@ export default function AvailabilityTester() {
     setOffers([])
     setIsPolling(false)
     setPollingStatus('')
+    setLocationSearch({ pickup: '', dropoff: '' })
     reset()
   }
 
@@ -165,18 +233,58 @@ export default function AvailabilityTester() {
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <Input
-                  label="Pickup Location (UN/LOCODE)"
-                  placeholder="USNYC"
-                  error={errors.pickup_unlocode?.message}
-                  {...register('pickup_unlocode')}
-                />
-                <Input
-                  label="Dropoff Location (UN/LOCODE)"
-                  placeholder="USLAX"
-                  error={errors.dropoff_unlocode?.message}
-                  {...register('dropoff_unlocode')}
-                />
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Pickup Location (UN/LOCODE)
+                  </label>
+                  <Input
+                    placeholder="Search locations..."
+                    value={locationSearch.pickup}
+                    onChange={(e) => setLocationSearch({ ...locationSearch, pickup: e.target.value })}
+                    className="mb-2"
+                  />
+                  <Select
+                    options={pickupOptions}
+                    error={errors.pickup_unlocode?.message}
+                    value={pickupUnlocode || ''}
+                    onChange={(e) => {
+                      setValue('pickup_unlocode', e.target.value)
+                      if (e.target.value) {
+                        setLocationSearch({ ...locationSearch, pickup: '' })
+                      }
+                    }}
+                    disabled={isLoadingLocations}
+                  />
+                  {isLoadingLocations && (
+                    <p className="text-xs text-gray-500">Loading locations...</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Dropoff Location (UN/LOCODE)
+                  </label>
+                  <Input
+                    placeholder="Search locations..."
+                    value={locationSearch.dropoff}
+                    onChange={(e) => setLocationSearch({ ...locationSearch, dropoff: e.target.value })}
+                    className="mb-2"
+                  />
+                  <Select
+                    options={dropoffOptions}
+                    error={errors.dropoff_unlocode?.message}
+                    value={dropoffUnlocode || ''}
+                    onChange={(e) => {
+                      setValue('dropoff_unlocode', e.target.value)
+                      if (e.target.value) {
+                        setLocationSearch({ ...locationSearch, dropoff: '' })
+                      }
+                    }}
+                    disabled={isLoadingLocations}
+                  />
+                  {isLoadingLocations && (
+                    <p className="text-xs text-gray-500">Loading locations...</p>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

@@ -21,10 +21,14 @@ import Settings from '../pages/Settings'
 import Integrations from '../pages/Integrations'
 import BookingLogs from '../pages/BookingLogs'
 import DocsPage from '../pages/Docs'
+import DocsFullscreen from '../pages/DocsFullscreen'
 import Activity from '../pages/Activity'
 import Changelog from '../pages/Changelog'
 import IpWhitelist from '../pages/IpWhitelist'
 import LocationValidation from '../pages/LocationValidation'
+import Branches from '../pages/Branches'
+import LocationRequests from '../pages/LocationRequests'
+import UNLocodes from '../pages/UNLocodes'
 
 // Import new pages
 import LoginPage from '../pages/LoginPage'
@@ -232,7 +236,35 @@ export const AppRoutes: React.FC = () => {
             </RequireAgreement>
           }
         />
+        <Route
+          path="branches"
+          element={
+            <RequireAgreement>
+              <Branches />
+            </RequireAgreement>
+          }
+        />
+        <Route
+          path="location-requests"
+          element={
+            <RequireAgreement>
+              <LocationRequests />
+            </RequireAgreement>
+          }
+        />
+        <Route
+          path="unlocodes"
+          element={
+            <RequireAgreement>
+              <UNLocodes />
+            </RequireAgreement>
+          }
+        />
       </Route>
+
+      {/* Fullscreen docs route (no sidebar) */}
+      <Route path="/docs-fullscreen/:endpointId" element={<DocsFullscreen />} />
+      <Route path="/docs-fullscreen" element={<DocsFullscreen />} />
 
       {/* Legacy Routes (kept for backward compatibility) */}
       <Route

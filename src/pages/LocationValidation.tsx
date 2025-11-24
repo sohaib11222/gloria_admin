@@ -27,14 +27,30 @@ export default function LocationValidation() {
       }
     },
     onError: (error: any) => {
-      const errorMessage = error.response?.data?.message || 'Failed to validate location'
-      toast.error(errorMessage)
-      setValidationResult({
-        status: 'error',
-        message: errorMessage,
-        error: errorMessage,
-      })
-      setShowResult(true)
+      // Handle 422 validation errors - they contain structured error data
+      const errorData = error.response?.data
+      if (errorData && errorData.status === 'error') {
+        // This is a validation error with structured data
+        setValidationResult({
+          status: 'error',
+          message: errorData.message || 'Location validation failed',
+          error: errorData.error || errorData.message || 'Location validation failed',
+          fields: errorData.fields || [],
+          days: errorData.days || [],
+        })
+        setShowResult(true)
+        toast.error(errorData.message || 'Validation failed. Check the details below.')
+      } else {
+        // Generic error
+        const errorMessage = errorData?.message || error.message || 'Failed to validate location'
+        toast.error(errorMessage)
+        setValidationResult({
+          status: 'error',
+          message: errorMessage,
+          error: errorMessage,
+        })
+        setShowResult(true)
+      }
     },
   })
 
@@ -48,8 +64,13 @@ export default function LocationValidation() {
   }
 
   const handleLoadExample = () => {
+    // Example JSON - CompanyCode is optional for admin users
+    // Note: For SOURCE users, CompanyCode must match their company code
+    // For ADMIN users, CompanyCode can be any value or omitted
     const example: LocationValidationRequest = {
-      CompanyCode: 'CMP00023',
+      // CompanyCode is optional for admins - you can remove this field entirely or set any value
+      // Uncomment the line below if you want to include CompanyCode in the example
+      // CompanyCode: 'EXAMPLE_CODE',
       Branchcode: 'BR001',
       Name: 'Airport Branch',
       LocationType: 'AIRPORT',
@@ -143,12 +164,17 @@ export default function LocationValidation() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h4 className="text-sm font-semibold text-blue-900 mb-2">Validation Rules:</h4>
               <ul className="text-xs text-blue-800 space-y-1 list-disc list-inside">
-                <li>CompanyCode must match source's companyCode</li>
-                <li>All required fields must be present</li>
+                <li><strong>CompanyCode:</strong> 
+                  <ul className="ml-4 mt-1 space-y-0.5">
+                    <li>• <strong>Admin users:</strong> Optional - can be omitted or set to any value</li>
+                    <li>• <strong>Source users:</strong> Required - must match your company code exactly</li>
+                  </ul>
+                </li>
+                <li>All required fields must be present (Branchcode, Name, LocationType, CollectionType, AtAirport)</li>
                 <li>Email format must be valid</li>
                 <li>Phone must match pattern: <code className="bg-blue-100 px-1 rounded">^\+[0-9]{10,15}$</code></li>
                 <li>All 7 days of opening hours required (Monday-Sunday)</li>
-                <li>Address fields must be complete</li>
+                <li>Address fields must be complete (AddressLine, CityName, PostalCode, CountryName with Code)</li>
                 <li>Coordinates (Latitude/Longitude) must be valid numbers</li>
               </ul>
             </div>

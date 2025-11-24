@@ -20,6 +20,7 @@ export default function Logs() {
     { value: 'availability', label: 'availability' },
     { value: 'booking', label: 'booking' },
     { value: 'locations', label: 'locations' },
+    { value: 'agreements', label: 'agreements' },
   ]), [])
 
   const { data: logs, isLoading, error, refetch, isFetching } = useQuery({
@@ -109,27 +110,63 @@ export default function Logs() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Request ID</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agreement</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Endpoint</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {logs.data.map((log) => (
                     <tr key={log.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setSelected(log)}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(log.timestamp)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{log.requestId || '-'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{log.companyId || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">{log.requestId || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="text-gray-900 font-medium">{log.companyName || log.companyId || '-'}</div>
+                        {log.companyCode && (
+                          <div className="text-xs text-gray-500">{log.companyCode}</div>
+                        )}
+                        {log.companyType && (
+                          <div className="text-xs text-gray-400">{log.companyType}</div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {log.sourceName || log.sourceId ? (
+                          <>
+                            <div className="text-gray-900 font-medium">{log.sourceName || log.sourceId}</div>
+                            {log.sourceCode && (
+                              <div className="text-xs text-gray-500">{log.sourceCode}</div>
+                            )}
+                            {log.sourceType && (
+                              <div className="text-xs text-gray-400">{log.sourceType}</div>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {log.agreementRef ? (
+                          <span className="font-mono text-blue-600">{log.agreementRef}</span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{log.endpoint || '-'}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Badge 
                           variant={
                             log.http_status && log.http_status >= 400 ? 'danger' :
-                            log.level === 'WARN' ? 'warning' : 'success'
+                            log.http_status && log.http_status >= 300 ? 'warning' : 'success'
                           }
                           size="sm"
                         >
-                          {log.http_status || log.level}
+                          {log.http_status || log.grpc_status || log.level || 'OK'}
                         </Badge>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {log.duration_ms ? `${log.duration_ms}ms` : '-'}
                       </td>
                     </tr>
                   ))}
@@ -149,19 +186,61 @@ export default function Logs() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div><span className="text-gray-500">Time:</span> <span className="text-gray-900">{formatDate(selected.timestamp)}</span></div>
-              <div><span className="text-gray-500">Request ID:</span> <span className="text-gray-900">{selected.requestId || '-'}</span></div>
-              <div><span className="text-gray-500">Company:</span> <span className="text-gray-900">{selected.companyId || '-'}</span></div>
+              <div><span className="text-gray-500">Request ID:</span> <span className="text-gray-900 font-mono">{selected.requestId || '-'}</span></div>
+              <div>
+                <span className="text-gray-500">Company:</span>
+                <div className="mt-1">
+                  <div className="text-gray-900 font-medium">{selected.companyName || selected.companyId || '-'}</div>
+                  {selected.companyCode && <div className="text-xs text-gray-500">Code: {selected.companyCode}</div>}
+                  {selected.companyType && <div className="text-xs text-gray-400">Type: {selected.companyType}</div>}
+                </div>
+              </div>
+              <div>
+                <span className="text-gray-500">Source:</span>
+                <div className="mt-1">
+                  {selected.sourceName || selected.sourceId ? (
+                    <>
+                      <div className="text-gray-900 font-medium">{selected.sourceName || selected.sourceId}</div>
+                      {selected.sourceCode && <div className="text-xs text-gray-500">Code: {selected.sourceCode}</div>}
+                      {selected.sourceType && <div className="text-xs text-gray-400">Type: {selected.sourceType}</div>}
+                    </>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <span className="text-gray-500">Agreement:</span>
+                <div className="mt-1">
+                  {selected.agreementRef ? (
+                    <span className="font-mono text-blue-600">{selected.agreementRef}</span>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
+                </div>
+              </div>
               <div><span className="text-gray-500">Endpoint:</span> <span className="text-gray-900">{selected.endpoint || '-'}</span></div>
-              <div><span className="text-gray-500">Status:</span> <span className="text-gray-900">{selected.http_status || selected.level}</span></div>
+              <div><span className="text-gray-500">Status:</span> <span className="text-gray-900">{selected.http_status || selected.grpc_status || selected.level || 'OK'}</span></div>
+              <div><span className="text-gray-500">Duration:</span> <span className="text-gray-900">{selected.duration_ms ? `${selected.duration_ms}ms` : '-'}</span></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Request</h4>
-                <pre className="bg-gray-50 rounded p-3 text-xs overflow-auto max-h-80">{selected.maskedRequest || selected.rawRequest || 'N/A'}</pre>
+                <pre className="bg-gray-50 rounded p-3 text-xs overflow-auto max-h-80 border border-gray-200">
+                  {typeof selected.maskedRequest === 'object' 
+                    ? JSON.stringify(selected.maskedRequest, null, 2)
+                    : selected.maskedRequest || selected.rawRequest || 'N/A'}
+                </pre>
               </div>
               <div>
                 <h4 className="font-medium text-gray-900 mb-2">Response</h4>
-                <pre className="bg-gray-50 rounded p-3 text-xs overflow-auto max-h-80">{typeof selected.maskedResponse === 'string' ? selected.maskedResponse : JSON.stringify(selected.maskedResponse || selected.rawResponse || 'N/A', null, 2)}</pre>
+                <pre className="bg-gray-50 rounded p-3 text-xs overflow-auto max-h-80 border border-gray-200">
+                  {typeof selected.maskedResponse === 'object'
+                    ? JSON.stringify(selected.maskedResponse, null, 2)
+                    : typeof selected.maskedResponse === 'string'
+                    ? selected.maskedResponse
+                    : JSON.stringify(selected.maskedResponse || selected.rawResponse || 'N/A', null, 2)}
+                </pre>
               </div>
             </div>
           </div>

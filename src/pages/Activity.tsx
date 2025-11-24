@@ -28,25 +28,106 @@ export default function Activity() {
   const [selectedActor, setSelectedActor] = useState<ActivityActor | 'all'>('all')
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Try to fetch from admin logs endpoint
+  // Fetch from admin logs endpoint
   const { data: logsData, isLoading: logsLoading } = useQuery({
-    queryKey: ['activity-logs', selectedType],
+    queryKey: ['activity-logs', selectedType, selectedActor, searchQuery],
     queryFn: async () => {
       try {
         const { data } = await http.get('/admin/logs', {
           params: {
-            limit: 100,
-            ...(selectedType !== 'all' && { type: selectedType }),
+            limit: 200,
+            // Map activity type to endpoint filter
+            ...(selectedType === 'booking' && { endpoint: 'booking' }),
+            ...(selectedType === 'availability' && { endpoint: 'availability' }),
+            ...(selectedType === 'health' && { endpoint: 'health' }),
+            ...(selectedType === 'admin' && { endpoint: 'admin' }),
+            ...(searchQuery && { q: searchQuery }),
           },
         })
         return data
       } catch (error) {
+        console.error('Failed to fetch activity logs:', error)
         return null
       }
     },
+    refetchInterval: 30000, // Refetch every 30 seconds
   })
 
-  // Mock data for when backend doesn't have this
+  // Transform backend data to ActivityEntry format
+  const activities: ActivityEntry[] = useMemo(() => {
+    if (!logsData) return []
+    
+    // Use activities array if available, otherwise transform from items
+    const rawActivities = logsData.activities || logsData.items || []
+    
+    return rawActivities.map((item: any) => {
+      // If already in ActivityEntry format, use it
+      if (item.actor && item.action && item.resource && item.result) {
+        return {
+          id: item.id,
+          timestamp: item.timestamp || item.createdAt,
+          actor: item.actor as ActivityActor,
+          action: item.action,
+          resource: item.resource,
+          result: item.result as 'success' | 'error' | 'warning',
+          details: item.details,
+        }
+      }
+      
+      // Otherwise transform from audit log format
+      const endpoint = item.endpoint || ''
+      let actor: ActivityActor = 'system'
+      if (endpoint.startsWith('admin.')) actor = 'admin'
+      else if (item.companyType === 'AGENT') actor = 'agent'
+      else if (item.companyType === 'SOURCE' || item.sourceType === 'SOURCE') actor = 'source'
+      
+      const actionParts = endpoint.split('.')
+      const action = actionParts.length >= 2
+        ? `${actionParts[actionParts.length - 1].charAt(0).toUpperCase() + actionParts[actionParts.length - 1].slice(1)} ${actionParts[0]}`
+        : endpoint.replace(/\./g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())
+      
+      let resource = 'System resource'
+      if (item.agreementRef) resource = `Agreement ${item.agreementRef}`
+      else if (item.requestId) resource = `Request ${item.requestId.slice(0, 16)}...`
+      else if (item.companyName) resource = item.companyName
+      else if (item.sourceName) resource = item.sourceName
+      else if (endpoint.includes('booking')) resource = 'Booking operation'
+      else if (endpoint.includes('availability')) resource = 'Availability request'
+      else if (endpoint.includes('agreement')) resource = 'Agreement'
+      else if (endpoint.includes('health')) resource = 'Health check'
+      else if (endpoint.includes('location')) resource = 'Location sync'
+      
+      const result: 'success' | 'error' | 'warning' = 
+        (item.httpStatus && item.httpStatus >= 400) || (item.grpcStatus && item.grpcStatus !== 0)
+          ? 'error'
+          : (item.httpStatus && item.httpStatus >= 300)
+          ? 'warning'
+          : 'success'
+      
+      let details: string | undefined = undefined
+      if (item.durationMs) {
+        details = `Duration: ${item.durationMs}ms`
+      }
+      if (item.httpStatus && item.httpStatus >= 400) {
+        details = details ? `${details}, HTTP ${item.httpStatus}` : `HTTP ${item.httpStatus}`
+      }
+      if (item.grpcStatus && item.grpcStatus !== 0) {
+        details = details ? `${details}, gRPC ${item.grpcStatus}` : `gRPC ${item.grpcStatus}`
+      }
+      
+      return {
+        id: item.id,
+        timestamp: item.timestamp || item.createdAt,
+        actor,
+        action,
+        resource,
+        result,
+        details,
+      }
+    })
+  }, [logsData])
+
+  // Mock data for when backend doesn't have this (fallback)
   const mockActivities: ActivityEntry[] = useMemo(() => [
     {
       id: '1',
@@ -107,10 +188,11 @@ export default function Activity() {
     },
   ], [])
 
-  const activities = (logsData?.items || mockActivities) as ActivityEntry[]
+  // Use real activities if available, otherwise fall back to mock
+  const finalActivities = activities.length > 0 ? activities : mockActivities
 
   const filteredActivities = useMemo(() => {
-    return activities.filter((activity) => {
+    return finalActivities.filter((activity) => {
       const matchesType =
         selectedType === 'all' ||
         (selectedType === 'booking' && activity.action.toLowerCase().includes('booking')) ||
@@ -125,7 +207,7 @@ export default function Activity() {
 
       return matchesType && matchesActor && matchesSearch
     })
-  }, [activities, selectedType, selectedActor, searchQuery])
+  }, [finalActivities, selectedType, selectedActor, searchQuery])
 
   const getActorBadge = (actor: ActivityActor) => {
     const badges = {
@@ -283,11 +365,11 @@ export default function Activity() {
       </Card>
 
       {/* Info box */}
-      {!logsData && (
+      {!logsData && activities.length === 0 && (
         <Card className="bg-blue-50 border-blue-200">
           <CardContent className="p-4">
             <p className="text-sm text-blue-800">
-              <strong>Note:</strong> Showing mock activity data. Backend endpoint <code className="bg-blue-100 px-1 rounded">/admin/logs</code> will be wired to real audit logs when available.
+              <strong>Note:</strong> Showing mock activity data. Backend endpoint <code className="bg-blue-100 px-1 rounded">/admin/logs</code> is not available or returned no data.
             </p>
           </CardContent>
         </Card>

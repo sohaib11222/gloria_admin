@@ -91,6 +91,7 @@ const EditSourceModal: React.FC<EditSourceModalProps> = ({ source, isOpen, onClo
 
       <WhitelistModal
         companyId={source?.id}
+        companyType={source?.type?.toLowerCase() || 'source'}
         isOpen={isWhitelistOpen}
         onClose={() => setIsWhitelistOpen(false)}
       />
@@ -100,13 +101,14 @@ const EditSourceModal: React.FC<EditSourceModalProps> = ({ source, isOpen, onClo
 
 interface WhitelistModalProps {
   companyId: string
+  companyType?: 'source' | 'agent' | 'admin'
   isOpen: boolean
   onClose: () => void
 }
 
-const WhitelistModal: React.FC<WhitelistModalProps> = ({ companyId, isOpen, onClose }) => {
+const WhitelistModal: React.FC<WhitelistModalProps> = ({ companyId, companyType = 'source', isOpen, onClose }) => {
   const [newIp, setNewIp] = useState('')
-  const [ipType, setIpType] = useState<'agent' | 'source' | 'admin'>('source')
+  const [ipType, setIpType] = useState<'agent' | 'source' | 'admin'>(companyType as 'agent' | 'source' | 'admin')
   const [ipError, setIpError] = useState('')
 
   const { data: whitelist, isLoading, refetch } = useQuery({
@@ -115,11 +117,10 @@ const WhitelistModal: React.FC<WhitelistModalProps> = ({ companyId, isOpen, onCl
     enabled: isOpen,
   })
 
-  // Filter whitelist by company type if companyId is provided
-  const filteredWhitelist = whitelist?.filter(() => {
-    // If companyId is provided, try to match by type (this is a simplified approach)
-    // In a real scenario, you might want to link entries to companies
-    return true // Show all entries for now
+  // Filter whitelist by company type
+  const filteredWhitelist = whitelist?.filter((entry) => {
+    // Show entries that match the company type or are admin entries
+    return entry.type === ipType || entry.type === 'admin'
   })
 
   const addMutation = useMutation({
@@ -147,22 +148,46 @@ const WhitelistModal: React.FC<WhitelistModalProps> = ({ companyId, isOpen, onCl
   const testMutation = useMutation({
     mutationFn: () => whitelistApi.testWhitelist(companyId),
     onSuccess: (results) => {
+      if (!results || results.length === 0) {
+        toast.error('No test results returned')
+        return
+      }
       const accessible = results.every(r => r.accessible)
-      toast.success(accessible ? 'All IPs are accessible' : 'Some IPs are not accessible')
+      const failed = results.filter(r => !r.accessible)
+      if (accessible) {
+        toast.success(`All ${results.length} endpoint(s) are accessible`)
+      } else {
+        toast.error(`${failed.length} of ${results.length} endpoint(s) are not accessible. Check whitelist configuration.`)
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to test whitelist access')
     },
   })
 
   const handleAddIp = () => {
+    const trimmedIp = newIp.trim()
+    if (!trimmedIp) {
+      setIpError('IP address or domain is required')
+      return
+    }
+    
     try {
-      WhitelistIPSchema.parse(newIp)
+      WhitelistIPSchema.parse(trimmedIp)
       setIpError('')
       addMutation.mutate({
-        ip: newIp,
+        ip: trimmedIp,
         type: ipType,
         enabled: true,
       })
     } catch (error: any) {
-      setIpError(error.errors?.[0]?.message || 'Invalid IP address')
+      if (error.errors && error.errors.length > 0) {
+        setIpError(error.errors[0].message)
+      } else if (error.message) {
+        setIpError(error.message)
+      } else {
+        setIpError('Invalid format. Enter an IP address (IPv4/IPv6), domain name, or wildcard domain (e.g., *.example.com)')
+      }
     }
   }
 
@@ -172,9 +197,18 @@ const WhitelistModal: React.FC<WhitelistModalProps> = ({ companyId, isOpen, onCl
         <div className="space-y-2">
           <div className="flex space-x-2">
             <Input
-              placeholder="192.168.1.1 or localhost"
+              placeholder="192.168.1.1, example.com, or *.example.com"
               value={newIp}
-              onChange={(e) => setNewIp((e.currentTarget as any).value)}
+              onChange={(e: any) => {
+                setNewIp(e.target.value)
+                if (ipError) setIpError('') // Clear error on input
+              }}
+              onKeyDown={(e: any) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  handleAddIp()
+                }
+              }}
               error={ipError}
               className="flex-1"
             />
@@ -255,7 +289,10 @@ const WhitelistModal: React.FC<WhitelistModalProps> = ({ companyId, isOpen, onCl
                 </table>
               </div>
             ) : (
-              <p className="text-gray-500 text-center py-4">No IPs in whitelist</p>
+              <div className="text-center py-6">
+                <p className="text-gray-500 mb-2">No IPs in whitelist for this type</p>
+                <p className="text-xs text-gray-400">Add IP addresses, domains, or wildcard domains (e.g., *.example.com) above</p>
+              </div>
             )}
           </div>
         )}

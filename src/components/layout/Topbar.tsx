@@ -1,17 +1,39 @@
 import React, { useState } from 'react'
 import { useAtom } from 'jotai'
+import { useQuery } from '@tanstack/react-query'
 import { LogOut, Bell, Search } from 'lucide-react'
 import { userAtom, logoutAtom } from '../../store/auth'
 import { Button } from '../ui/Button'
 import { Badge } from '../ui/Badge'
 import { NotificationsDrawer } from '../NotificationsDrawer'
 import { useSearch } from '../../contexts/SearchContext'
+import http from '../../lib/http'
 
 export const Topbar: React.FC = () => {
   const [user] = useAtom(userAtom)
   const [, logout] = useAtom(logoutAtom)
   const [showNotifications, setShowNotifications] = useState(false)
   const { openSearch } = useSearch()
+  
+  // Fetch unread notification count
+  const { data: notificationsData } = useQuery({
+    queryKey: ['notifications-count'],
+    queryFn: async () => {
+      try {
+        const { data } = await http.get('/admin/notifications', {
+          params: { limit: 50, unreadOnly: true }
+        })
+        const items = data?.items || data?.data?.items || []
+        return items.filter((n: any) => !n.read && !n.readAt)
+      } catch (error) {
+        return []
+      }
+    },
+    refetchInterval: 30000, // Refetch every 30 seconds
+    retry: 1,
+  })
+  
+  const unreadCount = notificationsData?.length || 0
 
   const handleLogout = () => {
     logout()
@@ -54,8 +76,12 @@ export const Topbar: React.FC = () => {
             className="relative p-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <Bell className="h-5 w-5" />
-            {/* Unread badge - this would come from actual notifications */}
-            <span className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-white" />
+            {/* Unread badge - show only if there are unread notifications */}
+            {unreadCount > 0 && (
+              <span className="absolute top-0 right-0 h-5 w-5 bg-red-500 text-white text-xs font-bold rounded-full border-2 border-white flex items-center justify-center">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
           </button>
           
           <Button

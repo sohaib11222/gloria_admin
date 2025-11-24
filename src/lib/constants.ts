@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building, FileText, MapPin, HeartPulse, Puzzle, Settings, BookOpen, Users, Server, Search, ClipboardList, BarChart3, CheckCircle, Activity as ActivityIcon, History, HelpCircle, Shield, FileCheck } from 'lucide-react'
+import { LayoutDashboard, Building, FileText, MapPin, HeartPulse, Puzzle, Settings, BookOpen, Users, Server, Search, ClipboardList, BarChart3, CheckCircle, Activity as ActivityIcon, History, HelpCircle, Shield, FileCheck, Store, Globe } from 'lucide-react'
 
 export const ROUTES = {
   LOGIN: '/login',
@@ -63,6 +63,9 @@ export const NAVIGATION_ITEMS = [
   { path: '/sources', label: 'Sources', icon: 'Server' },
   { path: '/agreements-management', label: 'Agreements', icon: 'FileText' },
   { path: '/locations', label: 'Locations', icon: 'MapPin' },
+  { path: '/branches', label: 'Branches', icon: 'Store' },
+  { path: '/location-requests', label: 'Location Requests', icon: 'MapPin' },
+  { path: '/unlocodes', label: 'UN/LOCODEs', icon: 'Globe' },
   { path: '/location-validation', label: 'Location Validation', icon: 'FileCheck' },
   { path: '/availability', label: 'Availability', icon: 'Search' },
   { path: '/verification', label: 'Verification', icon: 'CheckCircle' },
@@ -98,6 +101,8 @@ export const Icons = {
   HelpCircle,
   Shield,
   FileCheck,
+  Store,
+  Globe,
 }
 
 export const POLL_INTERVALS = {

@@ -72,25 +72,33 @@ export default function Locations() {
           ) : (
             <>
               {tab === 'all' && (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UN/LOCODE</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Country</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {(allLocations?.data ?? []).map((loc: any) => (
-                        <tr key={loc.unlocode}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{loc.unlocode}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{loc.name}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{loc.country}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div>
+                  {((allLocations?.items ?? allLocations?.data ?? []).length === 0) ? (
+                    <div className="text-center py-8 text-gray-500">No locations found</div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UN/LOCODE</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Country</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IATA Code</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {(allLocations?.items ?? allLocations?.data ?? []).map((loc: any) => (
+                            <tr key={loc.unlocode}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{loc.unlocode}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{loc.place || loc.name || '—'}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{loc.country}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{loc.iata_code || '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               )}
 

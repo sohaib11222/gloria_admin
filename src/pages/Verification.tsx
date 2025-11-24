@@ -55,17 +55,79 @@ export default function Verification() {
 
   const [srcGrpcRunBooking, setSrcGrpcRunBooking] = useState(false)
   const [srcGrpcResults, setSrcGrpcResults] = useState<any[]>([])
+  const [srcGrpcError, setSrcGrpcError] = useState<string | null>(null)
   const sourceGrpcTest = useMutation({
     mutationFn: (payload: any) => adminTestApi.testSourceGrpc(payload),
-    onSuccess: (data) => setSrcGrpcResults(data?.results || []),
+    onSuccess: (data) => {
+      setSrcGrpcError(null)
+      // Handle both response formats:
+      // 1. New format: { ok: true, address, results: [...] }
+      // 2. Old format: { ok: true, addr, ms, result: {...} }
+      if (data?.results && Array.isArray(data.results)) {
+        // New format with results array
+        setSrcGrpcResults(data.results)
+        const passedCount = data.results.filter((r: any) => r.status === 'PASSED').length
+        toast.success(`Source gRPC test completed: ${passedCount}/${data.results.length} passed`)
+      } else if (data?.result && data.ok) {
+        // Old format with single result - convert to array format
+        const convertedResult = {
+          name: 'Health Check',
+          status: data.result.status === 'SERVING' ? 'PASSED' : 'FAILED',
+          response: data.result,
+          duration_ms: data.ms || 0,
+        }
+        setSrcGrpcResults([convertedResult])
+        toast.success(`Source gRPC test completed: ${convertedResult.status === 'PASSED' ? '1/1' : '0/1'} passed`)
+      } else {
+        setSrcGrpcResults([])
+        toast.error('Source gRPC test returned invalid results')
+      }
+    },
+    onError: (error: any) => {
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message || 'Source gRPC test failed'
+      setSrcGrpcError(errorMsg)
+      setSrcGrpcResults([])
+      toast.error(errorMsg)
+    },
   })
 
   const [agtGrpcTrySearch, setAgtGrpcTrySearch] = useState(false)
   const [agtGrpcTryBook, setAgtGrpcTryBook] = useState(false)
   const [agtGrpcResults, setAgtGrpcResults] = useState<any[]>([])
+  const [agtGrpcError, setAgtGrpcError] = useState<string | null>(null)
   const agentGrpcTest = useMutation({
     mutationFn: (payload: any) => adminTestApi.testAgentGrpc(payload),
-    onSuccess: (data) => setAgtGrpcResults(data?.results || []),
+    onSuccess: (data) => {
+      setAgtGrpcError(null)
+      // Handle both response formats:
+      // 1. New format: { ok: true, address, results: [...] }
+      // 2. Old format: { ok: true, addr, ms, result: {...} }
+      if (data?.results && Array.isArray(data.results)) {
+        // New format with results array
+        setAgtGrpcResults(data.results)
+        const passedCount = data.results.filter((r: any) => r.status === 'PASSED').length
+        toast.success(`Agent gRPC test completed: ${passedCount}/${data.results.length} passed`)
+      } else if (data?.result && data.ok) {
+        // Old format with single result - convert to array format
+        const convertedResult = {
+          name: 'Health Check',
+          status: data.result.status === 'SERVING' ? 'PASSED' : 'FAILED',
+          response: data.result,
+          duration_ms: data.ms || 0,
+        }
+        setAgtGrpcResults([convertedResult])
+        toast.success(`Agent gRPC test completed: ${convertedResult.status === 'PASSED' ? '1/1' : '0/1'} passed`)
+      } else {
+        setAgtGrpcResults([])
+        toast.error('Agent gRPC test returned invalid results')
+      }
+    },
+    onError: (error: any) => {
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message || 'Agent gRPC test failed'
+      setAgtGrpcError(errorMsg)
+      setAgtGrpcResults([])
+      toast.error(errorMsg)
+    },
   })
 
   async function runSourceLocalTests(index: number) {
@@ -343,7 +405,9 @@ export default function Verification() {
                   <span className="text-sm text-gray-700">Run booking cycle (create → check → cancel)</span>
                 </div>
                 <Button
-                  onClick={() =>
+                  onClick={() => {
+                    setSrcGrpcError(null)
+                    setSrcGrpcResults([])
                     sourceGrpcTest.mutate({
                       address: sourceGrpc,
                       availabilityPayload: {
@@ -354,14 +418,25 @@ export default function Verification() {
                       },
                       runBooking: srcGrpcRunBooking,
                     })
-                  }
+                  }}
                   loading={sourceGrpcTest.isPending}
+                  disabled={!sourceGrpc || sourceGrpc.trim() === ''}
                 >
                   Run Source gRPC Test
                 </Button>
               </div>
 
-              <ResultList results={srcGrpcResults} />
+              {srcGrpcError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800 font-medium">Error:</p>
+                  <p className="text-xs text-red-600 mt-1">{srcGrpcError}</p>
+                </div>
+              )}
+              {srcGrpcResults.length > 0 ? (
+                <ResultList results={srcGrpcResults} />
+              ) : !sourceGrpcTest.isPending && !srcGrpcError && (
+                <p className="text-sm text-gray-500 text-center py-4">No test results yet. Click "Run Source gRPC Test" to start.</p>
+              )}
             </CardContent>
           </Card>
 
@@ -387,7 +462,9 @@ export default function Verification() {
                   <span className="text-sm text-gray-700">Try RunSearch (requires Agent token configured)</span>
                 </div>
                 <Button
-                  onClick={() =>
+                  onClick={() => {
+                    setAgtGrpcError(null)
+                    setAgtGrpcResults([])
                     agentGrpcTest.mutate({
                       address: agentGrpc,
                       ...(agtGrpcTrySearch
@@ -411,8 +488,9 @@ export default function Verification() {
                           }
                         : {}),
                     })
-                  }
+                  }}
                   loading={agentGrpcTest.isPending}
+                  disabled={!agentGrpc || agentGrpc.trim() === ''}
                 >
                   Run Agent gRPC Test
                 </Button>
@@ -423,7 +501,17 @@ export default function Verification() {
                 <span className="text-sm text-gray-700">Also test RunBook (idempotency via middleware)</span>
               </div>
 
-              <ResultList results={agtGrpcResults} />
+              {agtGrpcError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800 font-medium">Error:</p>
+                  <p className="text-xs text-red-600 mt-1">{agtGrpcError}</p>
+                </div>
+              )}
+              {agtGrpcResults.length > 0 ? (
+                <ResultList results={agtGrpcResults} />
+              ) : !agentGrpcTest.isPending && !agtGrpcError && (
+                <p className="text-sm text-gray-500 text-center py-4">No test results yet. Click "Run Agent gRPC Test" to start.</p>
+              )}
             </CardContent>
           </Card>
 

@@ -9,10 +9,35 @@ export const EndpointSchema = z.object({
   api_base_url: z.string().url('Invalid URL'),
 })
 
-export const WhitelistIPSchema = z.string().regex(
-  /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/,
-  'Invalid IP address (IPv4 or IPv6)'
-)
+// Whitelist entry can be: IPv4, IPv6, domain name, or wildcard domain
+export const WhitelistIPSchema = z.string()
+  .min(1, 'IP address or domain is required')
+  .refine(
+    (value) => {
+      const trimmed = value.trim().toLowerCase()
+      
+      // IPv4 address
+      const ipv4Regex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+      if (ipv4Regex.test(trimmed)) return true
+      
+      // IPv6 address
+      const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::1$|^localhost$/
+      if (ipv6Regex.test(trimmed)) return true
+      
+      // Wildcard domain (e.g., *.example.com)
+      const wildcardDomainRegex = /^\*\.([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/
+      if (wildcardDomainRegex.test(trimmed)) return true
+      
+      // Regular domain name (e.g., example.com, localhost)
+      const domainRegex = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$|^localhost$/
+      if (domainRegex.test(trimmed)) return true
+      
+      return false
+    },
+    {
+      message: 'Invalid format. Enter an IP address (IPv4/IPv6), domain name, or wildcard domain (e.g., *.example.com)'
+    }
+  )
 
 export const AvailabilitySchema = z.object({
   pickup_unlocode: z.string().min(1, 'Pickup location is required'),

@@ -34,6 +34,8 @@ const CompanyFormModal: React.FC<CompanyFormModalProps> = ({ company, isOpen, on
     password: '',
     adapterType: 'mock',
     grpcEndpoint: '',
+    httpEndpoint: '',
+    companyCode: '',
     status: 'ACTIVE' as 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED',
   })
 
@@ -46,6 +48,8 @@ const CompanyFormModal: React.FC<CompanyFormModalProps> = ({ company, isOpen, on
         password: '',
         adapterType: company.adapterType || 'mock',
         grpcEndpoint: company.grpcEndpoint || '',
+        httpEndpoint: company.httpEndpoint || '',
+        companyCode: company.companyCode || '',
         status: company.status || 'ACTIVE',
       })
     } else {
@@ -56,6 +60,8 @@ const CompanyFormModal: React.FC<CompanyFormModalProps> = ({ company, isOpen, on
         password: '',
         adapterType: 'mock',
         grpcEndpoint: '',
+        httpEndpoint: '',
+        companyCode: '',
         status: 'ACTIVE',
       })
     }
@@ -106,6 +112,15 @@ const CompanyFormModal: React.FC<CompanyFormModalProps> = ({ company, isOpen, on
 
     if (formData.grpcEndpoint) {
       dataToSend.grpcEndpoint = formData.grpcEndpoint
+    }
+
+    if (formData.type === 'SOURCE') {
+      if (formData.companyCode) {
+        dataToSend.companyCode = formData.companyCode
+      }
+      if (formData.httpEndpoint) {
+        dataToSend.httpEndpoint = formData.httpEndpoint
+      }
     }
 
     if (company) {
@@ -159,27 +174,46 @@ const CompanyFormModal: React.FC<CompanyFormModalProps> = ({ company, isOpen, on
         </div>
 
         {formData.type === 'SOURCE' && (
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Adapter Type</label>
-              <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={formData.adapterType}
-                onChange={(e) => setFormData({ ...formData, adapterType: e.target.value as any })}
-              >
-                <option value="mock">Mock</option>
-                <option value="grpc">gRPC</option>
-                <option value="http">HTTP</option>
-              </select>
+          <>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Adapter Type</label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.adapterType}
+                  onChange={(e) => setFormData({ ...formData, adapterType: e.target.value as any })}
+                >
+                  <option value="mock">Mock</option>
+                  <option value="grpc">gRPC</option>
+                  <option value="http">HTTP</option>
+                </select>
+              </div>
+              <Input
+                label="Company Code"
+                placeholder="CMP00023"
+                value={formData.companyCode}
+                onChange={(e) => setFormData({ ...formData, companyCode: e.target.value })}
+                helperText="Required for branch import (e.g., CMP00023)"
+                required={formData.type === 'SOURCE'}
+              />
             </div>
-            <Input
-              label="gRPC Endpoint"
-              placeholder="localhost:51062"
-              value={formData.grpcEndpoint}
-              onChange={(e) => setFormData({ ...formData, grpcEndpoint: e.target.value })}
-              helperText="Format: host:port"
-            />
-          </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="gRPC Endpoint"
+                placeholder="localhost:51062"
+                value={formData.grpcEndpoint}
+                onChange={(e) => setFormData({ ...formData, grpcEndpoint: e.target.value })}
+                helperText="Format: host:port"
+              />
+              <Input
+                label="HTTP Endpoint"
+                placeholder="https://api.example.com/locations"
+                value={formData.httpEndpoint}
+                onChange={(e) => setFormData({ ...formData, httpEndpoint: e.target.value })}
+                helperText="Required for branch import"
+              />
+            </div>
+          </>
         )}
 
         <div>
@@ -233,10 +267,48 @@ const CompanyDetailModal: React.FC<CompanyDetailModalProps> = ({ company, isOpen
               {company.status}
             </Badge>
           </div>
+          {company.type === 'SOURCE' && (
+            <div>
+              <label className="text-sm font-medium text-gray-700">Approval Status</label>
+              <Badge 
+                variant={
+                  company.approvalStatus === 'APPROVED' ? 'success' : 
+                  company.approvalStatus === 'REJECTED' ? 'danger' : 
+                  'warning'
+                }
+              >
+                {company.approvalStatus || 'PENDING'}
+              </Badge>
+            </div>
+          )}
+          <div>
+            <label className="text-sm font-medium text-gray-700">Email Verified</label>
+            <Badge variant={company.emailVerified ? 'success' : 'warning'}>
+              {company.emailVerified ? 'Yes' : 'No'}
+            </Badge>
+          </div>
           <div>
             <label className="text-sm font-medium text-gray-700">Adapter Type</label>
             <p className="text-sm text-gray-900">{company.adapterType || 'N/A'}</p>
           </div>
+          {company.type === 'SOURCE' && (
+            <>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Company Code</label>
+                <p className="text-sm text-gray-900 font-mono">{company.companyCode || 'Not set'}</p>
+                {!company.companyCode && (
+                  <p className="text-xs text-red-600 mt-1">Required for branch import</p>
+                )}
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">HTTP Endpoint</label>
+                <p className="text-sm text-gray-900 break-all">{company.httpEndpoint || 'Not configured'}</p>
+                {!company.httpEndpoint && (
+                  <p className="text-xs text-red-600 mt-1">Required for branch import</p>
+                )}
+              </div>
+            </>
+          )}
           <div>
             <label className="text-sm font-medium text-gray-700">gRPC Endpoint</label>
             <p className="text-sm text-gray-900">{company.grpcEndpoint || 'Not configured'}</p>
@@ -338,6 +410,28 @@ export default function Companies() {
     },
   })
 
+  const approveMutation = useMutation({
+    mutationFn: (id: string) => companiesApi.approveCompany(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] })
+      toast.success('Company approved successfully')
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to approve company')
+    },
+  })
+
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) => companiesApi.rejectCompany(id, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] })
+      toast.success('Company rejected successfully')
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to reject company')
+    },
+  })
+
   const importBranchesMutation = useMutation({
     mutationFn: (sourceId: string) => branchImportApi.importBranches(sourceId),
     onSuccess: (data) => {
@@ -355,24 +449,31 @@ export default function Companies() {
       // Handle specific error codes with helpful messages
       let userMessage = errorMessage
       if (errorCode === 'NOT_APPROVED') {
-        userMessage = 'Source must be approved before importing branches. Please approve the source first.'
+        userMessage = 'Source must be approved before importing branches. Click the "Approve" button next to the source to approve it first.'
       } else if (errorCode === 'EMAIL_NOT_VERIFIED') {
         userMessage = 'Source email must be verified before importing branches.'
       } else if (errorCode === 'HTTP_ENDPOINT_NOT_CONFIGURED') {
         userMessage = 'Source HTTP endpoint must be configured before importing branches.'
       } else if (errorCode === 'COMPANY_CODE_MISSING') {
-        userMessage = 'Source company code is missing. Please verify the source registration.'
-      } else if (errorCode === 'WHITELIST_VIOLATION') {
-        userMessage = 'Source endpoint is not whitelisted. Please add it to the IP whitelist first.'
+        userMessage = 'Source company code is missing. Please set it in the Edit form.'
+      } else if (errorCode === 'COMPANY_CODE_MISMATCH') {
+        const expectedCode = errorData?.message?.match(/Expected CompanyCode (.+?),/)?.[1]
+        const gotCode = errorData?.message?.match(/got (.+)$/)?.[1]
+        userMessage = `CompanyCode mismatch: Source has "${expectedCode || 'unknown'}" but branches have "${gotCode || 'unknown'}". Please update the source's Company Code to match the branch data.`
       } else if (errorCode === 'VALIDATION_FAILED') {
         const errorCount = errorData?.errors?.length || 0
-        userMessage = `${errorCount} branch(es) failed validation. Check the details below.`
+        const firstError = errorData?.errors?.[0]?.error?.error
+        if (firstError === 'CompanyCode mismatch') {
+          userMessage = `${errorCount} branch(es) have CompanyCode mismatch. The CompanyCode in each branch must match the source's Company Code. Please check the source's Company Code in the Edit form.`
+        } else {
+          userMessage = `${errorCount} branch(es) failed validation: ${firstError || 'See details below'}`
+        }
         // Show validation errors in console for debugging
         if (errorData?.errors) {
           console.error('Branch validation errors:', errorData.errors)
         }
-      } else if (errorCode === 'COMPANY_CODE_MISMATCH') {
-        userMessage = `Company code mismatch: ${errorMessage}`
+      } else if (errorCode === 'WHITELIST_VIOLATION') {
+        userMessage = 'Source endpoint is not whitelisted. Please add it to the IP whitelist first.'
       } else if (errorCode === 'NO_BRANCHES') {
         userMessage = 'No branches found in supplier response. Check supplier endpoint configuration.'
       } else if (errorCode === 'TIMEOUT') {
@@ -482,6 +583,7 @@ export default function Companies() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approval</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
@@ -501,6 +603,31 @@ export default function Companies() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Badge variant={company.status === 'ACTIVE' ? 'success' : company.status === 'PENDING_VERIFICATION' ? 'warning' : 'danger'}>{company.status}</Badge>
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {company.type === 'SOURCE' ? (
+                          <Badge 
+                            variant={
+                              company.approvalStatus === 'APPROVED' ? 'success' : 
+                              company.approvalStatus === 'REJECTED' ? 'danger' : 
+                              'warning'
+                            }
+                          >
+                            {company.approvalStatus || 'PENDING'}
+                          </Badge>
+                        ) : (
+                          company.approvalStatus && (
+                            <Badge 
+                              variant={
+                                company.approvalStatus === 'APPROVED' ? 'success' : 
+                                company.approvalStatus === 'REJECTED' ? 'danger' : 
+                                'warning'
+                              }
+                            >
+                              {company.approvalStatus}
+                            </Badge>
+                          )
+                        )}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(company.createdAt)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-2">
@@ -510,6 +637,44 @@ export default function Companies() {
                           <Button size="sm" variant="primary" onClick={() => handleEditClick(company)}>
                             Edit
                           </Button>
+                          {company.type === 'SOURCE' && company.approvalStatus !== 'APPROVED' && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="primary"
+                                onClick={() => {
+                                  if (!company.emailVerified) {
+                                    toast.error('Company email must be verified before approval. Please verify the email first.')
+                                    return
+                                  }
+                                  approveMutation.mutate(company.id)
+                                }}
+                                loading={approveMutation.isPending}
+                                disabled={!company.emailVerified}
+                                title={
+                                  !company.emailVerified 
+                                    ? 'Email must be verified before approval. Click Edit to verify email.' 
+                                    : 'Approve this source company'
+                                }
+                              >
+                                Approve
+                              </Button>
+                              {company.approvalStatus !== 'REJECTED' && (
+                                <Button
+                                  size="sm"
+                                  variant="danger"
+                                  onClick={() => {
+                                    const reason = prompt('Enter rejection reason (optional):')
+                                    rejectMutation.mutate({ id: company.id, reason: reason || undefined })
+                                  }}
+                                  loading={rejectMutation.isPending}
+                                  title="Reject this source company"
+                                >
+                                  Reject
+                                </Button>
+                              )}
+                            </>
+                          )}
                           {company.type === 'SOURCE' && (
                             <Button
                               size="sm"
@@ -520,6 +685,10 @@ export default function Companies() {
                                   toast.error('Source must be ACTIVE to import branches')
                                   return
                                 }
+                                if (company.approvalStatus !== 'APPROVED') {
+                                  toast.error('Source must be APPROVED to import branches')
+                                  return
+                                }
                                 // Note: Backend will check approvalStatus, emailVerified, httpEndpoint, companyCode
                                 importBranchesMutation.mutate(company.id)
                               }}
@@ -527,9 +696,11 @@ export default function Companies() {
                               title={
                                 company.status !== 'ACTIVE'
                                   ? 'Source must be ACTIVE to import branches'
+                                  : company.approvalStatus !== 'APPROVED'
+                                  ? 'Source must be APPROVED to import branches'
                                   : 'Import branches from supplier endpoint. Requires: APPROVED status, verified email, configured HTTP endpoint, and company code.'
                               }
-                              disabled={company.status !== 'ACTIVE'}
+                              disabled={company.status !== 'ACTIVE' || company.approvalStatus !== 'APPROVED'}
                             >
                               <Download className="h-4 w-4" />
                             </Button>
