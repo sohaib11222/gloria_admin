@@ -4,6 +4,9 @@ import { LoginForm } from '../lib/validators'
 export interface LoginResponse {
   access: string
   refresh: string
+  token?: string
+  user?: any
+  companyId?: string
 }
 
 export const authApi = {

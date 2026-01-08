@@ -18,10 +18,17 @@ const queryClient = new QueryClient({
   },
 })
 
+// Get base path from Vite config (matches vite.config.js base setting)
+const getBasePath = () => {
+  // In production, use /admin/, in dev use /
+  return import.meta.env.PROD ? '/admin' : ''
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter
+        basename={getBasePath()}
         future={{
           v7_relativeSplatPath: true,
         }}

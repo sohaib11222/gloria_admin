@@ -27,10 +27,34 @@ http.interceptors.response.use(
     if (error?.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-        window.location.href = '/login'
+      if (typeof window !== 'undefined') {
+        // Get base path (matches vite.config.js and main.jsx)
+        const basePath = import.meta.env.PROD ? '/admin' : ''
+        const loginPath = `${basePath}/login`
+        const currentPath = window.location.pathname
+        
+        // Only redirect if not already on login page
+        if (!currentPath.endsWith('/login') && !currentPath.endsWith('/login/')) {
+          window.location.href = loginPath
+        }
       }
     }
+    
+    // Log errors for debugging (but don't show technical details to users)
+    if (error?.response?.status >= 500) {
+      const errorData = error?.response?.data || {}
+      const errorCode = errorData.error
+      
+      // Don't log sensitive database errors to console in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Server error:', {
+          status: error?.response?.status,
+          code: errorCode,
+          message: errorData.message
+        })
+      }
+    }
+    
     return Promise.reject(error)
   }
 )

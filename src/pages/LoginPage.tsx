@@ -66,9 +66,39 @@ export default function LoginPage() {
           // Authentication state will be automatically detected by useAuth hook
           
           toast.success('Login successful!')
-        } catch (authError) {
+        } catch (authError: any) {
           console.error('Authentication failed:', authError)
-          toast.error('Login failed. Please check your credentials.')
+          
+          // Extract error details
+          const errorData = authError?.response?.data || {}
+          const errorCode = errorData.error || authError?.code
+          const errorMessage = errorData.message || authError?.message || 'Login failed. Please check your credentials.'
+          
+          // Handle specific error types with user-friendly messages
+          let userMessage = errorMessage
+          
+          if (errorCode === 'DATABASE_AUTH_ERROR' || errorCode === 'DATABASE_CONFIG_ERROR') {
+            userMessage = 'Database connection error. Please contact the administrator or check server logs.'
+          } else if (errorCode === 'EMAIL_NOT_VERIFIED') {
+            userMessage = 'Please verify your email address before logging in.'
+          } else if (errorCode === 'AUTH_ERROR') {
+            userMessage = 'Invalid email or password. Please check your credentials and try again.'
+          } else if (errorCode === 'INTERNAL_ERROR' && errorMessage.includes('Access denied')) {
+            userMessage = 'Server configuration error. Please contact the administrator.'
+          } else if (errorCode === 'INTERNAL_ERROR' && errorMessage.includes('DATABASE_URL')) {
+            userMessage = 'Server configuration error. Please contact the administrator.'
+          } else if (authError?.response?.status === 500 || authError?.response?.status === 503) {
+            userMessage = 'Server error. Please try again later or contact support.'
+          }
+          
+          console.error('Error details:', {
+            status: authError?.response?.status,
+            code: errorCode,
+            data: errorData,
+            message: errorMessage
+          })
+          
+          toast.error(userMessage)
           return
         }
       }
