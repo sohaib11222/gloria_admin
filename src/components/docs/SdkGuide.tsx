@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './docs.css';
 
+type SdkType = 'javascript' | 'typescript' | 'go' | 'php' | 'python' | 'java' | 'perl';
+
 const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'admin' }) => {
+  const [activeSdk, setActiveSdk] = useState<SdkType>('typescript');
   const prefaceText = {
     agent: 'Start here: login → approve agreement → availability → booking',
     source: 'Start here: login → offer agreement → locations → verification',
@@ -107,19 +110,288 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
           </div>
 
           {/* Python Card */}
-          <div style={{ border: '1px solid #e5e7eb', borderRadius: '0.5rem', padding: '1.5rem', backgroundColor: '#f9fafb', opacity: 0.7 }}>
+          <div style={{ border: '2px solid #10b981', borderRadius: '0.5rem', padding: '1.5rem', backgroundColor: '#f0fdf4' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <span style={{ fontSize: '1.5rem' }}>🐍</span>
               <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>Python</h3>
-              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#9ca3af', color: 'white', borderRadius: '9999px', fontWeight: 600 }}>Coming Soon</span>
+              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '9999px', fontWeight: 600 }}>Available</span>
             </div>
-            <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-              Python SDK for data science and automation.
+            <p style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '1rem' }}>
+              Production-ready Python SDK for data science and automation.
             </p>
+            <div style={{ fontSize: '0.875rem' }}>
+              <p style={{ margin: '0.5rem 0', fontWeight: 600 }}>Features:</p>
+              <ul style={{ margin: '0.5rem 0', paddingLeft: '1.5rem', color: '#6b7280' }}>
+                <li>Async iterator support</li>
+                <li>Full API coverage</li>
+                <li>Type hints</li>
+                <li>Error handling</li>
+              </ul>
+            </div>
+          </div>
+          
+          {/* Java Card */}
+          <div style={{ border: '2px solid #10b981', borderRadius: '0.5rem', padding: '1.5rem', backgroundColor: '#f0fdf4' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '1.5rem' }}>☕</span>
+              <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>Java</h3>
+              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '9999px', fontWeight: 600 }}>Available</span>
+            </div>
+            <p style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '1rem' }}>
+              Production-ready Java SDK with CompletableFuture support.
+            </p>
+            <div style={{ fontSize: '0.875rem' }}>
+              <p style={{ margin: '0.5rem 0', fontWeight: 600 }}>Features:</p>
+              <ul style={{ margin: '0.5rem 0', paddingLeft: '1.5rem', color: '#6b7280' }}>
+                <li>Async operations</li>
+                <li>Full API coverage</li>
+                <li>Maven/Gradle support</li>
+                <li>Error handling</li>
+              </ul>
+            </div>
+          </div>
+          
+          {/* Perl Card */}
+          <div style={{ border: '2px solid #10b981', borderRadius: '0.5rem', padding: '1.5rem', backgroundColor: '#f0fdf4' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '1.5rem' }}>🐪</span>
+              <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>Perl</h3>
+              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '9999px', fontWeight: 600 }}>Available</span>
+            </div>
+            <p style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '1rem' }}>
+              Production-ready Perl SDK for legacy systems.
+            </p>
+            <div style={{ fontSize: '0.875rem' }}>
+              <p style={{ margin: '0.5rem 0', fontWeight: 600 }}>Features:</p>
+              <ul style={{ margin: '0.5rem 0', paddingLeft: '1.5rem', color: '#6b7280' }}>
+                <li>Generator-based streaming</li>
+                <li>Full API coverage</li>
+                <li>CPAN support</li>
+                <li>Error handling</li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>
 
+      {/* SDK Tabs Navigation */}
+      <section style={{ marginBottom: '2rem' }}>
+        <div className="sdk-tabs" style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', borderBottom: '3px solid #e5e7eb', paddingBottom: '0.5rem', overflowX: 'auto' }}>
+          <button
+            className={`sdk-tab ${activeSdk === 'typescript' ? 'active' : ''}`}
+            onClick={() => setActiveSdk('typescript')}
+            style={{
+              background: activeSdk === 'typescript' ? '#eff6ff' : 'transparent',
+              border: 'none',
+              padding: '0.625rem 1.25rem',
+              fontSize: '0.875rem',
+              fontWeight: activeSdk === 'typescript' ? 700 : 600,
+              color: activeSdk === 'typescript' ? '#3b82f6' : '#6b7280',
+              cursor: 'pointer',
+              borderBottom: activeSdk === 'typescript' ? '3px solid #3b82f6' : '3px solid transparent',
+              marginBottom: activeSdk === 'typescript' ? '-0.5rem' : '-0.5rem',
+              transition: 'all 0.2s',
+              borderRadius: '0.5rem 0.5rem 0 0',
+              whiteSpace: 'nowrap'
+            }}
+            onMouseEnter={(e) => {
+              if (activeSdk !== 'typescript') {
+                e.currentTarget.style.background = '#f3f4f6';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeSdk !== 'typescript') {
+                e.currentTarget.style.background = 'transparent';
+              }
+            }}
+          >
+            TypeScript
+          </button>
+          <button
+            className={`sdk-tab ${activeSdk === 'javascript' ? 'active' : ''}`}
+            onClick={() => setActiveSdk('javascript')}
+            style={{
+              background: activeSdk === 'javascript' ? '#eff6ff' : 'transparent',
+              border: 'none',
+              padding: '0.625rem 1.25rem',
+              fontSize: '0.875rem',
+              fontWeight: activeSdk === 'javascript' ? 700 : 600,
+              color: activeSdk === 'javascript' ? '#3b82f6' : '#6b7280',
+              cursor: 'pointer',
+              borderBottom: activeSdk === 'javascript' ? '3px solid #3b82f6' : '3px solid transparent',
+              marginBottom: activeSdk === 'javascript' ? '-0.5rem' : '-0.5rem',
+              transition: 'all 0.2s',
+              borderRadius: '0.5rem 0.5rem 0 0',
+              whiteSpace: 'nowrap'
+            }}
+            onMouseEnter={(e) => {
+              if (activeSdk !== 'javascript') {
+                e.currentTarget.style.background = '#f3f4f6';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeSdk !== 'javascript') {
+                e.currentTarget.style.background = 'transparent';
+              }
+            }}
+          >
+            JavaScript
+          </button>
+          <button
+            className={`sdk-tab ${activeSdk === 'go' ? 'active' : ''}`}
+            onClick={() => setActiveSdk('go')}
+            style={{
+              background: activeSdk === 'go' ? '#eff6ff' : 'transparent',
+              border: 'none',
+              padding: '0.625rem 1.25rem',
+              fontSize: '0.875rem',
+              fontWeight: activeSdk === 'go' ? 700 : 600,
+              color: activeSdk === 'go' ? '#3b82f6' : '#6b7280',
+              cursor: 'pointer',
+              borderBottom: activeSdk === 'go' ? '3px solid #3b82f6' : '3px solid transparent',
+              marginBottom: activeSdk === 'go' ? '-0.5rem' : '-0.5rem',
+              transition: 'all 0.2s',
+              borderRadius: '0.5rem 0.5rem 0 0',
+              whiteSpace: 'nowrap'
+            }}
+            onMouseEnter={(e) => {
+              if (activeSdk !== 'go') {
+                e.currentTarget.style.background = '#f3f4f6';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeSdk !== 'go') {
+                e.currentTarget.style.background = 'transparent';
+              }
+            }}
+          >
+            Go
+          </button>
+          <button
+            className={`sdk-tab ${activeSdk === 'php' ? 'active' : ''}`}
+            onClick={() => setActiveSdk('php')}
+            style={{
+              background: activeSdk === 'php' ? '#eff6ff' : 'transparent',
+              border: 'none',
+              padding: '0.625rem 1.25rem',
+              fontSize: '0.875rem',
+              fontWeight: activeSdk === 'php' ? 700 : 600,
+              color: activeSdk === 'php' ? '#3b82f6' : '#6b7280',
+              cursor: 'pointer',
+              borderBottom: activeSdk === 'php' ? '3px solid #3b82f6' : '3px solid transparent',
+              marginBottom: activeSdk === 'php' ? '-0.5rem' : '-0.5rem',
+              transition: 'all 0.2s',
+              borderRadius: '0.5rem 0.5rem 0 0',
+              whiteSpace: 'nowrap'
+            }}
+            onMouseEnter={(e) => {
+              if (activeSdk !== 'php') {
+                e.currentTarget.style.background = '#f3f4f6';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeSdk !== 'php') {
+                e.currentTarget.style.background = 'transparent';
+              }
+            }}
+          >
+            PHP
+          </button>
+          <button
+            className={`sdk-tab ${activeSdk === 'python' ? 'active' : ''}`}
+            onClick={() => setActiveSdk('python')}
+            style={{
+              background: activeSdk === 'python' ? '#eff6ff' : 'transparent',
+              border: 'none',
+              padding: '0.625rem 1.25rem',
+              fontSize: '0.875rem',
+              fontWeight: activeSdk === 'python' ? 700 : 600,
+              color: activeSdk === 'python' ? '#3b82f6' : '#6b7280',
+              cursor: 'pointer',
+              borderBottom: activeSdk === 'python' ? '3px solid #3b82f6' : '3px solid transparent',
+              marginBottom: activeSdk === 'python' ? '-0.5rem' : '-0.5rem',
+              transition: 'all 0.2s',
+              borderRadius: '0.5rem 0.5rem 0 0',
+              whiteSpace: 'nowrap'
+            }}
+            onMouseEnter={(e) => {
+              if (activeSdk !== 'python') {
+                e.currentTarget.style.background = '#f3f4f6';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeSdk !== 'python') {
+                e.currentTarget.style.background = 'transparent';
+              }
+            }}
+          >
+            Python
+          </button>
+          <button
+            className={`sdk-tab ${activeSdk === 'java' ? 'active' : ''}`}
+            onClick={() => setActiveSdk('java')}
+            style={{
+              background: activeSdk === 'java' ? '#eff6ff' : 'transparent',
+              border: 'none',
+              padding: '0.625rem 1.25rem',
+              fontSize: '0.875rem',
+              fontWeight: activeSdk === 'java' ? 700 : 600,
+              color: activeSdk === 'java' ? '#3b82f6' : '#6b7280',
+              cursor: 'pointer',
+              borderBottom: activeSdk === 'java' ? '3px solid #3b82f6' : '3px solid transparent',
+              marginBottom: activeSdk === 'java' ? '-0.5rem' : '-0.5rem',
+              transition: 'all 0.2s',
+              borderRadius: '0.5rem 0.5rem 0 0',
+              whiteSpace: 'nowrap'
+            }}
+            onMouseEnter={(e) => {
+              if (activeSdk !== 'java') {
+                e.currentTarget.style.background = '#f3f4f6';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeSdk !== 'java') {
+                e.currentTarget.style.background = 'transparent';
+              }
+            }}
+          >
+            Java
+          </button>
+          <button
+            className={`sdk-tab ${activeSdk === 'perl' ? 'active' : ''}`}
+            onClick={() => setActiveSdk('perl')}
+            style={{
+              background: activeSdk === 'perl' ? '#eff6ff' : 'transparent',
+              border: 'none',
+              padding: '0.625rem 1.25rem',
+              fontSize: '0.875rem',
+              fontWeight: activeSdk === 'perl' ? 700 : 600,
+              color: activeSdk === 'perl' ? '#3b82f6' : '#6b7280',
+              cursor: 'pointer',
+              borderBottom: activeSdk === 'perl' ? '3px solid #3b82f6' : '3px solid transparent',
+              marginBottom: activeSdk === 'perl' ? '-0.5rem' : '-0.5rem',
+              transition: 'all 0.2s',
+              borderRadius: '0.5rem 0.5rem 0 0',
+              whiteSpace: 'nowrap'
+            }}
+            onMouseEnter={(e) => {
+              if (activeSdk !== 'perl') {
+                e.currentTarget.style.background = '#f3f4f6';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeSdk !== 'perl') {
+                e.currentTarget.style.background = 'transparent';
+              }
+            }}
+          >
+            Perl
+          </button>
+        </div>
+      </section>
+
+      {/* TypeScript SDK Section */}
+      {activeSdk === 'typescript' && (
       <section>
         <h2>TypeScript Quick Start</h2>
         <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
@@ -164,10 +436,41 @@ for await (const offers of client.availability.stream({
             </a>
           </p>
         </div>
-      </section>
+          <section>
+            <h2>Installation</h2>
+            <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.5rem', padding: '1rem', marginTop: '1rem' }}>
+              <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`npm install @carhire/sdk
+# or
+yarn add @carhire/sdk
+# or
+pnpm add @carhire/sdk`}</pre>
+            </div>
+          </section>
+          <section>
+            <h2>Documentation Links</h2>
+            <div style={{ marginTop: '1rem' }}>
+              <ul style={{ listStyle: 'none', padding: 0 }}>
+                <li style={{ marginBottom: '0.75rem' }}>
+                  <a href="../../sdk/typescript/README.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+                    📖 Full README
+                  </a>
+                </li>
+                <li style={{ marginBottom: '0.75rem' }}>
+                  <a href="../../sdk/typescript/REFERENCE.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+                    📚 API Reference
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+      )}
 
-      <section>
-        <h2>JavaScript Quick Start</h2>
+      {/* JavaScript SDK Section */}
+      {activeSdk === 'javascript' && (
+        <>
+          <section>
+            <h2>JavaScript Quick Start</h2>
         <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
           <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`import { CarHireClient } from '@carhire/sdk';
 
@@ -200,45 +503,45 @@ for await (const offers of client.availability.stream({
         </div>
       </section>
 
-      <section>
-        <h2>Installation</h2>
-        <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.5rem', padding: '1rem', marginTop: '1rem' }}>
-          <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`npm install @carhire/sdk
+          <section>
+            <h2>Installation</h2>
+            <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.5rem', padding: '1rem', marginTop: '1rem' }}>
+              <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`npm install @carhire/sdk
 # or
 yarn add @carhire/sdk
 # or
 pnpm add @carhire/sdk`}</pre>
-        </div>
-      </section>
+            </div>
+          </section>
 
-      <section>
-        <h2>Documentation Links</h2>
-        <div style={{ marginTop: '1rem' }}>
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            <li style={{ marginBottom: '0.75rem' }}>
-              <a href="../../sdk/javascript/README.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
-                📖 Full README
-              </a>
-            </li>
-            <li style={{ marginBottom: '0.75rem' }}>
-              <a href="../../sdk/javascript/REFERENCE.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
-                📚 API Reference
-              </a>
-            </li>
-            <li style={{ marginBottom: '0.75rem' }}>
-              <a href="../../sdk/javascript/examples/" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
-                💡 Examples
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          <section>
+            <h2>Documentation Links</h2>
+            <div style={{ marginTop: '1rem' }}>
+              <ul style={{ listStyle: 'none', padding: 0 }}>
+                <li style={{ marginBottom: '0.75rem' }}>
+                  <a href="../../sdk/javascript/README.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+                    📖 Full README
+                  </a>
+                </li>
+                <li style={{ marginBottom: '0.75rem' }}>
+                  <a href="../../sdk/javascript/REFERENCE.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+                    📚 API Reference
+                  </a>
+                </li>
+                <li style={{ marginBottom: '0.75rem' }}>
+                  <a href="../../sdk/javascript/examples/" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+                    💡 Examples
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </section>
 
-      <section>
-        <h2>Availability Long-polling</h2>
-        <p>The SDK supports multiple patterns for polling availability results:</p>
-        <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-          <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`// Async Iterator (Recommended)
+          <section>
+            <h2>Availability Long-polling</h2>
+            <p>The SDK supports multiple patterns for polling availability results:</p>
+            <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
+              <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`// Async Iterator (Recommended)
 for await (const offers of client.availability.stream({
   requestId: request_id,
   waitMs: 10000,
@@ -253,14 +556,14 @@ const final = await client.availability.untilComplete({
   waitMs: 10000,
   overallTimeoutMs: 120000,
 });`}</pre>
-        </div>
-      </section>
+            </div>
+          </section>
 
-      <section>
-        <h2>Error Handling</h2>
-        <p>All errors are thrown as <code>SDKError</code> with structured information:</p>
-        <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-          <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`import { SDKError } from '@carhire/sdk';
+          <section>
+            <h2>Error Handling</h2>
+            <p>All errors are thrown as <code>SDKError</code> with structured information:</p>
+            <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
+              <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`import { SDKError } from '@carhire/sdk';
 
 try {
   await client.agreements.list();
@@ -272,11 +575,14 @@ try {
     console.error('Details:', error.details);
   }
 }`}</pre>
-        </div>
-      </section>
+            </div>
+          </section>
+        </>
+      )}
 
       {/* Go SDK Section */}
-      <section style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '2px solid #e5e7eb' }}>
+      {activeSdk === 'go' && (
+      <section>
         <h1 style={{ fontSize: '1.875rem', fontWeight: 700, marginBottom: '1rem' }}>Go SDK</h1>
         <p style={{ fontSize: '1rem', color: '#6b7280', marginBottom: '2rem' }}>
           Production-ready Go SDK for high-performance integrations with full type safety and channel-based streaming.
@@ -488,10 +794,12 @@ client := carhire.NewClient(cfg)
 // - Idempotent operations (GET, HEAD, OPTIONS, PUT, DELETE)`}</pre>
           </div>
         </section>
-      </section>
+        </section>
+      )}
 
       {/* PHP SDK Section */}
-      <section style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '2px solid #e5e7eb' }}>
+      {activeSdk === 'php' && (
+      <section>
         <h1 style={{ fontSize: '1.875rem', fontWeight: 700, marginBottom: '1rem' }}>PHP SDK</h1>
         <p style={{ fontSize: '1rem', color: '#6b7280', marginBottom: '2rem' }}>
           Production-ready PHP SDK for server-side integration with generator-based streaming and full API coverage.
@@ -650,7 +958,116 @@ $client = new Client([
 // - Network timeouts (status 0)`}</pre>
           </div>
         </section>
-      </section>
+        </section>
+      )}
+
+      {/* Python SDK Section */}
+      {activeSdk === 'python' && (
+      <section>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: 700, marginBottom: '1rem' }}>Python SDK</h1>
+        <p style={{ fontSize: '1rem', color: '#6b7280', marginBottom: '2rem' }}>
+          Production-ready Python SDK for data science and automation with async iterator support and full type hints.
+        </p>
+
+        <section>
+          <h2>Python Quick Start</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`from datetime import datetime
+from carhire import CarHireClient, Config
+
+config = Config.for_rest({
+    "baseUrl": "https://api.carhire.example.com",
+    "token": "Bearer <JWT>",
+})
+
+client = CarHireClient(config)
+
+# List companies (admin)
+companies = await client.admin.companies.list()`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Installation</h2>
+          <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.5rem', padding: '1rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`pip install carhire-python-sdk`}</pre>
+          </div>
+        </section>
+        </section>
+      )}
+
+      {/* Java SDK Section */}
+      {activeSdk === 'java' && (
+      <section>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: 700, marginBottom: '1rem' }}>Java SDK</h1>
+        <p style={{ fontSize: '1rem', color: '#6b7280', marginBottom: '2rem' }}>
+          Production-ready Java SDK with CompletableFuture support for asynchronous operations.
+        </p>
+
+        <section>
+          <h2>Java Quick Start</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`import com.carhire.sdk.*;
+import java.util.*;
+
+Map<String, Object> configData = new HashMap<>();
+configData.put("baseUrl", "https://api.carhire.example.com");
+configData.put("token", "Bearer <JWT>");
+
+Config config = Config.forRest(configData);
+CarHireClient client = new CarHireClient(config);
+
+// List companies (admin)
+List<Company> companies = client.admin().companies().list().join();`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Installation</h2>
+          <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.5rem', padding: '1rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`<dependency>
+  <groupId>com.carhire</groupId>
+  <artifactId>carhire-java-sdk</artifactId>
+  <version>1.0.0</version>
+</dependency>`}</pre>
+          </div>
+        </section>
+        </section>
+      )}
+
+      {/* Perl SDK Section */}
+      {activeSdk === 'perl' && (
+      <section>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: 700, marginBottom: '1rem' }}>Perl SDK</h1>
+        <p style={{ fontSize: '1rem', color: '#6b7280', marginBottom: '2rem' }}>
+          Production-ready Perl SDK for legacy systems with generator-based streaming.
+        </p>
+
+        <section>
+          <h2>Perl Quick Start</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`use CarHire::SDK;
+
+my $config = CarHire::SDK::Config->for_rest({
+    baseUrl => 'https://api.carhire.example.com',
+    token   => 'Bearer <JWT>',
+});
+
+my $client = CarHire::SDK::Client->new($config);
+
+# List companies (admin)
+my $companies = $client->admin()->companies()->list();`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Installation</h2>
+          <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.5rem', padding: '1rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`cpanm CarHire::SDK`}</pre>
+          </div>
+        </section>
+        </section>
+      )}
     </div>
   );
 };

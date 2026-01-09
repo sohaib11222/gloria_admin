@@ -60,6 +60,10 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+.docs-nav-btn:active {
+  transform: translateY(0);
+}
+
 .docs-nav-btn.active {
   background: rgba(255, 255, 255, 0.3);
   border-color: rgba(255, 255, 255, 0.4);
@@ -127,6 +131,10 @@
 .docs-nav-endpoint:hover {
   background: linear-gradient(to right, #eff6ff, #dbeafe);
   transform: translateX(4px);
+}
+
+.docs-nav-endpoint:active {
+  transform: translateX(2px);
 }
 
 .docs-nav-endpoint.active {
@@ -474,6 +482,10 @@
 .docs-code-tab:hover {
   color: #374151;
   background: #f3f4f6;
+}
+
+.docs-code-tab:active {
+  transform: translateY(1px);
 }
 
 .docs-code-tab.active {
