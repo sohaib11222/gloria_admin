@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
+import { ErrorDisplay } from '../components/ui/ErrorDisplay'
 import { Badge } from '../components/ui/Badge'
 import { Modal } from '../components/ui/Modal'
 import { Loader } from '../components/ui/Loader'
@@ -114,7 +115,28 @@ export default function BookingLogs() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Filters</CardTitle>
+            {(requestId || companyId || sourceId || agreementRef || operation || fromDate || toDate) && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => { 
+                  setRequestId('')
+                  setCompanyId('')
+                  setSourceId('')
+                  setAgreementRef('')
+                  setOperation('')
+                  setFromDate('')
+                  setToDate('')
+                  fetchLogs.mutate() 
+                }}
+                disabled={fetchLogs.isPending}
+              >
+                Clear All
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -235,12 +257,31 @@ export default function BookingLogs() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Results ({rows.length})</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Results ({rows.length})</CardTitle>
+            <Button variant="secondary" onClick={() => fetchLogs.mutate()} loading={fetchLogs.isPending}>
+              Refresh
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {fetchLogs.isPending ? (
             <div className="flex justify-center items-center py-12">
               <Loader />
+            </div>
+          ) : fetchLogs.error ? (
+            <div className="text-center py-8">
+              <p className="text-red-600 mb-2">Failed to load booking logs</p>
+              <Button variant="secondary" onClick={() => fetchLogs.mutate()}>
+                Retry
+              </Button>
+            </div>
+          ) : rows.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-gray-500 text-lg mb-2">No booking logs found</div>
+              <div className="text-sm text-gray-400">
+                Try adjusting your filters or create a booking to see logs
+              </div>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -258,84 +299,76 @@ export default function BookingLogs() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {visibleRows.length === 0 ? (
-                    <tr>
-                      <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
-                        No booking logs found. Try adjusting your filters or create a booking to see logs.
-                      </td>
-                    </tr>
-                  ) : (
-                    visibleRows.map((r, idx) => {
-                      const created = r.createdAt || r.created_at
-                      const rid = r.requestId || r.request_id
-                      const cid = r.companyId || r.company_id
-                      const cname = r.companyName
-                      const ccode = r.companyCode
-                      const sid = r.sourceId || r.source_id
-                      const sname = r.sourceName
-                      const scode = r.sourceCode
-                      const op = r.operation || 'create'
-                      const http = r.httpStatus ?? (r as any).http_status
-                      const grpc = r.grpcStatus ?? (r as any).grpc_status
-                      const statusVariant = http && http >= 200 && http < 300 ? 'success' : http && http >= 400 ? 'danger' : 'warning'
-                      return (
-                        <tr key={r.id || rid || idx} className="hover:bg-gray-50 cursor-pointer" onClick={() => openRow(r)}>
-                          <td className="px-6 py-3 text-sm text-gray-700 whitespace-nowrap">
-                            {created ? new Date(created).toLocaleString() : '—'}
-                          </td>
-                          <td className="px-6 py-3 text-sm font-mono text-gray-900">
-                            {rid ? (rid.length > 16 ? `${rid.slice(0, 16)}...` : rid) : '—'}
-                          </td>
-                          <td className="px-6 py-3 text-sm">
-                            {cname ? (
-                              <div>
-                                <div className="text-gray-900 font-medium">{cname}</div>
-                                {ccode && <div className="text-xs text-gray-500">{ccode}</div>}
-                                {cid && <div className="text-xs text-gray-400 font-mono">{cid.slice(0, 8)}...</div>}
-                              </div>
-                            ) : cid ? (
-                              <span className="text-gray-700 font-mono">{cid.length > 12 ? `${cid.slice(0, 12)}...` : cid}</span>
-                            ) : (
-                              '—'
-                            )}
-                          </td>
-                          <td className="px-6 py-3 text-sm">
-                            {sname ? (
-                              <div>
-                                <div className="text-gray-900 font-medium">{sname}</div>
-                                {scode && <div className="text-xs text-gray-500">{scode}</div>}
-                                {sid && <div className="text-xs text-gray-400 font-mono">{sid.slice(0, 8)}...</div>}
-                              </div>
-                            ) : sid ? (
-                              <span className="text-gray-700 font-mono">{sid.length > 12 ? `${sid.slice(0, 12)}...` : sid}</span>
-                            ) : (
-                              '—'
-                            )}
-                          </td>
-                          <td className="px-6 py-3 text-sm">
-                            {r.agreementRef ? (
-                              <span className="font-mono text-blue-600">{r.agreementRef}</span>
-                            ) : (
-                              <span className="text-gray-400">—</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-3 text-sm">
-                            <Badge variant={op === 'create' ? 'success' : op === 'cancel' ? 'danger' : op === 'modify' ? 'warning' : 'default'}>
-                              {op}
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-3 text-sm">
-                            <Badge variant={statusVariant as any}>
-                              {http ? `HTTP ${http}` : grpc ? `gRPC ${grpc}` : '—'}
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-3 text-sm text-gray-500">
-                            {r.durationMs ? `${r.durationMs}ms` : '—'}
-                          </td>
-                        </tr>
-                      )
-                    })
-                  )}
+                  {visibleRows.map((r, idx) => {
+                    const created = r.createdAt || r.created_at
+                    const rid = r.requestId || r.request_id
+                    const cid = r.companyId || r.company_id
+                    const cname = r.companyName
+                    const ccode = r.companyCode
+                    const sid = r.sourceId || r.source_id
+                    const sname = r.sourceName
+                    const scode = r.sourceCode
+                    const op = r.operation || 'create'
+                    const http = r.httpStatus ?? (r as any).http_status
+                    const grpc = r.grpcStatus ?? (r as any).grpc_status
+                    const statusVariant = http && http >= 200 && http < 300 ? 'success' : http && http >= 400 ? 'danger' : 'warning'
+                    return (
+                      <tr key={r.id || rid || idx} className="hover:bg-gray-50 cursor-pointer" onClick={() => openRow(r)}>
+                        <td className="px-6 py-3 text-sm text-gray-700 whitespace-nowrap">
+                          {created ? new Date(created).toLocaleString() : '—'}
+                        </td>
+                        <td className="px-6 py-3 text-sm font-mono text-gray-900">
+                          {rid ? (rid.length > 16 ? `${rid.slice(0, 16)}...` : rid) : '—'}
+                        </td>
+                        <td className="px-6 py-3 text-sm">
+                          {cname ? (
+                            <div>
+                              <div className="text-gray-900 font-medium">{cname}</div>
+                              {ccode && <div className="text-xs text-gray-500">{ccode}</div>}
+                              {cid && <div className="text-xs text-gray-400 font-mono">{cid.slice(0, 8)}...</div>}
+                            </div>
+                          ) : cid ? (
+                            <span className="text-gray-700 font-mono">{cid.length > 12 ? `${cid.slice(0, 12)}...` : cid}</span>
+                          ) : (
+                            '—'
+                          )}
+                        </td>
+                        <td className="px-6 py-3 text-sm">
+                          {sname ? (
+                            <div>
+                              <div className="text-gray-900 font-medium">{sname}</div>
+                              {scode && <div className="text-xs text-gray-500">{scode}</div>}
+                              {sid && <div className="text-xs text-gray-400 font-mono">{sid.slice(0, 8)}...</div>}
+                            </div>
+                          ) : sid ? (
+                            <span className="text-gray-700 font-mono">{sid.length > 12 ? `${sid.slice(0, 12)}...` : sid}</span>
+                          ) : (
+                            '—'
+                          )}
+                        </td>
+                        <td className="px-6 py-3 text-sm">
+                          {r.agreementRef ? (
+                            <span className="font-mono text-blue-600">{r.agreementRef}</span>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-3 text-sm">
+                          <Badge variant={op === 'create' ? 'success' : op === 'cancel' ? 'danger' : op === 'modify' ? 'warning' : 'default'}>
+                            {op}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-3 text-sm">
+                          <Badge variant={statusVariant as any}>
+                            {http ? `HTTP ${http}` : grpc ? `gRPC ${grpc}` : '—'}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-3 text-sm text-gray-500">
+                          {r.durationMs ? `${r.durationMs}ms` : '—'}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

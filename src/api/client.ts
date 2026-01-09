@@ -157,18 +157,21 @@ export async function getUiConfig(): Promise<UiConfig> {
 export async function testSourceGrpc(addr?: string): Promise<TestResult> {
   const startTime = Date.now()
   try {
-    await httpClient.post(MW.testSourceGrpc(), { addr })
+    const response = await httpClient.post(MW.testSourceGrpc(), { addr })
     return {
-      success: true,
-      message: 'Source gRPC test successful',
+      success: response.ok !== false,
+      message: response.ok !== false ? 'Source gRPC test successful' : 'Source gRPC test failed',
       responseTime: Date.now() - startTime,
+      error: response.ok === false ? response.error : undefined,
     }
-  } catch (error) {
+  } catch (error: any) {
+    // Extract error message from response data if available
+    const errorMessage = error?.data?.error || error?.message || 'Unknown error'
     return {
       success: false,
       message: 'Source gRPC test failed',
       responseTime: Date.now() - startTime,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: errorMessage,
     }
   }
 }
@@ -176,18 +179,21 @@ export async function testSourceGrpc(addr?: string): Promise<TestResult> {
 export async function testAgentGrpc(addr?: string): Promise<TestResult> {
   const startTime = Date.now()
   try {
-    await httpClient.post(MW.testAgentGrpc(), { addr })
+    const response = await httpClient.post(MW.testAgentGrpc(), { addr })
     return {
-      success: true,
-      message: 'Agent gRPC test successful',
+      success: response.ok !== false,
+      message: response.ok !== false ? 'Agent gRPC test successful' : 'Agent gRPC test failed',
       responseTime: Date.now() - startTime,
+      error: response.ok === false ? response.error : undefined,
     }
-  } catch (error) {
+  } catch (error: any) {
+    // Extract error message from response data if available
+    const errorMessage = error?.data?.error || error?.message || 'Unknown error'
     return {
       success: false,
       message: 'Agent gRPC test failed',
       responseTime: Date.now() - startTime,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: errorMessage,
     }
   }
 }

@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { Loader } from '../components/ui/Loader'
 import { verificationApi } from '../api/verification'
-import { CheckCircle, XCircle, Clock } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, PlayCircle, Server, TestTube, Plus, Trash2, Zap, Activity } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { localSourceApi } from '../api/localSource'
 import { localAgentApi } from '../api/localAgent'
@@ -273,62 +273,158 @@ export default function Verification() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Verification</h1>
-        <p className="mt-2 text-gray-600">
-          Run verification tests for sources and agents
-        </p>
+    <div className="space-y-8 pb-8">
+      {/* Enhanced Header */}
+      <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-8 border border-blue-100 shadow-sm">
+        <div className="flex items-center gap-4 mb-3">
+          <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+            <TestTube className="h-8 w-8 text-white" />
+          </div>
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 bg-clip-text text-transparent">
+              Verification & Testing
+            </h1>
+            <p className="mt-2 text-gray-700 text-lg">
+              Run comprehensive verification tests for sources and agents to ensure system integrity
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Local Sandbox Testers */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-gray-900">Local Sandbox Testers</h2>
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="secondary"
-            onClick={() => setSourceTesters(prev => [...prev, { id: `src-${prev.length}`, url: sourceUrl, runBooking: false, results: [], running: false }])}
-          >
-            Add Source Tester
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => setAgentTesters(prev => [...prev, { id: `agt-${prev.length}`, url: agentUrl, trySearch: false, results: [], running: false }])}
-          >
-            Add Agent Tester
-          </Button>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg shadow-md">
+              <Server className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Local Sandbox Testers</h2>
+              <p className="text-sm text-gray-600 mt-0.5">Test local HTTP endpoints for sources and agents</p>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => setSourceTesters(prev => [...prev, { id: `src-${prev.length}`, url: sourceUrl, runBooking: false, results: [], running: false }])}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Source Tester
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => setAgentTesters(prev => [...prev, { id: `agt-${prev.length}`, url: agentUrl, trySearch: false, results: [], running: false }])}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Agent Tester
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {sourceTesters.map((t, i) => (
-            <Card key={t.id}>
-              <CardHeader>
-                <CardTitle>Local Source (Supplier) Tester #{i + 1}</CardTitle>
+            <Card key={t.id} className="bg-gradient-to-br from-white to-blue-50/30 border-blue-200 hover:shadow-xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+                      <Server className="h-5 w-5 text-white" />
+                    </div>
+                    <CardTitle className="text-lg font-bold text-gray-900">Source Tester #{i + 1}</CardTitle>
+                  </div>
+                  {sourceTesters.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSourceTesters(prev => prev.filter((_, idx) => idx !== i))}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-5 pt-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Source Base URL</label>
-                  <Input value={t.url} onChange={(e: any) => setSourceTesters(prev => prev.map((p, idx) => idx === i ? { ...p, url: e.target.value } : p))} placeholder="http://localhost:9090" />
-                  <p className="text-xs text-gray-500">Examples: /locations, /health, /availability, /booking/*</p>
+                  <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-blue-600" />
+                    Source Base URL
+                  </label>
+                  <Input 
+                    value={t.url} 
+                    onChange={(e: any) => setSourceTesters(prev => prev.map((p, idx) => idx === i ? { ...p, url: e.target.value } : p))} 
+                    placeholder="http://localhost:9090"
+                    className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <Zap className="h-3 w-3" />
+                    Endpoints: /locations, /health, /availability, /booking/*
+                  </p>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" checked={t.runBooking} onChange={(e) => setSourceTesters(prev => prev.map((p, idx) => idx === i ? { ...p, runBooking: e.target.checked } : p))} />
-                    <span className="text-sm text-gray-700">Run booking test (create → check → cancel)</span>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <input 
+                      type="checkbox" 
+                      checked={t.runBooking} 
+                      onChange={(e) => setSourceTesters(prev => prev.map((p, idx) => idx === i ? { ...p, runBooking: e.target.checked } : p))}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700 font-medium">Run booking test (create → check → cancel)</span>
                   </div>
-                  <Button onClick={() => runSourceLocalTests(i)} loading={t.running} className="shrink-0">Run Source Local Tests</Button>
+                  <Button 
+                    onClick={() => runSourceLocalTests(i)} 
+                    loading={t.running} 
+                    className="w-full flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                  >
+                    <PlayCircle className="h-5 w-5" />
+                    {t.running ? 'Running Tests...' : 'Run Source Tests'}
+                  </Button>
                 </div>
 
                 {t.results.length > 0 && (
-                  <div className="space-y-3">
+                  <div className="space-y-2 pt-4 border-t border-gray-200">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4" />
+                      Test Results
+                    </h4>
                     {t.results.map((r, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="font-medium text-gray-800">{r.name}</div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={r.status === 'PASSED' ? 'success' : 'danger'} size="sm">{r.status}</Badge>
-                          {typeof r.duration_ms === 'number' && (<span className="text-xs text-gray-500">{r.duration_ms}ms</span>)}
-                          {r.note && (<span className="text-xs text-gray-400">{r.note}</span>)}
+                      <div 
+                        key={idx} 
+                        className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
+                          r.status === 'PASSED' 
+                            ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 shadow-sm' 
+                            : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-300 shadow-sm'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {r.status === 'PASSED' ? (
+                            <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                          ) : (
+                            <XCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+                          )}
+                          <div>
+                            <div className="font-semibold text-gray-900">{r.name}</div>
+                            {r.note && (
+                              <div className="text-xs text-gray-600 mt-0.5">{r.note}</div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Badge 
+                            variant={r.status === 'PASSED' ? 'success' : 'danger'} 
+                            size="sm"
+                            className="font-semibold"
+                          >
+                            {r.status}
+                          </Badge>
+                          {typeof r.duration_ms === 'number' && (
+                            <span className="text-xs font-medium text-gray-600 bg-white px-2 py-1 rounded border border-gray-200">
+                              {r.duration_ms}ms
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -339,34 +435,106 @@ export default function Verification() {
           ))}
 
           {agentTesters.map((t, i) => (
-            <Card key={t.id}>
-              <CardHeader>
-                <CardTitle>Local Agent Tester #{i + 1}</CardTitle>
+            <Card key={t.id} className="bg-gradient-to-br from-white to-purple-50/30 border-purple-200 hover:shadow-xl transition-all duration-300">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b border-purple-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg">
+                      <Server className="h-5 w-5 text-white" />
+                    </div>
+                    <CardTitle className="text-lg font-bold text-gray-900">Agent Tester #{i + 1}</CardTitle>
+                  </div>
+                  {agentTesters.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setAgentTesters(prev => prev.filter((_, idx) => idx !== i))}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-5 pt-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Agent Base URL</label>
-                  <Input value={t.url} onChange={(e: any) => setAgentTesters(prev => prev.map((p, idx) => idx === i ? { ...p, url: e.target.value } : p))} placeholder="http://localhost:9091" />
-                  <p className="text-xs text-gray-500">Examples: /health, /test, /search, /book</p>
+                  <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-purple-600" />
+                    Agent Base URL
+                  </label>
+                  <Input 
+                    value={t.url} 
+                    onChange={(e: any) => setAgentTesters(prev => prev.map((p, idx) => idx === i ? { ...p, url: e.target.value } : p))} 
+                    placeholder="http://localhost:9091"
+                    className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
+                  />
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <Zap className="h-3 w-3" />
+                    Endpoints: /health, /test, /search, /book
+                  </p>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" checked={t.trySearch} onChange={(e) => setAgentTesters(prev => prev.map((p, idx) => idx === i ? { ...p, trySearch: e.target.checked } : p))} />
-                    <span className="text-sm text-gray-700">Try /search (requires AGENT_TOKEN in agent-backend)</span>
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <input 
+                      type="checkbox" 
+                      checked={t.trySearch} 
+                      onChange={(e) => setAgentTesters(prev => prev.map((p, idx) => idx === i ? { ...p, trySearch: e.target.checked } : p))}
+                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                    />
+                    <span className="text-sm text-gray-700 font-medium">Try /search (requires AGENT_TOKEN in agent-backend)</span>
                   </div>
-                  <Button onClick={() => runAgentLocalTests(i)} loading={t.running} className="shrink-0">Run Agent Local Tests</Button>
+                  <Button 
+                    onClick={() => runAgentLocalTests(i)} 
+                    loading={t.running} 
+                    className="w-full flex items-center justify-center gap-2 shadow-md hover:shadow-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  >
+                    <PlayCircle className="h-5 w-5" />
+                    {t.running ? 'Running Tests...' : 'Run Agent Tests'}
+                  </Button>
                 </div>
 
                 {t.results.length > 0 && (
-                  <div className="space-y-3">
+                  <div className="space-y-2 pt-4 border-t border-gray-200">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4" />
+                      Test Results
+                    </h4>
                     {t.results.map((r, idx) => (
-                      <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div className="font-medium text-gray-800">{r.name}</div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={r.status === 'PASSED' ? 'success' : 'danger'} size="sm">{r.status}</Badge>
-                          {typeof r.duration_ms === 'number' && (<span className="text-xs text-gray-500">{r.duration_ms}ms</span>)}
-                          {r.note && (<span className="text-xs text-gray-400">{r.note}</span>)}
+                      <div 
+                        key={idx} 
+                        className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
+                          r.status === 'PASSED' 
+                            ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 shadow-sm' 
+                            : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-300 shadow-sm'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {r.status === 'PASSED' ? (
+                            <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                          ) : (
+                            <XCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+                          )}
+                          <div>
+                            <div className="font-semibold text-gray-900">{r.name}</div>
+                            {r.note && (
+                              <div className="text-xs text-gray-600 mt-0.5">{r.note}</div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Badge 
+                            variant={r.status === 'PASSED' ? 'success' : 'danger'} 
+                            size="sm"
+                            className="font-semibold"
+                          >
+                            {r.status}
+                          </Badge>
+                          {typeof r.duration_ms === 'number' && (
+                            <span className="text-xs font-medium text-gray-600 bg-white px-2 py-1 rounded border border-gray-200">
+                              {r.duration_ms}ms
+                            </span>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -380,29 +548,54 @@ export default function Verification() {
 
       {/* Admin gRPC Tests (via Middleware) */}
       <div className="space-y-6">
-        <h2 className="text-2xl font-semibold text-gray-900">Admin gRPC Tests (via Middleware)</h2>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg shadow-md">
+            <Zap className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">gRPC Connectivity Tests</h2>
+            <p className="text-sm text-gray-600 mt-0.5">Test gRPC endpoints via middleware for sources and agents</p>
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {/* Source gRPC Tester */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Source gRPC Tester</CardTitle>
+          <Card className="bg-gradient-to-br from-white to-amber-50/30 border-amber-200 hover:shadow-xl transition-all duration-300">
+            <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg">
+                  <Zap className="h-5 w-5 text-white" />
+                </div>
+                <CardTitle className="text-lg font-bold text-gray-900">Source gRPC Tester</CardTitle>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-5 pt-6">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Source gRPC address</label>
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Server className="h-4 w-4 text-amber-600" />
+                  Source gRPC Address
+                </label>
                 <Input
                   value={sourceGrpc}
                   onChange={(e: any) => setSourceGrpc(e.target.value)}
                   placeholder="localhost:50061"
+                  className="border-gray-300 focus:border-amber-500 focus:ring-amber-500"
                 />
-                <p className="text-xs text-gray-500">Format: host:port or grpc://host:port</p>
+                <p className="text-xs text-gray-500 flex items-center gap-1">
+                  <Zap className="h-3 w-3" />
+                  Format: host:port or grpc://host:port
+                </p>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" checked={srcGrpcRunBooking} onChange={(e) => setSrcGrpcRunBooking(e.target.checked)} />
-                  <span className="text-sm text-gray-700">Run booking cycle (create → check → cancel)</span>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <input 
+                    type="checkbox" 
+                    checked={srcGrpcRunBooking} 
+                    onChange={(e) => setSrcGrpcRunBooking(e.target.checked)}
+                    className="w-4 h-4 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                  />
+                  <span className="text-sm text-gray-700 font-medium">Run booking cycle (create → check → cancel)</span>
                 </div>
                 <Button
                   onClick={() => {
@@ -421,45 +614,84 @@ export default function Verification() {
                   }}
                   loading={sourceGrpcTest.isPending}
                   disabled={!sourceGrpc || sourceGrpc.trim() === ''}
+                  className="w-full flex items-center justify-center gap-2 shadow-md hover:shadow-lg bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
                 >
-                  Run Source gRPC Test
+                  <PlayCircle className="h-5 w-5" />
+                  {sourceGrpcTest.isPending ? 'Testing...' : 'Run Source gRPC Test'}
                 </Button>
               </div>
 
               {srcGrpcError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-800 font-medium">Error:</p>
-                  <p className="text-xs text-red-600 mt-1">{srcGrpcError}</p>
+                <div className="p-4 bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-300 rounded-lg shadow-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <XCircle className="h-5 w-5 text-red-600" />
+                    <p className="text-sm text-red-800 font-semibold">Error</p>
+                  </div>
+                  <p className="text-xs text-red-700 font-mono bg-white/50 p-2 rounded border border-red-200">{srcGrpcError}</p>
                 </div>
               )}
               {srcGrpcResults.length > 0 ? (
-                <ResultList results={srcGrpcResults} />
+                <div className="pt-4 border-t border-gray-200">
+                  <ResultList results={srcGrpcResults} />
+                </div>
               ) : !sourceGrpcTest.isPending && !srcGrpcError && (
-                <p className="text-sm text-gray-500 text-center py-4">No test results yet. Click "Run Source gRPC Test" to start.</p>
+                <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                  <TestTube className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500 font-medium">No test results yet</p>
+                  <p className="text-xs text-gray-400 mt-1">Click "Run Source gRPC Test" to start</p>
+                </div>
               )}
             </CardContent>
           </Card>
 
           {/* Agent gRPC Tester */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Agent gRPC Tester</CardTitle>
+          <Card className="bg-gradient-to-br from-white to-violet-50/30 border-violet-200 hover:shadow-xl transition-all duration-300">
+            <CardHeader className="bg-gradient-to-r from-violet-50 to-purple-50 border-b border-violet-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg">
+                  <Zap className="h-5 w-5 text-white" />
+                </div>
+                <CardTitle className="text-lg font-bold text-gray-900">Agent gRPC Tester</CardTitle>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-5 pt-6">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Agent gRPC address</label>
+                <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Server className="h-4 w-4 text-violet-600" />
+                  Agent gRPC Address
+                </label>
                 <Input
                   value={agentGrpc}
                   onChange={(e: any) => setAgentGrpc(e.target.value)}
                   placeholder="localhost:50062"
+                  className="border-gray-300 focus:border-violet-500 focus:ring-violet-500"
                 />
-                <p className="text-xs text-gray-500">Format: host:port or grpc://host:port</p>
+                <p className="text-xs text-gray-500 flex items-center gap-1">
+                  <Zap className="h-3 w-3" />
+                  Format: host:port or grpc://host:port
+                </p>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" checked={agtGrpcTrySearch} onChange={(e) => setAgtGrpcTrySearch(e.target.checked)} />
-                  <span className="text-sm text-gray-700">Try RunSearch (requires Agent token configured)</span>
+              <div className="flex flex-col gap-3">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <input 
+                      type="checkbox" 
+                      checked={agtGrpcTrySearch} 
+                      onChange={(e) => setAgtGrpcTrySearch(e.target.checked)}
+                      className="w-4 h-4 text-violet-600 border-gray-300 rounded focus:ring-violet-500"
+                    />
+                    <span className="text-sm text-gray-700 font-medium">Try RunSearch (requires Agent token configured)</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <input 
+                      type="checkbox" 
+                      checked={agtGrpcTryBook} 
+                      onChange={(e) => setAgtGrpcTryBook(e.target.checked)}
+                      className="w-4 h-4 text-violet-600 border-gray-300 rounded focus:ring-violet-500"
+                    />
+                    <span className="text-sm text-gray-700 font-medium">Also test RunBook (idempotency via middleware)</span>
+                  </div>
                 </div>
                 <Button
                   onClick={() => {
@@ -491,26 +723,32 @@ export default function Verification() {
                   }}
                   loading={agentGrpcTest.isPending}
                   disabled={!agentGrpc || agentGrpc.trim() === ''}
+                  className="w-full flex items-center justify-center gap-2 shadow-md hover:shadow-lg bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
                 >
-                  Run Agent gRPC Test
+                  <PlayCircle className="h-5 w-5" />
+                  {agentGrpcTest.isPending ? 'Testing...' : 'Run Agent gRPC Test'}
                 </Button>
               </div>
 
-              <div className="flex items-center gap-2">
-                <input type="checkbox" checked={agtGrpcTryBook} onChange={(e) => setAgtGrpcTryBook(e.target.checked)} />
-                <span className="text-sm text-gray-700">Also test RunBook (idempotency via middleware)</span>
-              </div>
-
               {agtGrpcError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-800 font-medium">Error:</p>
-                  <p className="text-xs text-red-600 mt-1">{agtGrpcError}</p>
+                <div className="p-4 bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-300 rounded-lg shadow-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <XCircle className="h-5 w-5 text-red-600" />
+                    <p className="text-sm text-red-800 font-semibold">Error</p>
+                  </div>
+                  <p className="text-xs text-red-700 font-mono bg-white/50 p-2 rounded border border-red-200">{agtGrpcError}</p>
                 </div>
               )}
               {agtGrpcResults.length > 0 ? (
-                <ResultList results={agtGrpcResults} />
+                <div className="pt-4 border-t border-gray-200">
+                  <ResultList results={agtGrpcResults} />
+                </div>
               ) : !agentGrpcTest.isPending && !agtGrpcError && (
-                <p className="text-sm text-gray-500 text-center py-4">No test results yet. Click "Run Agent gRPC Test" to start.</p>
+                <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                  <TestTube className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500 font-medium">No test results yet</p>
+                  <p className="text-xs text-gray-400 mt-1">Click "Run Agent gRPC Test" to start</p>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -557,36 +795,53 @@ export default function Verification() {
       </div>` */}
 
       {status?.report && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Latest Verification Results</CardTitle>
+        <Card className="bg-gradient-to-br from-white to-slate-50 border-slate-200 shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-gray-50 border-b border-slate-200">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-slate-500 to-gray-600 rounded-lg">
+                <Activity className="h-5 w-5 text-white" />
+              </div>
+              <CardTitle className="text-lg font-bold text-gray-900">Latest Verification Results</CardTitle>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+          <CardContent className="pt-6">
+            <div className="space-y-3">
               {status.report.test_results.map((test, index) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <h4 className="font-medium text-gray-900">{test.name}</h4>
-                    {test.description && (
-                      <p className="text-sm text-gray-600">{test.description}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-2">
+                <div 
+                  key={index} 
+                  className={`flex items-center justify-between p-5 rounded-xl border-2 transition-all ${
+                    test.status === 'PASSED' 
+                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 shadow-sm hover:shadow-md' 
+                      : test.status === 'FAILED'
+                      ? 'bg-gradient-to-r from-red-50 to-rose-50 border-red-300 shadow-sm hover:shadow-md'
+                      : 'bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-300 shadow-sm hover:shadow-md'
+                  }`}
+                >
+                  <div className="flex items-center gap-4 flex-1">
                     {test.status === 'PASSED' ? (
-                      <CheckCircle className="h-5 w-5 text-green-600" />
+                      <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0" />
                     ) : test.status === 'FAILED' ? (
-                      <XCircle className="h-5 w-5 text-red-600" />
+                      <XCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
                     ) : (
-                      <Clock className="h-5 w-5 text-yellow-600" />
+                      <Clock className="h-6 w-6 text-yellow-600 flex-shrink-0" />
                     )}
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900 text-base">{test.name}</h4>
+                      {test.description && (
+                        <p className="text-sm text-gray-600 mt-1">{test.description}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
                     <Badge
-                      variant={test.status === 'PASSED' ? 'success' : 'danger'}
+                      variant={test.status === 'PASSED' ? 'success' : test.status === 'FAILED' ? 'danger' : 'default'}
                       size="sm"
+                      className="font-semibold px-3 py-1"
                     >
                       {test.status}
                     </Badge>
                     {test.duration_ms && (
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs font-medium text-gray-700 bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm">
                         {test.duration_ms}ms
                       </span>
                     )}

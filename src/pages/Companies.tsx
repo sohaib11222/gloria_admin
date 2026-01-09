@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Download } from 'lucide-react'
+import { Download, Building2, RefreshCw, Plus, Search, Filter, Users, CheckCircle, Clock, XCircle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
@@ -378,6 +378,7 @@ export default function Companies() {
   const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null)
   const [filterType, setFilterType] = useState<'ALL' | 'SOURCE' | 'AGENT'>('ALL')
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED'>('ALL')
+  const [searchQuery, setSearchQuery] = useState('')
 
   const queryClient = useQueryClient()
 
@@ -517,91 +518,285 @@ export default function Companies() {
   const filteredCompanies = companies?.data?.filter((company) => {
     const typeMatch = filterType === 'ALL' || company.type === filterType
     const statusMatch = filterStatus === 'ALL' || company.status === filterStatus
-    return typeMatch && statusMatch
+    const searchMatch = !searchQuery || 
+      company.companyName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      company.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      company.companyCode?.toLowerCase().includes(searchQuery.toLowerCase())
+    return typeMatch && statusMatch && searchMatch
   }) || []
 
   if (isLoading) {
     return <Loader className="min-h-96" />
   }
 
+  const allCompanies = companies?.data || []
+  const stats = {
+    total: allCompanies.length,
+    sources: allCompanies.filter(c => c.type === 'SOURCE').length,
+    agents: allCompanies.filter(c => c.type === 'AGENT').length,
+    active: allCompanies.filter(c => c.status === 'ACTIVE').length,
+    pending: allCompanies.filter(c => c.status === 'PENDING_VERIFICATION').length,
+    suspended: allCompanies.filter(c => c.status === 'SUSPENDED').length,
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Companies</h1>
-        <p className="mt-2 text-gray-600">
-          Manage all companies (sources and agents)
-        </p>
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-sm">
+            <Building2 className="w-8 h-8 text-blue-600" />
+          </div>
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              Companies
+            </h1>
+            <p className="mt-2 text-gray-600 font-medium">
+              Manage all companies (sources and agents) in the system
+            </p>
+          </div>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>All Companies</CardTitle>
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <Card className="transform transition-all duration-300 hover:shadow-lg border-2 border-gray-100">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  {stats.total}
+                </p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-xl">
+                <Users className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="transform transition-all duration-300 hover:shadow-lg border-2 border-blue-100">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Sources</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                  {stats.sources}
+                </p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-xl">
+                <Building2 className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="transform transition-all duration-300 hover:shadow-lg border-2 border-purple-100">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Agents</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  {stats.agents}
+                </p>
+              </div>
+              <div className="p-3 bg-purple-100 rounded-xl">
+                <Users className="w-6 h-6 text-purple-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="transform transition-all duration-300 hover:shadow-lg border-2 border-green-100">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Active</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  {stats.active}
+                </p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-xl">
+                <CheckCircle className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="transform transition-all duration-300 hover:shadow-lg border-2 border-yellow-100">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Pending</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent">
+                  {stats.pending}
+                </p>
+              </div>
+              <div className="p-3 bg-yellow-100 rounded-xl">
+                <Clock className="w-6 h-6 text-yellow-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="transform transition-all duration-300 hover:shadow-lg border-2 border-red-100">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Suspended</p>
+                <p className="text-3xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
+                  {stats.suspended}
+                </p>
+              </div>
+              <div className="p-3 bg-red-100 rounded-xl">
+                <XCircle className="w-6 h-6 text-red-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Companies Table Card */}
+      <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100 shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-gray-50 via-blue-50/30 to-purple-50/30 border-b border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-blue-600" />
+                All Companies
+              </CardTitle>
+              <p className="text-sm text-gray-600 mt-1">
+                {filteredCompanies.length} of {stats.total} companies
+                {(searchQuery || filterType !== 'ALL' || filterStatus !== 'ALL') && ' (filtered)'}
+              </p>
+            </div>
             <div className="flex gap-2">
-              <Button variant="secondary" onClick={handleRefresh}>
+              <Button 
+                variant="secondary" 
+                onClick={handleRefresh}
+                className="shadow-md hover:shadow-lg transition-all duration-200"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh
               </Button>
-              <Button onClick={() => setIsCreateModalOpen(true)}>
+              <Button 
+                onClick={() => setIsCreateModalOpen(true)}
+                className="shadow-md hover:shadow-lg transition-all duration-200"
+              >
+                <Plus className="w-4 h-4 mr-2" />
                 Create Company
               </Button>
             </div>
           </div>
-          <div className="flex space-x-4 mt-4">
-            <div className="flex-1">
-              <Select
-                label="Filter by Type"
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value as any)}
-                options={[
-                  { value: 'ALL', label: 'All Types' },
-                  { value: 'SOURCE', label: 'Sources' },
-                  { value: 'AGENT', label: 'Agents' },
-                ]}
-              />
+          
+          {/* Filters */}
+          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <Filter className="w-4 h-4 text-gray-500" />
+              <span className="text-sm font-semibold text-gray-700">Filters</span>
             </div>
-            <div className="flex-1">
-              <Select
-                label="Filter by Status"
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value as any)}
-                options={[
-                  { value: 'ALL', label: 'All Statuses' },
-                  { value: 'ACTIVE', label: 'Active' },
-                  { value: 'PENDING_VERIFICATION', label: 'Pending Verification' },
-                  { value: 'SUSPENDED', label: 'Suspended' },
-                ]}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Search by name, email, or company code..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 sm:text-sm hover:border-gray-400"
+                  />
+                </div>
+              </div>
+              <div className="flex-1">
+                <Select
+                  label="Filter by Type"
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value as any)}
+                  options={[
+                    { value: 'ALL', label: 'All Types' },
+                    { value: 'SOURCE', label: 'Sources' },
+                    { value: 'AGENT', label: 'Agents' },
+                  ]}
+                />
+              </div>
+              <div className="flex-1">
+                <Select
+                  label="Filter by Status"
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value as any)}
+                  options={[
+                    { value: 'ALL', label: 'All Statuses' },
+                    { value: 'ACTIVE', label: 'Active' },
+                    { value: 'PENDING_VERIFICATION', label: 'Pending Verification' },
+                    { value: 'SUSPENDED', label: 'Suspended' },
+                  ]}
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {filteredCompanies.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-gradient-to-r from-gray-50 to-gray-100/50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Approval</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Company
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Approval
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Created
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredCompanies.map((company) => (
-                    <tr key={company.id} className="hover:bg-gray-50">
+                    <tr 
+                      key={company.id} 
+                      className="hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-purple-50/30 transition-all duration-200 cursor-pointer"
+                      onClick={() => handleCompanyClick(company)}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{company.companyName}</div>
-                          <div className="text-sm text-gray-500">{company.email}</div>
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-blue-100 rounded-lg">
+                            <Building2 className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-semibold text-gray-900">{company.companyName}</div>
+                            <div className="text-sm text-gray-500">{company.email}</div>
+                            {company.companyCode && (
+                              <div className="text-xs text-gray-400 font-mono mt-1">{company.companyCode}</div>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <Badge variant={company.type === 'SOURCE' ? 'info' : 'default'}>{company.type}</Badge>
+                        <Badge variant={company.type === 'SOURCE' ? 'info' : 'default'} className="font-semibold">
+                          {company.type}
+                        </Badge>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <Badge variant={company.status === 'ACTIVE' ? 'success' : company.status === 'PENDING_VERIFICATION' ? 'warning' : 'danger'}>{company.status}</Badge>
+                        <Badge 
+                          variant={company.status === 'ACTIVE' ? 'success' : company.status === 'PENDING_VERIFICATION' ? 'warning' : 'danger'}
+                          className="font-semibold"
+                        >
+                          {company.status}
+                        </Badge>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {company.type === 'SOURCE' ? (
@@ -611,6 +806,7 @@ export default function Companies() {
                               company.approvalStatus === 'REJECTED' ? 'danger' : 
                               'warning'
                             }
+                            className="font-semibold"
                           >
                             {company.approvalStatus || 'PENDING'}
                           </Badge>
@@ -622,19 +818,32 @@ export default function Companies() {
                                 company.approvalStatus === 'REJECTED' ? 'danger' : 
                                 'warning'
                               }
+                              className="font-semibold"
                             >
                               {company.approvalStatus}
                             </Badge>
                           )
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(company.createdAt)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex items-center space-x-2">
-                          <Button size="sm" variant="secondary" onClick={() => handleCompanyClick(company)}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-600 font-medium">{formatDate(company.createdAt)}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
+                          <Button 
+                            size="sm" 
+                            variant="secondary" 
+                            onClick={() => handleCompanyClick(company)}
+                            className="shadow-sm hover:shadow-md"
+                          >
                             View
                           </Button>
-                          <Button size="sm" variant="primary" onClick={() => handleEditClick(company)}>
+                          <Button 
+                            size="sm" 
+                            variant="primary" 
+                            onClick={() => handleEditClick(company)}
+                            className="shadow-sm hover:shadow-md"
+                          >
                             Edit
                           </Button>
                           {company.type === 'SOURCE' && company.approvalStatus !== 'APPROVED' && (
@@ -656,6 +865,7 @@ export default function Companies() {
                                     ? 'Email must be verified before approval. Click Edit to verify email.' 
                                     : 'Approve this source company'
                                 }
+                                className="shadow-sm hover:shadow-md"
                               >
                                 Approve
                               </Button>
@@ -669,6 +879,7 @@ export default function Companies() {
                                   }}
                                   loading={rejectMutation.isPending}
                                   title="Reject this source company"
+                                  className="shadow-sm hover:shadow-md"
                                 >
                                   Reject
                                 </Button>
@@ -701,6 +912,7 @@ export default function Companies() {
                                   : 'Import branches from supplier endpoint. Requires: APPROVED status, verified email, configured HTTP endpoint, and company code.'
                               }
                               disabled={company.status !== 'ACTIVE' || company.approvalStatus !== 'APPROVED'}
+                              className="shadow-sm hover:shadow-md"
                             >
                               <Download className="h-4 w-4" />
                             </Button>
@@ -709,13 +921,19 @@ export default function Companies() {
                             value={company.status}
                             onChange={(e) => handleStatusChange(company.id, e.target.value as any)}
                             disabled={updateStatusMutation.isPending}
-                            className="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-3 py-1.5 text-sm border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-all"
+                            onClick={(e) => e.stopPropagation()}
                           >
                             <option value="ACTIVE">Active</option>
                             <option value="PENDING_VERIFICATION">Pending Verification</option>
                             <option value="SUSPENDED">Suspended</option>
                           </select>
-                          <Button size="sm" variant="danger" onClick={() => handleDeleteClick(company)}>
+                          <Button 
+                            size="sm" 
+                            variant="danger" 
+                            onClick={() => handleDeleteClick(company)}
+                            className="shadow-sm hover:shadow-md"
+                          >
                             Delete
                           </Button>
                         </div>
@@ -726,7 +944,27 @@ export default function Companies() {
               </table>
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">No companies found</div>
+            <div className="text-center py-16">
+              <div className="p-4 bg-gray-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                <Building2 className="w-10 h-10 text-gray-400" />
+              </div>
+              <div className="text-gray-500 text-lg font-semibold mb-2">No companies found</div>
+              {(searchQuery || filterType !== 'ALL' || filterStatus !== 'ALL') ? (
+                <div className="text-sm text-gray-400 mb-4">
+                  Try adjusting your filters or search query
+                </div>
+              ) : (
+                <div className="text-sm text-gray-400 mb-4">
+                  Get started by creating your first company
+                </div>
+              )}
+              {!searchQuery && filterType === 'ALL' && filterStatus === 'ALL' && (
+                <Button onClick={() => setIsCreateModalOpen(true)} className="mt-4">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Company
+                </Button>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>

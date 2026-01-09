@@ -7,13 +7,21 @@ import {
   Shield, 
   MapPin, 
   Plus,
-  Download
+  Download,
+  Search,
+  X,
+  CheckCircle,
+  AlertCircle,
+  Server,
+  Activity
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { Modal } from '../components/ui/Modal'
 import { Input } from '../components/ui/Input'
+import { Select } from '../components/ui/Select'
+import { ErrorDisplay } from '../components/ui/ErrorDisplay'
 import { Loader } from '../components/ui/Loader'
 import { companiesApi } from '../api/companies'
 import { whitelistApi, branchImportApi } from '../api/whitelist'
@@ -303,12 +311,33 @@ const WhitelistModal: React.FC<WhitelistModalProps> = ({ companyId, companyType 
 
 export default function Sources() {
   const [editingSource, setEditingSource] = useState<any>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED'>('ALL')
+  const [approvalFilter, setApprovalFilter] = useState<'ALL' | 'APPROVED' | 'PENDING' | 'REJECTED'>('ALL')
   const queryClient = useQueryClient()
 
-  const { data: sources, isLoading } = useQuery({
+  const { data: sources, isLoading, error } = useQuery({
     queryKey: ['sources'],
     queryFn: () => companiesApi.listSources(),
   })
+
+  const filteredSources = React.useMemo(() => {
+    if (!sources?.data) return []
+    return sources.data.filter((source) => {
+      const matchesSearch = !searchQuery || 
+        source.companyName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        source.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        source.companyCode?.toLowerCase().includes(searchQuery.toLowerCase())
+      
+      const matchesStatus = statusFilter === 'ALL' || source.status === statusFilter
+      const matchesApproval = approvalFilter === 'ALL' || 
+        (approvalFilter === 'APPROVED' && source.approvalStatus === 'APPROVED') ||
+        (approvalFilter === 'PENDING' && (!source.approvalStatus || source.approvalStatus === 'PENDING')) ||
+        (approvalFilter === 'REJECTED' && source.approvalStatus === 'REJECTED')
+      
+      return matchesSearch && matchesStatus && matchesApproval
+    })
+  }, [sources?.data, searchQuery, statusFilter, approvalFilter])
 
   const healthCheckMutation = useMutation({
     mutationFn: (companyId: string) => companiesApi.runHealthCheck(companyId),
@@ -384,9 +413,28 @@ export default function Sources() {
     return <Loader className="min-h-96" />
   }
 
+  // Calculate stats
+  const stats = React.useMemo(() => {
+    if (!sources?.data) return { total: 0, active: 0, ready: 0, pending: 0 }
+    const total = sources.data.length
+    const active = sources.data.filter(s => s.status === 'ACTIVE').length
+    const ready = sources.data.filter(s => {
+      const isApproved = s.approvalStatus === 'APPROVED'
+      const isEmailVerified = s.emailVerified === true
+      const hasHttpEndpoint = !!s.httpEndpoint
+      const hasCompanyCode = !!s.companyCode
+      const isActive = s.status === 'ACTIVE'
+      return isActive && isApproved && isEmailVerified && hasHttpEndpoint && hasCompanyCode
+    }).length
+    const pending = sources.data.filter(s => s.approvalStatus === 'PENDING' || !s.approvalStatus).length
+    return { total, active, ready, pending }
+  }, [sources?.data])
+
+  const hasActiveFilters = searchQuery || statusFilter !== 'ALL' || approvalFilter !== 'ALL'
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Sources</h1>
           <p className="mt-2 text-gray-600">
@@ -399,34 +447,169 @@ export default function Sources() {
         </Button>
       </div>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="card-hover">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Sources</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <Server className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="card-hover">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active</p>
+                <p className="text-2xl font-bold text-green-600 mt-1">{stats.active}</p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-lg">
+                <Activity className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="card-hover">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Import Ready</p>
+                <p className="text-2xl font-bold text-indigo-600 mt-1">{stats.ready}</p>
+              </div>
+              <div className="p-3 bg-indigo-100 rounded-lg">
+                <CheckCircle className="h-6 w-6 text-indigo-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="card-hover">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Pending Approval</p>
+                <p className="text-2xl font-bold text-orange-600 mt-1">{stats.pending}</p>
+              </div>
+              <div className="p-3 bg-orange-100 rounded-lg">
+                <AlertCircle className="h-6 w-6 text-orange-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle>Source Companies</CardTitle>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Source Companies ({filteredSources.length})</CardTitle>
+              {hasActiveFilters && (
+                <p className="text-sm text-gray-500 mt-1">
+                  Showing {filteredSources.length} of {sources?.data?.length || 0} sources
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSearchQuery('')
+                    setStatusFilter('ALL')
+                    setApprovalFilter('ALL')
+                  }}
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Clear Filters
+                </Button>
+              )}
+              <Button variant="secondary" onClick={() => queryClient.invalidateQueries({ queryKey: ['sources'] })}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4 mt-4">
+            <div className="flex-1">
+              <Input
+                label="Search"
+                placeholder="Search by name, email, or company code..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                icon={<Search className="w-4 h-4" />}
+              />
+            </div>
+            <div className="flex-1">
+              <Select
+                label="Filter by Status"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                options={[
+                  { value: 'ALL', label: 'All Statuses' },
+                  { value: 'ACTIVE', label: 'Active' },
+                  { value: 'PENDING_VERIFICATION', label: 'Pending Verification' },
+                  { value: 'SUSPENDED', label: 'Suspended' },
+                ]}
+              />
+            </div>
+            <div className="flex-1">
+              <Select
+                label="Filter by Approval"
+                value={approvalFilter}
+                onChange={(e) => setApprovalFilter(e.target.value as any)}
+                options={[
+                  { value: 'ALL', label: 'All Approvals' },
+                  { value: 'APPROVED', label: 'Approved' },
+                  { value: 'PENDING', label: 'Pending' },
+                  { value: 'REJECTED', label: 'Rejected' },
+                ]}
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          {error ? (
+            <ErrorDisplay error={error} title="Failed to load sources" />
+          ) : filteredSources.length === 0 ? (
+            <div className="text-center py-12">
+              <Server className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <div className="text-gray-500 text-lg mb-2">No sources found</div>
+              {hasActiveFilters && (
+                <div className="text-sm text-gray-400">
+                  Try adjusting your filters or search query
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                     Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                     Branch Import Ready
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                     API Endpoint
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {sources?.data?.map((source) => {
+                {filteredSources.length > 0 ? filteredSources.map((source) => {
                   // Check branch import prerequisites
                   const isApproved = source.approvalStatus === 'APPROVED'
                   const isEmailVerified = source.emailVerified === true
@@ -444,79 +627,104 @@ export default function Sources() {
                   if (!hasCompanyCode) missingRequirements.push('Company code')
                   
                   return (
-                    <tr key={source.id}>
+                    <tr key={source.id} className="hover:bg-blue-50/50 transition-colors duration-150">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{source.companyName}</div>
-                          <div className="text-sm text-gray-500">{source.email}</div>
+                        <div className="space-y-1">
+                          <div className="text-sm font-semibold text-gray-900">{source.companyName}</div>
+                          <div className="text-sm text-gray-600 flex items-center gap-1">
+                            <span>{source.email}</span>
+                          </div>
                           {source.companyCode && (
-                            <div className="text-xs text-gray-400 font-mono mt-1">
-                              Code: {source.companyCode}
+                            <div className="text-xs text-gray-500 font-mono bg-gray-50 px-2 py-0.5 rounded inline-block">
+                              {source.companyCode}
                             </div>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="space-y-1">
+                        <div className="flex flex-col gap-2">
                           <Badge variant={source.status === 'ACTIVE' ? 'success' : 'warning'}>
                             {source.status}
                           </Badge>
                           {source.approvalStatus && (
-                            <div>
-                              <Badge 
-                                variant={source.approvalStatus === 'APPROVED' ? 'success' : source.approvalStatus === 'REJECTED' ? 'danger' : 'warning'}
-                                size="sm"
-                              >
-                                {source.approvalStatus}
-                              </Badge>
-                            </div>
+                            <Badge 
+                              variant={source.approvalStatus === 'APPROVED' ? 'success' : source.approvalStatus === 'REJECTED' ? 'danger' : 'warning'}
+                              size="sm"
+                            >
+                              {source.approvalStatus}
+                            </Badge>
                           )}
                           {source.emailVerified !== undefined && (
-                            <div>
-                              <Badge variant={source.emailVerified ? 'success' : 'warning'} size="sm">
-                                {source.emailVerified ? 'Email Verified' : 'Email Not Verified'}
-                              </Badge>
-                            </div>
+                            <Badge variant={source.emailVerified ? 'success' : 'warning'} size="sm">
+                              {source.emailVerified ? (
+                                <span className="flex items-center gap-1">
+                                  <CheckCircle className="h-3 w-3" />
+                                  Email Verified
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1">
+                                  <AlertCircle className="h-3 w-3" />
+                                  Email Not Verified
+                                </span>
+                              )}
+                            </Badge>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {canImportBranches ? (
                           <div className="flex items-center gap-2">
-                            <Badge variant="success" size="sm">Ready</Badge>
+                            <Badge variant="success" size="sm" className="flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3" />
+                              Ready
+                            </Badge>
                             <span className="text-xs text-gray-500">All prerequisites met</span>
                           </div>
                         ) : (
                           <div className="space-y-1">
-                            <Badge variant="warning" size="sm">Not Ready</Badge>
-                            <div className="text-xs text-gray-500 max-w-xs">
+                            <Badge variant="warning" size="sm" className="flex items-center gap-1">
+                              <AlertCircle className="h-3 w-3" />
+                              Not Ready
+                            </Badge>
+                            <div className="text-xs text-gray-500 max-w-xs mt-1">
                               Missing: {missingRequirements.join(', ')}
                             </div>
                           </div>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           {source.httpEndpoint ? (
-                            <code className="bg-gray-100 px-2 py-1 rounded text-xs block">
-                              {source.httpEndpoint}
-                            </code>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="info" size="sm">HTTP</Badge>
+                              <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
+                                {source.httpEndpoint}
+                              </code>
+                            </div>
                           ) : (
-                            <span className="text-gray-400 text-xs">HTTP: Not configured</span>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="warning" size="sm">HTTP</Badge>
+                              <span className="text-gray-400 text-xs">Not configured</span>
+                            </div>
                           )}
                           {source.grpcEndpoint && (
-                            <code className="bg-gray-100 px-2 py-1 rounded text-xs block">
-                              gRPC: {source.grpcEndpoint}
-                            </code>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="info" size="sm">gRPC</Badge>
+                              <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
+                                {source.grpcEndpoint}
+                              </code>
+                            </div>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
+                        <div className="flex items-center gap-1 flex-wrap">
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => setEditingSource(source)}
+                            title="Edit Source"
+                            className="hover:bg-blue-50 hover:text-blue-600"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -525,6 +733,8 @@ export default function Sources() {
                             variant="ghost"
                             onClick={() => healthCheckMutation.mutate(source.id)}
                             loading={healthCheckMutation.isPending}
+                            title="Run Health Check"
+                            className="hover:bg-green-50 hover:text-green-600"
                           >
                             <Play className="h-4 w-4" />
                           </Button>
@@ -533,6 +743,8 @@ export default function Sources() {
                             variant="ghost"
                             onClick={() => resetHealthMutation.mutate(source.id)}
                             loading={resetHealthMutation.isPending}
+                            title="Reset Health"
+                            className="hover:bg-orange-50 hover:text-orange-600"
                           >
                             <RefreshCw className="h-4 w-4" />
                           </Button>
@@ -542,6 +754,7 @@ export default function Sources() {
                             onClick={() => syncLocationsMutation.mutate(source.id)}
                             loading={syncLocationsMutation.isPending}
                             title="Sync Locations"
+                            className="hover:bg-purple-50 hover:text-purple-600"
                           >
                             <MapPin className="h-4 w-4" />
                           </Button>
@@ -562,6 +775,7 @@ export default function Sources() {
                                 : `Cannot import branches. Missing: ${missingRequirements.join(', ')}`
                             }
                             disabled={!canImportBranches}
+                            className={`hover:bg-indigo-50 hover:text-indigo-600 ${!canImportBranches ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             <Download className="h-4 w-4" />
                           </Button>
@@ -569,10 +783,11 @@ export default function Sources() {
                       </td>
                     </tr>
                   )
-                })}
+                }) : null}
               </tbody>
             </table>
           </div>
+          )}
         </CardContent>
       </Card>
 

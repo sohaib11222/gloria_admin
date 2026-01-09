@@ -37,7 +37,26 @@ export class HttpClient {
       })
 
       if (!response.ok) {
-        const error = new Error(`HTTP ${response.status}: ${response.statusText}`) as HttpError
+        // Try to extract error message from response body
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`
+        try {
+          const contentType = response.headers.get('content-type')
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json()
+            // Prefer user-friendly error message if available
+            errorMessage = errorData.error || errorData.message || errorMessage
+            // Store full error data for detailed error handling
+            const error = new Error(errorMessage) as HttpError & { data?: any }
+            error.status = response.status
+            error.statusText = response.statusText
+            error.data = errorData
+            throw error
+          }
+        } catch (parseError) {
+          // If parsing fails, continue with default error
+        }
+        
+        const error = new Error(errorMessage) as HttpError
         error.status = response.status
         error.statusText = response.statusText
         throw error

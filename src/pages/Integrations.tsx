@@ -141,7 +141,12 @@ export default function Integrations() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>API Keys</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>API Keys</CardTitle>
+              <Button variant="secondary" onClick={() => queryClient.invalidateQueries({ queryKey: ['api-keys'] })}>
+                Refresh
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {keysLoading ? (
@@ -238,8 +243,11 @@ export default function Integrations() {
                     </tbody>
                   </table>
                   {(apiKeys || []).length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      No API keys yet. Create one to get started.
+                    <div className="text-center py-12">
+                      <div className="text-gray-500 text-lg mb-2">No API keys yet</div>
+                      <div className="text-sm text-gray-400">
+                        Create one to get started
+                      </div>
                     </div>
                   )}
                 </div>
@@ -250,12 +258,19 @@ export default function Integrations() {
 
         <Card>
           <CardHeader>
-            <CardTitle>IP Whitelist</CardTitle>
-            <p className="text-sm text-gray-500 mt-1">Manage global IP whitelist entries by type</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>IP Whitelist</CardTitle>
+                <p className="text-sm text-gray-500 mt-1">Manage global IP whitelist entries by type</p>
+              </div>
+              <Button variant="secondary" onClick={() => queryClient.invalidateQueries({ queryKey: ['whitelist'] })}>
+                Refresh
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="col-span-1">
                   <label className="text-sm text-gray-700">Type</label>
                   <select
@@ -296,6 +311,14 @@ export default function Integrations() {
               </div>
               {wlLoading ? (
                 <Loader className="min-h-32" />
+              ) : !whitelist || whitelist.length === 0 ? (
+                <div className="text-center py-12">
+                  <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500 font-medium">No IPs in whitelist</p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Add IP addresses or domains above to get started
+                  </p>
+                </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">

@@ -6,6 +6,8 @@ import { Badge } from '../components/ui/Badge'
 import { Loader } from '../components/ui/Loader'
 import { Modal } from '../components/ui/Modal'
 import { Input } from '../components/ui/Input'
+import { Select } from '../components/ui/Select'
+import { ErrorDisplay } from '../components/ui/ErrorDisplay'
 import { companiesApi } from '../api/companies'
 import { agreementsApi } from '../api/agreements'
 import { formatDate } from '../lib/utils'
@@ -14,6 +16,8 @@ import toast from 'react-hot-toast'
 export default function Agents() {
   const [selectedAgent, setSelectedAgent] = useState<any>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED'>('ALL')
   const [form, setForm] = useState<{
     agreementRef: string
     sourceId: string
@@ -29,10 +33,23 @@ export default function Agents() {
 
   const queryClient = useQueryClient()
 
-  const { data: agents, isLoading } = useQuery({
+  const { data: agents, isLoading, error } = useQuery({
     queryKey: ['agents'],
     queryFn: () => companiesApi.listAgents(),
   })
+
+  const filteredAgents = React.useMemo(() => {
+    if (!agents?.data) return []
+    return agents.data.filter((agent) => {
+      const matchesSearch = !searchQuery || 
+        agent.companyName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        agent.email?.toLowerCase().includes(searchQuery.toLowerCase())
+      
+      const matchesStatus = statusFilter === 'ALL' || agent.status === statusFilter
+      
+      return matchesSearch && matchesStatus
+    })
+  }, [agents?.data, searchQuery, statusFilter])
 
   const { data: sources } = useQuery({
     queryKey: ['sources'],
@@ -124,10 +141,45 @@ export default function Agents() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Agent Companies</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Agent Companies</CardTitle>
+            <Button variant="secondary" onClick={() => queryClient.invalidateQueries({ queryKey: ['agents'] })}>
+              Refresh
+            </Button>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4 mt-4">
+            <div className="flex-1">
+              <Input
+                label="Search"
+                placeholder="Search by name or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <Select
+                label="Filter by Status"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as any)}
+                options={[
+                  { value: 'ALL', label: 'All Statuses' },
+                  { value: 'ACTIVE', label: 'Active' },
+                  { value: 'PENDING_VERIFICATION', label: 'Pending Verification' },
+                  { value: 'SUSPENDED', label: 'Suspended' },
+                ]}
+              />
+            </div>
+          </div>
+          {(searchQuery || statusFilter !== 'ALL') && (
+            <div className="mt-2 text-sm text-gray-600">
+              Showing {filteredAgents.length} of {agents?.data?.length || 0} agents
+            </div>
+          )}
         </CardHeader>
         <CardContent>
-          {agents?.data && agents.data.length > 0 ? (
+          {error ? (
+            <ErrorDisplay error={error} title="Failed to load agents" />
+          ) : filteredAgents.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -139,7 +191,7 @@ export default function Agents() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {agents.data.map((agent) => (
+                  {filteredAgents.map((agent) => (
                     <tr key={agent.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
@@ -169,7 +221,14 @@ export default function Agents() {
               </table>
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">No agents found</div>
+            <div className="text-center py-12">
+              <div className="text-gray-500 text-lg mb-2">No agents found</div>
+              {(searchQuery || statusFilter !== 'ALL') && (
+                <div className="text-sm text-gray-400">
+                  Try adjusting your filters or search query
+                </div>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>

@@ -1,10 +1,12 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Shield, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { Input } from '../components/ui/Input'
+import { Select } from '../components/ui/Select'
+import { ErrorDisplay } from '../components/ui/ErrorDisplay'
 import { Loader } from '../components/ui/Loader'
 import { whitelistApi, WhitelistEntry } from '../api/whitelist'
 import { formatDate } from '../lib/utils'
@@ -17,12 +19,26 @@ export default function IpWhitelist() {
   const [newIp, setNewIp] = useState('')
   const [ipType, setIpType] = useState<'agent' | 'source' | 'admin'>('source')
   const [ipError, setIpError] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [typeFilter, setTypeFilter] = useState<'ALL' | 'agent' | 'source' | 'admin'>('ALL')
   const queryClient = useQueryClient()
 
-  const { data: whitelist, isLoading, refetch } = useQuery({
+  const { data: whitelist, isLoading, error, refetch } = useQuery({
     queryKey: ['whitelist'],
     queryFn: () => whitelistApi.listWhitelist(),
   })
+
+  const filteredWhitelist = React.useMemo(() => {
+    if (!whitelist) return []
+    return whitelist.filter((entry) => {
+      const matchesSearch = !searchQuery || 
+        entry.ip?.toLowerCase().includes(searchQuery.toLowerCase())
+      
+      const matchesType = typeFilter === 'ALL' || entry.type === typeFilter
+      
+      return matchesSearch && matchesType
+    })
+  }, [whitelist, searchQuery, typeFilter])
 
   const addMutation = useMutation({
     mutationFn: (data: { ip: string; type: 'agent' | 'source' | 'admin'; enabled?: boolean }) =>
@@ -91,11 +107,14 @@ export default function IpWhitelist() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 placeholder="192.168.1.1, localhost, or *.example.com"
                 value={newIp}
-                onChange={(e) => setNewIp(e.target.value)}
+                onChange={(e) => {
+                  setNewIp(e.target.value)
+                  if (ipError) setIpError('')
+                }}
                 error={ipError}
                 className="flex-1"
                 onKeyPress={(e) => {
@@ -127,17 +146,63 @@ export default function IpWhitelist() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Whitelisted IPs and Domains</CardTitle>
-          <p className="text-sm text-gray-600 mt-1">
-            {whitelist?.length || 0} entry(s) configured
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Whitelisted IPs and Domains</CardTitle>
+              <p className="text-sm text-gray-600 mt-1">
+                {filteredWhitelist.length} of {whitelist?.length || 0} entry(s) shown
+              </p>
+            </div>
+            <Button variant="secondary" onClick={() => refetch()}>
+              Refresh
+            </Button>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4 mt-4">
+            <div className="flex-1">
+              <Input
+                label="Search"
+                placeholder="Search by IP or domain..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <Select
+                label="Filter by Type"
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value as any)}
+                options={[
+                  { value: 'ALL', label: 'All Types' },
+                  { value: 'source', label: 'Source' },
+                  { value: 'agent', label: 'Agent' },
+                  { value: 'admin', label: 'Admin' },
+                ]}
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex justify-center py-8">
               <Loader />
             </div>
-          ) : whitelist && whitelist.length > 0 ? (
+          ) : error ? (
+            <ErrorDisplay error={error} title="Failed to load whitelist" />
+          ) : filteredWhitelist.length === 0 ? (
+            <div className="text-center py-12">
+              <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 font-medium">No IPs found</p>
+              {(searchQuery || typeFilter !== 'ALL') ? (
+                <p className="text-sm text-gray-400 mt-1">
+                  Try adjusting your filters
+                </p>
+              ) : (
+                <p className="text-sm text-gray-400 mt-1">
+                  Add IP addresses or domains above to get started
+                </p>
+              )}
+            </div>
+          ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -160,7 +225,7 @@ export default function IpWhitelist() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {whitelist.map((entry) => (
+                  {filteredWhitelist.map((entry) => (
                     <tr key={entry.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="font-mono text-sm text-gray-900">{entry.ip}</span>
@@ -197,14 +262,6 @@ export default function IpWhitelist() {
                   ))}
                 </tbody>
               </table>
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 font-medium">No IPs in whitelist</p>
-              <p className="text-sm text-gray-400 mt-1">
-                Add IP addresses or domains above to get started
-              </p>
             </div>
           )}
         </CardContent>

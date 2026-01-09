@@ -1,14 +1,15 @@
 import React, { useState, useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
 import { Loader } from '../components/ui/Loader'
 import { Input } from '../components/ui/Input'
+import { Select } from '../components/ui/Select'
 import { logsApi } from '../api/logs'
 import http from '../lib/http'
 import { formatDate } from '../lib/utils'
-import { Filter } from 'lucide-react'
+import { Filter, RefreshCw, Search, X, Clock, CheckCircle, XCircle, AlertTriangle, Activity as ActivityIcon, Users, Server, Shield, Zap } from 'lucide-react'
 
 type ActivityType = 'all' | 'booking' | 'availability' | 'health' | 'admin'
 type ActivityActor = 'agent' | 'source' | 'admin' | 'system'
@@ -24,6 +25,7 @@ interface ActivityEntry {
 }
 
 export default function Activity() {
+  const queryClient = useQueryClient()
   const [selectedType, setSelectedType] = useState<ActivityType>('all')
   const [selectedActor, setSelectedActor] = useState<ActivityActor | 'all'>('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -211,88 +213,214 @@ export default function Activity() {
 
   const getActorBadge = (actor: ActivityActor) => {
     const badges = {
-      agent: { variant: 'info' as const, label: 'Agent' },
-      source: { variant: 'warning' as const, label: 'Source' },
-      admin: { variant: 'default' as const, label: 'Admin' },
-      system: { variant: 'default' as const, label: 'System' },
+      agent: { variant: 'info' as const, label: 'Agent', icon: Users },
+      source: { variant: 'warning' as const, label: 'Source', icon: Server },
+      admin: { variant: 'default' as const, label: 'Admin', icon: Shield },
+      system: { variant: 'default' as const, label: 'System', icon: Zap },
     }
-    return badges[actor] || { variant: 'default' as const, label: actor }
+    return badges[actor] || { variant: 'default' as const, label: actor, icon: ActivityIcon }
   }
 
   const getResultBadge = (result: ActivityEntry['result']) => {
     const badges = {
-      success: { variant: 'success' as const },
-      error: { variant: 'danger' as const },
-      warning: { variant: 'warning' as const },
+      success: { variant: 'success' as const, icon: CheckCircle },
+      error: { variant: 'danger' as const, icon: XCircle },
+      warning: { variant: 'warning' as const, icon: AlertTriangle },
     }
     return badges[result]
   }
 
+  // Calculate stats
+  const stats = useMemo(() => {
+    const total = filteredActivities.length
+    const success = filteredActivities.filter(a => a.result === 'success').length
+    const errors = filteredActivities.filter(a => a.result === 'error').length
+    const warnings = filteredActivities.filter(a => a.result === 'warning').length
+    
+    const byActor = {
+      agent: filteredActivities.filter(a => a.actor === 'agent').length,
+      source: filteredActivities.filter(a => a.actor === 'source').length,
+      admin: filteredActivities.filter(a => a.actor === 'admin').length,
+      system: filteredActivities.filter(a => a.actor === 'system').length,
+    }
+    
+    return { total, success, errors, warnings, byActor }
+  }, [filteredActivities])
+
+  const hasActiveFilters = selectedType !== 'all' || selectedActor !== 'all' || searchQuery
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Activity & Audit Log</h1>
-        <p className="mt-2 text-gray-600">
-          View all system activity and audit events
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Activity & Audit Log</h1>
+          <p className="mt-2 text-gray-600">
+            View all system activity and audit events in real-time
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg">
+            Auto-refresh: 30s
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <Card className="card-hover">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Events</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
+              </div>
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <ActivityIcon className="h-6 w-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="card-hover">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Success</p>
+                <p className="text-2xl font-bold text-green-600 mt-1">{stats.success}</p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-lg">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="card-hover">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Errors</p>
+                <p className="text-2xl font-bold text-red-600 mt-1">{stats.errors}</p>
+              </div>
+              <div className="p-3 bg-red-100 rounded-lg">
+                <XCircle className="h-6 w-6 text-red-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="card-hover">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Warnings</p>
+                <p className="text-2xl font-bold text-orange-600 mt-1">{stats.warnings}</p>
+              </div>
+              <div className="p-3 bg-orange-100 rounded-lg">
+                <AlertTriangle className="h-6 w-6 text-orange-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="card-hover">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Success Rate</p>
+                <p className="text-2xl font-bold text-indigo-600 mt-1">
+                  {stats.total > 0 ? Math.round((stats.success / stats.total) * 100) : 0}%
+                </p>
+              </div>
+              <div className="p-3 bg-indigo-100 rounded-lg">
+                <Zap className="h-6 w-6 text-indigo-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap items-center gap-4">
+        <CardHeader>
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Filter:</span>
+              <Filter className="h-5 w-5 text-gray-500" />
+              <CardTitle>Filters</CardTitle>
             </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Type:</span>
-              <select
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedType('all')
+                  setSelectedActor('all')
+                  setSearchQuery('')
+                }}
+              >
+                <X className="h-4 w-4 mr-1" />
+                Clear Filters
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Activity Type</label>
+              <Select
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value as ActivityType)}
-                className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="all">All</option>
-                <option value="booking">Booking</option>
-                <option value="availability">Availability</option>
-                <option value="health">Health</option>
-                <option value="admin">Admin</option>
-              </select>
+                options={[
+                  { value: 'all', label: 'All Types' },
+                  { value: 'booking', label: 'Booking' },
+                  { value: 'availability', label: 'Availability' },
+                  { value: 'health', label: 'Health' },
+                  { value: 'admin', label: 'Admin' },
+                ]}
+              />
             </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Actor:</span>
-              <select
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Actor</label>
+              <Select
                 value={selectedActor}
                 onChange={(e) => setSelectedActor(e.target.value as ActivityActor | 'all')}
-                className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="all">All</option>
-                <option value="agent">Agent</option>
-                <option value="source">Source</option>
-                <option value="admin">Admin</option>
-                <option value="system">System</option>
-              </select>
+                options={[
+                  { value: 'all', label: 'All Actors' },
+                  { value: 'agent', label: 'Agent' },
+                  { value: 'source', label: 'Source' },
+                  { value: 'admin', label: 'Admin' },
+                  { value: 'system', label: 'System' },
+                ]}
+              />
             </div>
-
-            <div className="flex-1 max-w-sm">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
               <Input
                 placeholder="Search actions or resources..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full"
+                icon={<Search className="w-4 h-4" />}
               />
             </div>
           </div>
+          {hasActiveFilters && (
+            <div className="mt-3 text-sm text-gray-600">
+              Showing {filteredActivities.length} of {finalActivities.length} entries
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Activities table */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <p className="text-sm text-gray-500 mt-1">{filteredActivities.length} entries</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Recent Activity</CardTitle>
+              <p className="text-sm text-gray-500 mt-1">{filteredActivities.length} entries</p>
+            </div>
+            <Button variant="secondary" onClick={() => queryClient.invalidateQueries({ queryKey: ['activity-logs'] })}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {logsLoading ? (
@@ -300,27 +428,33 @@ export default function Activity() {
               <Loader />
             </div>
           ) : filteredActivities.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              No activity found
+            <div className="text-center py-12">
+              <ActivityIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <div className="text-gray-500 text-lg mb-2">No activity found</div>
+              {hasActiveFilters && (
+                <div className="text-sm text-gray-400">
+                  Try adjusting your filters or search query
+                </div>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Time
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Actor
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Action
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Resource
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Result
                     </th>
                   </tr>
@@ -329,28 +463,39 @@ export default function Activity() {
                   {filteredActivities.map((activity) => {
                     const actorBadge = getActorBadge(activity.actor)
                     const resultBadge = getResultBadge(activity.result)
+                    const ResultIcon = resultBadge.icon
+                    const ActorIcon = actorBadge.icon
                     
                     return (
-                      <tr key={activity.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDate(activity.timestamp)}
+                      <tr key={activity.id} className="hover:bg-blue-50/50 transition-colors duration-150">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-gray-400" />
+                            <span className="text-sm text-gray-600">{formatDate(activity.timestamp)}</span>
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge variant={actorBadge.variant} size="sm">
+                          <Badge variant={actorBadge.variant} size="sm" className="flex items-center gap-1 w-fit">
+                            <ActorIcon className="h-3 w-3" />
                             {actorBadge.label}
                           </Badge>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-gray-900">{activity.action}</div>
+                          <div className="text-sm font-semibold text-gray-900">{activity.action}</div>
                           {activity.details && (
-                            <div className="text-xs text-gray-500 mt-1">{activity.details}</div>
+                            <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                              <span>{activity.details}</span>
+                            </div>
                           )}
                         </td>
                         <td className="px-6 py-4">
-                          <code className="text-sm text-gray-600">{activity.resource}</code>
+                          <code className="text-sm text-gray-700 bg-gray-50 px-2 py-1 rounded font-mono">
+                            {activity.resource}
+                          </code>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge variant={resultBadge.variant} size="sm">
+                          <Badge variant={resultBadge.variant} size="sm" className="flex items-center gap-1 w-fit">
+                            <ResultIcon className="h-3 w-3" />
                             {activity.result}
                           </Badge>
                         </td>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { X, Bell, Check } from 'lucide-react'
 import http from '../lib/http'
@@ -108,7 +109,7 @@ export const NotificationsDrawer: React.FC<{ isOpen: boolean; onClose: () => voi
 
   if (!isOpen) return null
 
-  return (
+  const drawerContent = (
     <>
       {/* Backdrop */}
       <div className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={onClose} />
@@ -203,5 +204,7 @@ export const NotificationsDrawer: React.FC<{ isOpen: boolean; onClose: () => voi
       </div>
     </>
   )
+
+  return createPortal(drawerContent, document.body)
 }
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import http from '../../lib/http';
 import SdkGuide from './SdkGuide';
+import toast from 'react-hot-toast';
 import './docs.css';
 
 type DocCodeSample = {
@@ -45,15 +46,27 @@ const DocsLayout: React.FC = () => {
 
   useEffect(() => {
     // admin gets full docs
-    http.get('/docs').then((res) => {
-      setCategories(res.data);
-      const firstCat = res.data[0];
-      if (firstCat && firstCat.endpoints && firstCat.endpoints[0]) {
-        setSelectedEndpoint(firstCat.endpoints[0]);
-      }
-    }).catch((err) => {
-      console.error('Failed to load docs:', err);
-    });
+    http.get('/docs')
+      .then((res) => {
+        if (res && res.data && Array.isArray(res.data)) {
+          setCategories(res.data);
+          const firstCat = res.data[0];
+          if (firstCat && firstCat.endpoints && firstCat.endpoints.length > 0) {
+            setSelectedEndpoint(firstCat.endpoints[0]);
+            setActiveCode(firstCat.endpoints[0].codeSamples?.[0]?.lang ?? 'curl');
+          }
+        } else {
+          console.error('Invalid docs response format:', res);
+          setCategories([]);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load docs:', err);
+        // Show user-friendly error
+        const errorMessage = err.response?.data?.message || err.message || 'Failed to load API documentation';
+        toast.error(errorMessage);
+        setCategories([]);
+      });
   }, []);
 
   return (
@@ -305,7 +318,12 @@ const DocsLayout: React.FC = () => {
             </section>
           </>
         )}
-        {!showSdkGuide && !selectedEndpoint && (
+        {!showSdkGuide && !selectedEndpoint && categories.length === 0 && (
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
+            <p>Loading API documentation...</p>
+          </div>
+        )}
+        {!showSdkGuide && !selectedEndpoint && categories.length > 0 && (
           <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
             <p>Select an endpoint from the sidebar to view documentation</p>
           </div>

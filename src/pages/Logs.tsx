@@ -73,14 +73,22 @@ export default function Logs() {
           <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="text-sm text-gray-700">Request ID</label>
-              <input className="mt-1 w-full border rounded px-3 py-2 text-sm" value={requestId} onChange={(e) => setRequestId(e.target.value)} placeholder="req_..." />
+              <Input
+                label="Request ID"
+                placeholder="req_..."
+                value={requestId}
+                onChange={(e) => setRequestId(e.target.value)}
+              />
             </div>
             <div>
-              <label className="text-sm text-gray-700">Company ID</label>
-              <input className="mt-1 w-full border rounded px-3 py-2 text-sm" value={companyId} onChange={(e) => setCompanyId(e.target.value)} placeholder="company id" />
+              <Input
+                label="Company ID"
+                placeholder="company id"
+                value={companyId}
+                onChange={(e) => setCompanyId(e.target.value)}
+              />
             </div>
             <div>
               <Select
@@ -91,9 +99,14 @@ export default function Logs() {
               />
             </div>
             <div className="flex items-end">
-              <Button onClick={() => refetch()} loading={isFetching} className="w-full">Apply</Button>
+              <Button onClick={() => refetch()} loading={isFetching} className="w-full">Apply Filters</Button>
             </div>
           </div>
+          {(requestId || companyId || endpoint) && (
+            <div className="mt-3 text-sm text-gray-600">
+              Filters applied. Click "Apply Filters" to refresh results.
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -249,3 +262,4 @@ export default function Logs() {
     </div>
   )
 }
+

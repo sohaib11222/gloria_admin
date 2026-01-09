@@ -1,15 +1,19 @@
 import React, { useMemo, useState } from 'react'
+import { Input } from '../components/ui/Input'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Select } from '../components/ui/Select'
 import { Loader } from '../components/ui/Loader'
+import { Badge } from '../components/ui/Badge'
 import { locationsApi } from '../api/locations'
 import { agreementsApi } from '../api/agreements'
 
 export default function Locations() {
   const [tab, setTab] = useState<'all' | 'byAgreement' | 'bySource'>('all')
   const [agreementId, setAgreementId] = useState<string>('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [countryFilter, setCountryFilter] = useState<string>('')
 
   const { data: agreements } = useQuery({
     queryKey: ['agreements'],
@@ -35,35 +39,149 @@ export default function Locations() {
 
   const isLoading = tab === 'all' ? allLoading : tab === 'byAgreement' ? byAgreementLoading : bySourceLoading
 
+  // Get unique countries for filter
+  const countries = React.useMemo(() => {
+    if (tab !== 'all' || !allLocations) return []
+    const locations = allLocations?.items ?? allLocations?.data ?? []
+    const uniqueCountries = Array.from(new Set(locations.map((loc: any) => loc.country).filter(Boolean)))
+    return uniqueCountries.sort()
+  }, [allLocations, tab])
+
+  // Filter locations
+  const filteredAllLocations = React.useMemo(() => {
+    if (tab !== 'all' || !allLocations) return []
+    const locations = allLocations?.items ?? allLocations?.data ?? []
+    return locations.filter((loc: any) => {
+      const matchesSearch = !searchQuery || 
+        loc.unlocode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        loc.place?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        loc.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        loc.iata_code?.toLowerCase().includes(searchQuery.toLowerCase())
+      
+      const matchesCountry = !countryFilter || loc.country === countryFilter
+      
+      return matchesSearch && matchesCountry
+    })
+  }, [allLocations, tab, searchQuery, countryFilter])
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Locations</h1>
-        <p className="mt-2 text-gray-600">
-          Manage supported locations and UN/LOCODE data
-        </p>
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-sm">
+            <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              Locations
+            </h1>
+            <p className="mt-2 text-gray-600 font-medium">Manage supported locations and UN/LOCODE data</p>
+          </div>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Location Management</CardTitle>
+      <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100">
+        <CardHeader className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white rounded-lg shadow-sm">
+              <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+            </div>
+            <div>
+              <CardTitle className="text-xl font-bold text-gray-900">Location Management</CardTitle>
+              <p className="text-sm text-gray-600 mt-1">Browse and filter locations by different criteria</p>
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
-          <div className="mb-4 flex items-center space-x-3">
-            <Button variant={tab === 'all' ? 'primary' : 'secondary'} size="sm" onClick={() => setTab('all')}>All LOCODE</Button>
-            <Button variant={tab === 'byAgreement' ? 'primary' : 'secondary'} size="sm" onClick={() => setTab('byAgreement')}>By Agreement</Button>
-            <Button variant={tab === 'bySource' ? 'primary' : 'secondary'} size="sm" onClick={() => setTab('bySource')}>By Source</Button>
-            {tab === 'byAgreement' && (
-              <div className="ml-4 w-72">
-                <Select
-                  label="Agreement"
-                  value={agreementId}
-                  onChange={(e) => setAgreementId(e.target.value)}
-                  options={[{ value: '', label: 'Select agreement' }].concat(
-                    (agreements?.data ?? []).map((a) => ({ value: a.id, label: `${a.agreementRef} (${a.status})` }))
-                  )}
-                />
-              </div>
+        <CardContent className="pt-6">
+          <div className="mb-6 space-y-4">
+            {/* Tab Buttons */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <Button 
+                variant={tab === 'all' ? 'primary' : 'secondary'} 
+                size="sm" 
+                onClick={() => setTab('all')}
+                className={tab === 'all' ? 'shadow-md' : ''}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                All LOCODE
+              </Button>
+              <Button 
+                variant={tab === 'byAgreement' ? 'primary' : 'secondary'} 
+                size="sm" 
+                onClick={() => setTab('byAgreement')}
+                className={tab === 'byAgreement' ? 'shadow-md' : ''}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                By Agreement
+              </Button>
+              <Button 
+                variant={tab === 'bySource' ? 'primary' : 'secondary'} 
+                size="sm" 
+                onClick={() => setTab('bySource')}
+                className={tab === 'bySource' ? 'shadow-md' : ''}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                By Source
+              </Button>
+              {tab === 'byAgreement' && (
+                <div className="w-72">
+                  <Select
+                    label="Agreement"
+                    value={agreementId}
+                    onChange={(e) => setAgreementId(e.target.value)}
+                    options={[{ value: '', label: 'Select agreement' }].concat(
+                      (agreements?.data ?? []).map((a) => ({ value: a.id, label: `${a.agreementRef} (${a.status})` }))
+                    )}
+                  />
+                </div>
+              )}
+            </div>
+            {tab === 'all' && (
+              <>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <Input
+                      label="Search"
+                      placeholder="Search by UN/LOCODE, name, or IATA code..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <Select
+                      label="Filter by Country"
+                      value={countryFilter}
+                      onChange={(e) => setCountryFilter(e.target.value)}
+                      options={[
+                        { value: '', label: 'All Countries' },
+                        ...countries.map((country) => ({ value: country, label: country })),
+                      ]}
+                    />
+                  </div>
+                </div>
+                {(searchQuery || countryFilter) && (
+                  <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    <span className="text-sm font-semibold text-blue-900">
+                      Showing {filteredAllLocations.length} of {(allLocations?.items ?? allLocations?.data ?? []).length} locations
+                    </span>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -73,26 +191,63 @@ export default function Locations() {
             <>
               {tab === 'all' && (
                 <div>
-                  {((allLocations?.items ?? allLocations?.data ?? []).length === 0) ? (
-                    <div className="text-center py-8 text-gray-500">No locations found</div>
+                  {filteredAllLocations.length === 0 ? (
+                    <div className="text-center py-16">
+                      <div className="mx-auto w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
+                        <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No locations found</h3>
+                      {(searchQuery || countryFilter) && (
+                        <p className="text-sm text-gray-500 mb-4">
+                          Try adjusting your filters or search query
+                        </p>
+                      )}
+                      {(searchQuery || countryFilter) && (
+                        <Button 
+                          variant="secondary" 
+                          size="sm"
+                          onClick={() => {
+                            setSearchQuery('')
+                            setCountryFilter('')
+                          }}
+                        >
+                          Clear Filters
+                        </Button>
+                      )}
+                    </div>
                   ) : (
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto rounded-lg border border-gray-200">
                       <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UN/LOCODE</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Country</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IATA Code</th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">UN/LOCODE</th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Country</th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">IATA Code</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {(allLocations?.items ?? allLocations?.data ?? []).map((loc: any) => (
-                            <tr key={loc.unlocode}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{loc.unlocode}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{loc.place || loc.name || '—'}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{loc.country}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{loc.iata_code || '—'}</td>
+                          {filteredAllLocations.map((loc: any, index: number) => (
+                            <tr key={loc.unlocode} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <code className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-mono font-semibold">{loc.unlocode}</code>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-semibold text-gray-900">{loc.place || loc.name || '—'}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <Badge variant="info" size="sm">{loc.country}</Badge>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                {loc.iata_code ? (
+                                  <Badge variant="success" size="sm">{loc.iata_code}</Badge>
+                                ) : (
+                                  <span className="text-xs text-gray-400">—</span>
+                                )}
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -105,52 +260,101 @@ export default function Locations() {
               {tab === 'byAgreement' && (
                 <div>
                   {(byAgreementLocations?.inherited) && (
-                    <div className="mb-3 text-xs inline-flex px-2 py-1 rounded-full bg-gray-100 text-gray-700">from global</div>
+                    <div className="mb-4 p-3 bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 border-l-4 border-amber-400 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-sm font-semibold text-amber-900">Locations inherited from global coverage</span>
+                      </div>
+                    </div>
                   )}
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">UN/LOCODE</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {(byAgreementLocations?.items ?? []).map((loc: any) => (
-                          <tr key={loc.unlocode}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{loc.unlocode}</td>
+                  {(byAgreementLocations?.items ?? []).length === 0 ? (
+                    <div className="text-center py-16">
+                      <div className="mx-auto w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
+                        <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No locations found</h3>
+                      <p className="text-sm text-gray-500">This agreement has no specific locations assigned</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto rounded-lg border border-gray-200">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                          <tr>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">UN/LOCODE</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {(byAgreementLocations?.items ?? []).length === 0 && (
-                      <div className="text-center py-8 text-gray-500">No locations found</div>
-                    )}
-                  </div>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {(byAgreementLocations?.items ?? []).map((loc: any, index: number) => (
+                            <tr key={loc.unlocode} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <code className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-mono font-semibold">{loc.unlocode}</code>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               )}
 
               {tab === 'bySource' && (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Locations</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {(sourceCounts?.items ?? []).map((s: any) => (
-                        <tr key={s.sourceId}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{s.companyName}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{s.status}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{s.locations}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {(sourceCounts?.items ?? []).length === 0 && (
-                    <div className="text-center py-8 text-gray-500">No data</div>
+                <div>
+                  {(sourceCounts?.items ?? []).length === 0 ? (
+                    <div className="text-center py-16">
+                      <div className="mx-auto w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
+                        <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No source data available</h3>
+                      <p className="text-sm text-gray-500">No location counts found for sources</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto rounded-lg border border-gray-200">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                          <tr>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Source</th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Locations</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {(sourceCounts?.items ?? []).map((s: any, index: number) => (
+                            <tr key={s.sourceId} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="text-sm font-semibold text-gray-900">{s.companyName}</div>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <Badge 
+                                  variant={
+                                    s.status === 'ACTIVE' ? 'success' : 
+                                    s.status === 'PENDING_VERIFICATION' ? 'warning' : 
+                                    'default'
+                                  }
+                                  size="sm"
+                                >
+                                  {s.status}
+                                </Badge>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <div className="flex items-center gap-2">
+                                  <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                                    {s.locations}
+                                  </div>
+                                  <span className="text-xs text-gray-500">locations</span>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   )}
                 </div>
               )}

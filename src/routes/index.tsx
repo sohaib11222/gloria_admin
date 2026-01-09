@@ -36,6 +36,7 @@ import AgreementsPage from '../pages/AgreementsPage'
 import RegistrationPage from '../pages/RegistrationPage'
 import ConnectivityPage from '../pages/ConnectivityPage'
 import AgentPage from '../pages/AgentPage'
+import NotFound from '../pages/NotFound'
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -260,6 +261,8 @@ export const AppRoutes: React.FC = () => {
             </RequireAgreement>
           }
         />
+        {/* 404 for protected routes */}
+        <Route path="*" element={<NotFound />} />
       </Route>
 
       {/* Fullscreen docs route (no sidebar) */}
@@ -290,7 +293,8 @@ export const AppRoutes: React.FC = () => {
         <Route path="settings" element={<Settings />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* 404 - Not Found Page */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   )
 }

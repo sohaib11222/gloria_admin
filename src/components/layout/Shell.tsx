@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation, Link } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { SearchPalette } from '../SearchPalette'
@@ -28,7 +28,7 @@ export const Shell: React.FC = () => {
 
   return (
     <>
-      <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="flex h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-100">
         {/* Mobile menu button */}
         <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
           <div className="px-4 py-3 flex items-center justify-between">
@@ -48,14 +48,18 @@ export const Shell: React.FC = () => {
           {/* Mobile topbar spacing */}
           <div className="lg:hidden h-16"></div>
           <Topbar />
-          <div className="bg-white border-b border-gray-200 shadow-sm">
+          <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm">
             <div className="max-w-7xl mx-auto px-6 py-3 text-sm text-gray-600">
               <nav className="flex items-center space-x-1">
-                <span className="text-gray-500">Home</span>
-                {location.pathname.split('/').filter(Boolean).map((seg, idx) => (
-                  <span key={idx}>
+                <Link to="/dashboard" className="text-gray-500 hover:text-blue-600 transition-colors">
+                  Home
+                </Link>
+                {location.pathname.split('/').filter(Boolean).map((seg, idx, arr) => (
+                  <span key={idx} className="flex items-center">
                     <span className="mx-2 text-gray-300">/</span>
-                    <span className="capitalize text-gray-900 font-medium">{seg.replace(/-/g, ' ')}</span>
+                    <span className="capitalize text-gray-900 font-medium hover:text-blue-600 transition-colors">
+                      {seg.replace(/-/g, ' ')}
+                    </span>
                   </span>
                 ))}
               </nav>

@@ -2,13 +2,21 @@
   display: flex;
   height: 100%;
   background: #f9fafb;
+  min-height: calc(100vh - 8rem);
 }
+
 .docs-sidebar {
-  width: 280px;
+  width: 320px;
+  min-width: 280px;
   border-right: 1px solid #e5e7eb;
   overflow-y: auto;
+  overflow-x: hidden;
   background: #fff;
-  padding: 1rem;
+  padding: 1.5rem;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+  position: sticky;
+  top: 0;
+  max-height: calc(100vh - 8rem);
 }
 .docs-cat {
   margin-bottom: 1rem;
@@ -26,17 +34,23 @@
   width: 100%;
   border: none;
   background: transparent;
-  padding: 0.35rem 0.25rem;
+  padding: 0.5rem 0.75rem;
   text-align: left;
-  border-radius: 0.4rem;
+  border-radius: 0.5rem;
   cursor: pointer;
   align-items: center;
+  transition: all 0.2s ease;
+  margin-bottom: 0.25rem;
 }
 .docs-endpoint-btn:hover {
   background: #f3f4f6;
+  transform: translateX(2px);
 }
 .docs-endpoint-btn.active {
-  background: #eff6ff;
+  background: linear-gradient(to right, #eff6ff, #dbeafe);
+  border-left: 3px solid #3b82f6;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.1);
 }
 .docs-endpoint-btn .method {
   font-size: 0.6rem;
@@ -54,9 +68,12 @@
 }
 .docs-main {
   flex: 1;
-  padding: 1.5rem 2rem;
+  padding: 2rem 3rem;
   overflow-y: auto;
-  max-width: 900px;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #fff;
+  min-height: calc(100vh - 8rem);
 }
 .docs-main h1 {
   font-size: 1.875rem;
@@ -104,22 +121,32 @@
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 th, td {
   border-bottom: 1px solid #e5e7eb;
-  padding: 0.5rem 0.75rem;
+  padding: 0.75rem 1rem;
   font-size: 0.875rem;
   text-align: left;
 }
 th {
-  background: #f9fafb;
+  background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
   font-weight: 600;
   color: #374151;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+tbody tr {
+  transition: background-color 0.15s ease;
+}
+tbody tr:hover {
+  background-color: #f9fafb;
 }
 tr:last-child td {
   border-bottom: none;
@@ -149,13 +176,30 @@ tr:last-child td {
 .code-block {
   background: #1f2937;
   color: #f9fafb;
-  padding: 1rem 1.25rem;
-  border-radius: 0.5rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 0.75rem;
   font-size: 0.875rem;
   white-space: pre-wrap;
   overflow-x: auto;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  line-height: 1.5;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  line-height: 1.6;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #374151;
+  position: relative;
+}
+.code-block::-webkit-scrollbar {
+  height: 8px;
+}
+.code-block::-webkit-scrollbar-track {
+  background: #111827;
+  border-radius: 4px;
+}
+.code-block::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+.code-block::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }
 .try-box {
   display: flex;
