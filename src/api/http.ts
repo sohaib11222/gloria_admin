@@ -7,7 +7,9 @@ export interface HttpOptions extends RequestInit {
   baseURL?: string
 }
 
-const DEFAULT_BASE_URL = (import.meta as any).env?.VITE_MW_URL || 'http://localhost:8080'
+import { API_BASE_URL } from '../lib/apiConfig'
+
+const DEFAULT_BASE_URL = API_BASE_URL
 
 export class HttpClient {
   private baseURL: string

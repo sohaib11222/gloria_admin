@@ -34,7 +34,7 @@ const initialState: AppState = {
   role: 'admin',
   addresses: {},
   features: {},
-  agreementsAccepted: false,
+  agreementsAccepted: true, // Default to true - terms acceptance no longer required
 }
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -55,7 +55,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'HYDRATE_FROM_LOCAL':
       try {
         const addr = JSON.parse(localStorage.getItem('addresses') || '{}')
-        const acc = localStorage.getItem('agreements.accepted') === 'true'
+        // Terms acceptance no longer required - always set to true
+        const acc = true
         
         // Check for existing authentication
         const existingToken = localStorage.getItem('token')

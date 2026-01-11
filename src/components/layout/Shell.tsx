@@ -32,7 +32,7 @@ export const Shell: React.FC = () => {
         {/* Mobile menu button */}
         <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
           <div className="px-4 py-3 flex items-center justify-between">
-            <h1 className="text-lg font-bold text-gray-900">Car Hire Middleware</h1>
+            <h1 className="text-lg font-bold text-gray-900">Gloria Connect</h1>
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"

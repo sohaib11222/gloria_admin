@@ -113,7 +113,7 @@ export default function Changelog() {
                 <Badge variant="success">Released</Badge>
               </div>
               <p className="text-gray-700 mb-4">
-                Car Hire Middleware is production-ready for availability and booking flows with full admin oversight.
+                Gloria Connect is production-ready for availability and booking flows with full admin oversight.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex items-center gap-2">

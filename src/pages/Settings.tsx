@@ -20,7 +20,7 @@ export default function Settings() {
     user: '',
     password: '',
     fromEmail: 'no-reply@carhire.local',
-    fromName: 'Car Hire Middleware',
+    fromName: 'Gloria Connect',
     enabled: true,
   })
   const queryClient = useQueryClient()
@@ -45,7 +45,7 @@ export default function Settings() {
         user: smtpData.config.user,
         password: '', // Don't populate password
         fromEmail: smtpData.config.fromEmail,
-        fromName: smtpData.config.fromName || 'Car Hire Middleware',
+        fromName: smtpData.config.fromName || 'Gloria Connect',
         enabled: smtpData.config.enabled,
       })
     }
@@ -111,7 +111,7 @@ export default function Settings() {
         user: '',
         password: '',
         fromEmail: 'no-reply@carhire.local',
-        fromName: 'Car Hire Middleware',
+        fromName: 'Gloria Connect',
         enabled: true,
       })
       toast.success('SMTP configuration deleted. System will use environment variables.')
@@ -180,7 +180,11 @@ export default function Settings() {
               <div>
                 <p className="font-medium">API Base URL</p>
                 <code className="text-sm bg-gray-100 px-2 py-1 rounded">
-                  {import.meta.env.VITE_MIDDLEWARE_URL || 'http://localhost:8080'}
+                  {(() => {
+                    if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL
+                    if (import.meta.env.PROD) return 'Same Origin (Production)'
+                    return 'http://localhost:8080'
+                  })()}
                 </code>
               </div>
               <div>
@@ -412,7 +416,7 @@ export default function Settings() {
                     </label>
                     <Input
                       type="text"
-                      placeholder="Car Hire Middleware"
+                      placeholder="Gloria Connect"
                       value={smtpForm.fromName}
                       onChange={(e) => setSmtpForm({ ...smtpForm, fromName: e.target.value })}
                     />

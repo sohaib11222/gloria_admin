@@ -1,4 +1,20 @@
-const DEFAULT_BASE_URL = import.meta.env?.VITE_MW_URL || 'http://localhost:8080'
+// Get API base URL with the same logic as TypeScript version
+function getApiBaseUrl() {
+  // If explicitly set, use that
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL
+  }
+  
+  // In production, use relative path (works with reverse proxy)
+  if (import.meta.env.PROD) {
+    return ''
+  }
+  
+  // Development: use localhost
+  return 'http://localhost:8080'
+}
+
+const DEFAULT_BASE_URL = getApiBaseUrl()
 
 export class HttpClient {
   constructor(baseURL = DEFAULT_BASE_URL) {

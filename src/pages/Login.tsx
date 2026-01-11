@@ -78,7 +78,7 @@ export default function Login() {
             </div>
           </div>
           <h2 className="text-4xl font-extrabold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent mb-2">
-            Car Hire Admin
+            Gloria Connect Admin
           </h2>
           <p className="mt-2 text-base text-gray-600 font-medium">
             Sign in to your admin account
@@ -144,7 +144,7 @@ export default function Login() {
             </p>
           </div>
           <p className="text-xs text-gray-500 font-medium tracking-wide">
-            Car Hire – Admin Portal
+            Gloria Connect – Admin Portal
           </p>
         </div>
       </div>

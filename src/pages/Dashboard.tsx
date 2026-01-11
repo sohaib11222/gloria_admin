@@ -137,7 +137,7 @@ export default function Dashboard() {
                 Dashboard
               </h1>
               <p className="mt-2 text-gray-600 font-medium">
-                Overview of your Car Hire Middleware system
+                Overview of your Gloria Connect system
               </p>
             </div>
           </div>
@@ -164,7 +164,7 @@ export default function Dashboard() {
                 Dashboard
               </h1>
               <p className="mt-2 text-gray-600 font-medium">
-                Overview of your Car Hire Middleware system
+                Overview of your Gloria Connect system
               </p>
             </div>
           </div>

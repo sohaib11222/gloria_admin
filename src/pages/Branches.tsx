@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Search, MapPin, Edit, Trash2, Filter, X, RefreshCw, Building2, TrendingUp, AlertCircle, Database, Eye } from 'lucide-react'
+import { Search, MapPin, Edit, Trash2, Filter, X, RefreshCw, Building2, TrendingUp, AlertCircle, Database, Eye, Download } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -12,6 +12,7 @@ import { ErrorDisplay } from '../components/ui/ErrorDisplay'
 import { BranchEditModal } from '../components/BranchEditModal'
 import { branchesApi, Branch, BranchStats } from '../api/branches'
 import { companiesApi } from '../api/companies'
+import { branchImportApi } from '../api/whitelist'
 import toast from 'react-hot-toast'
 import { formatDate } from '../lib/utils'
 
@@ -28,6 +29,7 @@ export default function Branches() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isImportSourceModalOpen, setIsImportSourceModalOpen] = useState(false)
   const [showStats, setShowStats] = useState(true)
 
   const queryClient = useQueryClient()
@@ -72,6 +74,86 @@ export default function Branches() {
       toast.error(error.response?.data?.message || 'Failed to delete branch')
     },
   })
+
+  // Import branches mutation
+  const importBranchesMutation = useMutation({
+    mutationFn: (sourceId: string) => branchImportApi.importBranches(sourceId),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['branches'] })
+      queryClient.invalidateQueries({ queryKey: ['branchStats'] })
+      toast.success(
+        `Branches imported successfully: ${data.imported} new, ${data.updated} updated, ${data.total} total`,
+        { duration: 5000 }
+      )
+    },
+    onError: (error: any) => {
+      const errorData = error.response?.data
+      const errorCode = errorData?.error
+      const errorMessage = errorData?.message || 'Failed to import branches'
+      
+      // Handle specific error codes with helpful messages
+      let userMessage = errorMessage
+      if (errorCode === 'NOT_APPROVED') {
+        userMessage = 'Source must be approved before importing branches. Please approve the source first.'
+      } else if (errorCode === 'EMAIL_NOT_VERIFIED') {
+        userMessage = 'Source email must be verified before importing branches.'
+      } else if (errorCode === 'HTTP_ENDPOINT_NOT_CONFIGURED') {
+        userMessage = 'Source HTTP endpoint must be configured before importing branches.'
+      } else if (errorCode === 'COMPANY_CODE_MISSING') {
+        userMessage = 'Source company code is missing. Please verify the source registration.'
+      }
+      
+      toast.error(userMessage)
+    },
+  })
+
+  const handleImportBranches = () => {
+    // If source is already selected, import directly
+    if (filters.sourceId) {
+      const selectedSource = sources.find((s: any) => s.id === filters.sourceId)
+      if (!selectedSource) {
+        toast.error('Selected source not found')
+        return
+      }
+
+      // Check prerequisites
+      if (selectedSource.status !== 'ACTIVE') {
+        toast.error('Source must be ACTIVE to import branches')
+        return
+      }
+      if (selectedSource.approvalStatus !== 'APPROVED') {
+        toast.error('Source must be APPROVED to import branches')
+        return
+      }
+
+      importBranchesMutation.mutate(filters.sourceId)
+      return
+    }
+
+    // If no source selected, show modal to select one
+    const eligibleSources = sources.filter((s: any) => 
+      s.status === 'ACTIVE' && s.approvalStatus === 'APPROVED'
+    )
+
+    if (eligibleSources.length === 0) {
+      toast.error('No eligible sources found. Sources must be ACTIVE and APPROVED to import branches.')
+      return
+    }
+
+    // If only one eligible source, use it directly
+    if (eligibleSources.length === 1) {
+      importBranchesMutation.mutate(eligibleSources[0].id)
+      return
+    }
+
+    // Multiple sources - show modal
+    setIsImportSourceModalOpen(true)
+  }
+
+  const handleImportFromSource = (sourceId: string) => {
+    setIsImportSourceModalOpen(false)
+    importBranchesMutation.mutate(sourceId)
+  }
 
   const handleDelete = () => {
     if (selectedBranch) {
@@ -271,14 +353,26 @@ export default function Branches() {
                 Branches ({branchesData?.total ?? 0})
               </CardTitle>
             </div>
-            <Button 
-              variant="secondary" 
-              onClick={() => queryClient.invalidateQueries({ queryKey: ['branches'] })}
-              className="bg-white hover:bg-gray-50 border border-gray-200 shadow-sm"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="primary" 
+                onClick={handleImportBranches}
+                loading={importBranchesMutation.isPending}
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                title={filters.sourceId ? "Import branches from the selected source's supplier endpoint" : "Import branches from available sources"}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Import Branches
+              </Button>
+              <Button 
+                variant="secondary" 
+                onClick={() => queryClient.invalidateQueries({ queryKey: ['branches'] })}
+                className="bg-white hover:bg-gray-50 border border-gray-200 shadow-sm"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="pt-6">
@@ -611,6 +705,63 @@ export default function Branches() {
               className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg"
             >
               Delete Branch
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Import Source Selection Modal */}
+      <Modal
+        isOpen={isImportSourceModalOpen}
+        onClose={() => setIsImportSourceModalOpen(false)}
+        title="Select Source to Import Branches"
+      >
+        <div className="space-y-4">
+          <p className="text-gray-600">
+            Select a source to import branches from its supplier endpoint. Only active and approved sources are shown.
+          </p>
+          
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {sources
+              .filter((s: any) => s.status === 'ACTIVE' && s.approvalStatus === 'APPROVED')
+              .map((source: any) => (
+                <button
+                  key={source.id}
+                  onClick={() => handleImportFromSource(source.id)}
+                  className="w-full text-left p-4 border border-gray-200 rounded-lg hover:border-indigo-500 hover:bg-indigo-50 transition-all duration-200 group"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold text-gray-900 group-hover:text-indigo-700">
+                        {source.companyName}
+                      </div>
+                      {source.companyCode && (
+                        <div className="text-sm text-gray-500 mt-1">
+                          Code: {source.companyCode}
+                        </div>
+                      )}
+                    </div>
+                    <Download className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 transition-colors" />
+                  </div>
+                </button>
+              ))}
+          </div>
+
+          {sources.filter((s: any) => s.status === 'ACTIVE' && s.approvalStatus === 'APPROVED').length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <AlertCircle className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+              <p>No eligible sources found.</p>
+              <p className="text-sm mt-1">Sources must be ACTIVE and APPROVED to import branches.</p>
+            </div>
+          )}
+
+          <div className="flex justify-end pt-4 border-t border-gray-200">
+            <Button
+              variant="secondary"
+              onClick={() => setIsImportSourceModalOpen(false)}
+              className="bg-white hover:bg-gray-50 border border-gray-200"
+            >
+              Cancel
             </Button>
           </div>
         </div>

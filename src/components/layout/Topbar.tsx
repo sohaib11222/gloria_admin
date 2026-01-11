@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useAtom } from 'jotai'
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { LogOut, Bell, Search } from 'lucide-react'
 import { userAtom, logoutAtom } from '../../store/auth'
 import { Button } from '../ui/Button'
@@ -10,6 +11,7 @@ import { useSearch } from '../../contexts/SearchContext'
 import http from '../../lib/http'
 
 export const Topbar: React.FC = () => {
+  const navigate = useNavigate()
   const [user] = useAtom(userAtom)
   const [, logout] = useAtom(logoutAtom)
   const [showNotifications, setShowNotifications] = useState(false)
@@ -36,7 +38,13 @@ export const Topbar: React.FC = () => {
   const unreadCount = notificationsData?.length || 0
 
   const handleLogout = () => {
+    // Clear all authentication data
     logout()
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('notifiedAgreements')
+    
+    // Navigate to login page
+    navigate('/login', { replace: true })
   }
 
   return (
@@ -44,7 +52,11 @@ export const Topbar: React.FC = () => {
       <div className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm">
         <div className="flex items-center space-x-4">
           <Badge variant="info" size="sm" className="font-mono text-xs">
-            {import.meta.env.VITE_MIDDLEWARE_URL || 'http://localhost:8080'}
+            {(() => {
+              if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL
+              if (import.meta.env.PROD) return 'Same Origin (Production)'
+              return 'http://localhost:8080'
+            })()}
           </Badge>
           <button
             onClick={openSearch}

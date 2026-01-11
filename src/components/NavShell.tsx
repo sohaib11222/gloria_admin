@@ -29,10 +29,7 @@ export const NavShell: React.FC = () => {
     { path: '/registration', label: 'Registration', icon: '📝' },
   ]
 
-  // Add agreements tab if not accepted
-  if (!state.agreementsAccepted) {
-    navItems.unshift({ path: '/agreements', label: 'Agreements', icon: '📋' })
-  }
+  // Agreements tab removed - terms acceptance no longer required
 
   // Filter items based on role
   const visibleItems = state.role === 'viewer' 
@@ -72,9 +69,6 @@ export const NavShell: React.FC = () => {
             <div className="flex items-center space-x-4">
               <div className="hidden md:flex items-center space-x-2">
                 <Badge variant="info">{state.role}</Badge>
-                {!state.agreementsAccepted && (
-                  <Badge variant="warning">Agreements Pending</Badge>
-                )}
               </div>
               <div className="flex items-center space-x-3">
                 <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold text-gray-700">

@@ -1,6 +1,6 @@
-# Car Hire Admin Panel
+# Gloria Connect Admin Panel
 
-A comprehensive admin panel for the Car Hire Middleware backend, built with React, Vite, and Tailwind CSS.
+A comprehensive admin panel for the Gloria Connect platform backend, built with React, Vite, and Tailwind CSS.
 
 ## Features
 
@@ -33,7 +33,7 @@ A comprehensive admin panel for the Car Hire Middleware backend, built with Reac
 
 - Node.js 18+ 
 - npm or yarn
-- Car Hire Middleware backend running on `http://localhost:8080`
+- Gloria Connect backend running on `http://localhost:8080`
 
 ## Installation
 
@@ -50,7 +50,7 @@ A comprehensive admin panel for the Car Hire Middleware backend, built with Reac
    Edit `.env` and set your API base URL and app name:
    ```
    VITE_MIDDLEWARE_URL=http://localhost:8080
-   VITE_APP_NAME=Car Hire Admin
+   VITE_APP_NAME=Gloria Connect Admin
    ```
 
 3. **Start development server**:

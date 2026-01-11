@@ -42,8 +42,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileTo
               </svg>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Car Hire</h1>
-              <p className="text-xs text-blue-100 font-medium">Middleware</p>
+              <h1 className="text-xl font-bold text-white tracking-tight">Gloria Connect</h1>
+              <p className="text-xs text-blue-100 font-medium">Platform</p>
             </div>
           </div>
           {onMobileToggle && (

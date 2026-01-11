@@ -12,7 +12,7 @@ import toast from 'react-hot-toast'
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const { setAuthed, setRole, setAgreementsAccepted, state } = useAppStore()
+  const { setAuthed, setRole, state } = useAppStore()
   const [isLoading, setIsLoading] = useState(false)
 
   const {
@@ -103,12 +103,8 @@ export default function LoginPage() {
         }
       }
       
-      // Check if agreements are accepted
-      if (!state.agreementsAccepted) {
-        navigate('/agreements')
-      } else {
-        navigate('/connectivity')
-      }
+      // Navigate to connectivity page (terms acceptance no longer required)
+      navigate('/connectivity')
     } catch (error) {
       console.error('Login failed:', error)
       toast.error('Login failed. Please try again.')
@@ -142,7 +138,7 @@ export default function LoginPage() {
             Admin Dashboard
           </h2>
           <p className="mt-2 text-base text-gray-600 font-medium">
-            Sign in to access the Car Hire middleware admin interface
+            Sign in to access the Gloria Connect admin interface
           </p>
         </div>
         
@@ -195,7 +191,7 @@ export default function LoginPage() {
                   <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                 </svg>
                 <p className="text-xs font-medium">
-                  Secure access to Car Hire Middleware administration
+                  Secure access to Gloria Connect administration
                 </p>
               </div>
             </div>
@@ -204,7 +200,7 @@ export default function LoginPage() {
 
         <div className="text-center">
           <p className="text-xs text-gray-500 font-medium tracking-wide">
-            Car Hire Middleware Platform
+            Gloria Connect Platform
           </p>
         </div>
       </div>

@@ -14,7 +14,7 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
   return (
     <div className="docs-main">
       <h1>SDK Guide</h1>
-      <p>Get started with Car Hire SDKs for integrating with our API.</p>
+      <p>Get started with Gloria Connect SDKs for integrating with our API.</p>
 
       {role && (
         <div style={{ marginBottom: '2rem', padding: '1rem', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '0.5rem' }}>
