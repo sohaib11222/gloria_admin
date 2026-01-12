@@ -176,21 +176,20 @@ export default function Branches() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-lg p-8 text-white">
+      <div className="mb-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-              <Building2 className="w-8 h-8" />
+            <div className="p-3 bg-gray-100 rounded">
+              <Building2 className="w-6 h-6 text-gray-700" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold">Branches</h1>
-              <p className="mt-2 text-blue-100">Manage source branches and locations</p>
+              <h1 className="text-2xl font-semibold text-gray-900">Branches</h1>
+              <p className="mt-1 text-sm text-gray-600">Manage source branches and locations</p>
             </div>
           </div>
           <Button 
             variant="secondary" 
             onClick={() => setShowStats(!showStats)}
-            className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm"
           >
             {showStats ? 'Hide' : 'Show'} Stats
           </Button>
@@ -199,46 +198,46 @@ export default function Branches() {
 
       {/* Stats Card */}
       {showStats && stats && (
-        <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100">
-          <CardHeader className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b border-gray-200">
+        <Card>
+          <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg text-white">
-                <TrendingUp className="w-5 h-5" />
+              <div className="p-2 bg-gray-100 rounded">
+                <TrendingUp className="w-5 h-5 text-gray-700" />
               </div>
-              <CardTitle className="text-xl font-bold text-gray-900">Branch Statistics</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-900">Branch Statistics</CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="pt-6">
+          <CardContent className="pt-4">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 transform transition-all duration-300 hover:scale-105 hover:shadow-lg">
+              <div className="p-4 bg-gray-50 rounded border border-gray-200">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm font-medium text-blue-700">Total Branches</div>
-                  <Database className="w-5 h-5 text-blue-600" />
+                  <div className="text-sm font-medium text-gray-700">Total Branches</div>
+                  <Database className="w-5 h-5 text-gray-600" />
                 </div>
-                <div className="text-3xl font-bold text-blue-900">{stats.total}</div>
+                <div className="text-2xl font-semibold text-gray-900">{stats.total}</div>
               </div>
-              <div className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200 transform transition-all duration-300 hover:scale-105 hover:shadow-lg">
+              <div className="p-4 bg-gray-50 rounded border border-gray-200">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm font-medium text-orange-700">Unmapped</div>
-                  <AlertCircle className="w-5 h-5 text-orange-600" />
+                  <div className="text-sm font-medium text-gray-700">Unmapped</div>
+                  <AlertCircle className="w-5 h-5 text-gray-600" />
                 </div>
-                <div className="text-3xl font-bold text-orange-900">{stats.unmapped}</div>
+                <div className="text-2xl font-semibold text-gray-900">{stats.unmapped}</div>
               </div>
-              <div className="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 transform transition-all duration-300 hover:scale-105 hover:shadow-lg">
+              <div className="p-4 bg-gray-50 rounded border border-gray-200">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm font-medium text-purple-700">By Source</div>
-                  <Building2 className="w-5 h-5 text-purple-600" />
+                  <div className="text-sm font-medium text-gray-700">By Source</div>
+                  <Building2 className="w-5 h-5 text-gray-600" />
                 </div>
-                <div className="text-2xl font-bold text-purple-900">
+                <div className="text-xl font-semibold text-gray-900">
                   {stats.bySource.length} source{stats.bySource.length !== 1 ? 's' : ''}
                 </div>
               </div>
-              <div className="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 transform transition-all duration-300 hover:scale-105 hover:shadow-lg">
+              <div className="p-4 bg-gray-50 rounded border border-gray-200">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm font-medium text-green-700">By Status</div>
-                  <TrendingUp className="w-5 h-5 text-green-600" />
+                  <div className="text-sm font-medium text-gray-700">By Status</div>
+                  <TrendingUp className="w-5 h-5 text-gray-600" />
                 </div>
-                <div className="text-2xl font-bold text-green-900">
+                <div className="text-xl font-semibold text-gray-900">
                   {stats.byStatus.length} status{stats.byStatus.length !== 1 ? 'es' : ''}
                 </div>
               </div>
@@ -248,14 +247,14 @@ export default function Branches() {
       )}
 
       {/* Filters */}
-      <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100">
-        <CardHeader className="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border-b border-gray-200">
+      <Card>
+        <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg text-white">
-                <Filter className="w-5 h-5" />
+              <div className="p-2 bg-gray-100 rounded">
+                <Filter className="w-5 h-5 text-gray-700" />
               </div>
-              <CardTitle className="text-xl font-bold text-gray-900">Filters</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-900">Filters</CardTitle>
             </div>
             {hasActiveFilters && (
               <Button 
@@ -342,12 +341,12 @@ export default function Branches() {
       </Card>
 
       {/* Branches Table */}
-      <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100">
-        <CardHeader className="bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border-b border-gray-200">
+      <Card>
+        <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg text-white">
-                <MapPin className="w-5 h-5" />
+              <div className="p-2 bg-gray-100 rounded">
+                <MapPin className="w-5 h-5 text-gray-700" />
               </div>
               <CardTitle className="text-xl font-bold text-gray-900">
                 Branches ({branchesData?.total ?? 0})
@@ -358,7 +357,6 @@ export default function Branches() {
                 variant="primary" 
                 onClick={handleImportBranches}
                 loading={importBranchesMutation.isPending}
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
                 title={filters.sourceId ? "Import branches from the selected source's supplier endpoint" : "Import branches from available sources"}
               >
                 <Download className="h-4 w-4 mr-2" />
@@ -406,7 +404,7 @@ export default function Branches() {
             <>
               <div className="overflow-x-auto rounded-lg border border-gray-200">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                  <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                         Branch Code
@@ -433,7 +431,7 @@ export default function Branches() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {(branchesData?.items ?? []).map((branch) => (
-                      <tr key={branch.id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-colors duration-150 cursor-pointer">
+                      <tr key={branch.id} className="hover:bg-gray-50 transition-colors duration-150 cursor-pointer">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {branch.branchCode}
                         </td>

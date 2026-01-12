@@ -129,14 +129,14 @@ export default function Dashboard() {
       <div className="space-y-6">
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-sm">
-              <TrendingUp className="w-8 h-8 text-blue-600" />
+            <div className="p-3 bg-gray-100 rounded">
+              <TrendingUp className="w-6 h-6 text-gray-700" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-semibold text-gray-900">
                 Dashboard
               </h1>
-              <p className="mt-2 text-gray-600 font-medium">
+              <p className="mt-1 text-sm text-gray-600">
                 Overview of your Gloria Connect system
               </p>
             </div>
@@ -156,26 +156,26 @@ export default function Dashboard() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-sm">
-              <TrendingUp className="w-8 h-8 text-blue-600" />
+            <div className="p-3 bg-gray-100 rounded">
+              <TrendingUp className="w-6 h-6 text-gray-700" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-semibold text-gray-900">
                 Dashboard
               </h1>
-              <p className="mt-2 text-gray-600 font-medium">
+              <p className="mt-1 text-sm text-gray-600">
                 Overview of your Gloria Connect system
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {excludedSources > 0 && (
-              <Badge variant="warning" className="font-bold shadow-md">
+              <Badge variant="warning">
                 {excludedSources} source(s) excluded
               </Badge>
             )}
             {hasBookingErrors && (
-              <Badge variant="danger" className="font-bold shadow-md">
+              <Badge variant="danger">
                 Booking errors detected
               </Badge>
             )}
@@ -185,80 +185,80 @@ export default function Dashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="transform transition-all duration-300 hover:shadow-xl hover:scale-[1.02] border-2 border-blue-100">
+        <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Total Sources</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-1">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Total Sources</p>
+                <p className="text-3xl font-semibold text-gray-900 mb-1">
                   {sources?.data?.length || 0}
                 </p>
-                <p className="text-sm text-green-600 font-semibold flex items-center mt-2">
-                  <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+                <p className="text-sm text-gray-600 flex items-center mt-2">
+                  <span className="inline-block w-2 h-2 bg-green-600 rounded mr-2"></span>
                   {activeSources} active
                 </p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl shadow-lg">
-                <Server className="h-8 w-8 text-blue-600" />
+              <div className="p-3 bg-gray-100 rounded">
+                <Server className="h-6 w-6 text-gray-700" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="transform transition-all duration-300 hover:shadow-xl hover:scale-[1.02] border-2 border-green-100">
+        <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Total Agents</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-1">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Total Agents</p>
+                <p className="text-3xl font-semibold text-gray-900 mb-1">
                   {agents?.data?.length || 0}
                 </p>
-                <p className="text-sm text-green-600 font-semibold flex items-center mt-2">
-                  <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+                <p className="text-sm text-gray-600 flex items-center mt-2">
+                  <span className="inline-block w-2 h-2 bg-green-600 rounded mr-2"></span>
                   {activeAgents} active
                 </p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl shadow-lg">
-                <Users className="h-8 w-8 text-green-600" />
+              <div className="p-3 bg-gray-100 rounded">
+                <Users className="h-6 w-6 text-gray-700" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="transform transition-all duration-300 hover:shadow-xl hover:scale-[1.02] border-2 border-purple-100">
+        <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Active Agreements</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-1">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Active Agreements</p>
+                <p className="text-3xl font-semibold text-gray-900 mb-1">
                   {activeAgreements}
                 </p>
-                <p className="text-sm text-gray-600 font-semibold mt-2">
+                <p className="text-sm text-gray-600 mt-2">
                   {agreements?.data?.length || 0} total
                 </p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl shadow-lg">
-                <FileText className="h-8 w-8 text-purple-600" />
+              <div className="p-3 bg-gray-100 rounded">
+                <FileText className="h-6 w-6 text-gray-700" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="transform transition-all duration-300 hover:shadow-xl hover:scale-[1.02] border-2 border-red-100">
+        <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Excluded Sources</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent mb-1">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Excluded Sources</p>
+                <p className="text-3xl font-semibold text-gray-900 mb-1">
                   {excludedSources}
                 </p>
-                <p className="text-sm text-red-600 font-semibold flex items-center mt-2">
-                  <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
+                <p className="text-sm text-red-600 flex items-center mt-2">
+                  <span className="inline-block w-2 h-2 bg-red-600 rounded mr-2"></span>
                   Health issues
                 </p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-red-100 to-rose-100 rounded-2xl shadow-lg">
-                <AlertTriangle className="h-8 w-8 text-red-600" />
+              <div className="p-3 bg-gray-100 rounded">
+                <AlertTriangle className="h-6 w-6 text-gray-700" />
               </div>
             </div>
           </CardContent>
@@ -266,14 +266,14 @@ export default function Dashboard() {
       </div>
 
       {/* System Status */}
-      <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-blue-100 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50">
-        <CardHeader className="bg-gradient-to-r from-blue-100 to-indigo-100 border-b border-blue-200">
+      <Card>
+        <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white rounded-lg shadow-sm">
-              <Server className="h-5 w-5 text-blue-600" />
+            <div className="p-2 bg-gray-100 rounded">
+              <Server className="h-5 w-5 text-gray-700" />
             </div>
             <div>
-              <CardTitle className="text-xl font-bold text-gray-900">System Status</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-900">System Status</CardTitle>
               <p className="text-sm text-gray-600 mt-1">Real-time system component status</p>
             </div>
           </div>
@@ -281,29 +281,29 @@ export default function Dashboard() {
         <CardContent className="pt-6">
           {systemStatus ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className={`p-5 rounded-xl border-2 transition-all duration-200 ${
+              <div className={`p-4 rounded border ${
                 systemStatus.grpcServices?.status === 'operational' 
-                  ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200' 
+                  ? 'bg-green-50 border-green-200' 
                   : systemStatus.grpcServices?.status === 'degraded'
-                  ? 'bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200'
-                  : 'bg-gradient-to-br from-red-50 to-rose-50 border-red-200'
+                  ? 'bg-yellow-50 border-yellow-200'
+                  : 'bg-red-50 border-red-200'
               }`}>
                 <div className="flex items-start gap-3">
                   {systemStatus.grpcServices?.status === 'operational' ? (
-                    <div className="p-2 bg-green-100 rounded-lg">
+                    <div className="p-2 bg-green-100 rounded">
                       <CheckCircle className="h-5 w-5 text-green-600" />
                     </div>
                   ) : systemStatus.grpcServices?.status === 'degraded' ? (
-                    <div className="p-2 bg-yellow-100 rounded-lg">
+                    <div className="p-2 bg-yellow-100 rounded">
                       <AlertTriangle className="h-5 w-5 text-yellow-600" />
                     </div>
                   ) : (
-                    <div className="p-2 bg-red-100 rounded-lg">
+                    <div className="p-2 bg-red-100 rounded">
                       <AlertTriangle className="h-5 w-5 text-red-600" />
                     </div>
                   )}
                   <div className="flex-1">
-                    <p className="text-sm font-bold text-gray-900 mb-1">gRPC Services</p>
+                    <p className="text-sm font-semibold text-gray-900 mb-1">gRPC Services</p>
                     <p className="text-xs text-gray-600">
                       {systemStatus.grpcServices?.message || 'Checking status...'}
                     </p>
@@ -320,29 +320,29 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              <div className={`p-5 rounded-xl border-2 transition-all duration-200 ${
+              <div className={`p-4 rounded border ${
                 systemStatus.jobQueue?.status === 'idle' 
-                  ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'
+                  ? 'bg-green-50 border-green-200'
                   : systemStatus.jobQueue?.status === 'processing'
-                  ? 'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'
-                  : 'bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200'
+                  ? 'bg-blue-50 border-blue-200'
+                  : 'bg-yellow-50 border-yellow-200'
               }`}>
                 <div className="flex items-start gap-3">
                   {systemStatus.jobQueue?.status === 'idle' ? (
-                    <div className="p-2 bg-green-100 rounded-lg">
+                    <div className="p-2 bg-green-100 rounded">
                       <CheckCircle className="h-5 w-5 text-green-600" />
                     </div>
                   ) : systemStatus.jobQueue?.status === 'processing' ? (
-                    <div className="p-2 bg-blue-100 rounded-lg">
+                    <div className="p-2 bg-blue-100 rounded">
                       <CheckCircle className="h-5 w-5 text-blue-600" />
                     </div>
                   ) : (
-                    <div className="p-2 bg-yellow-100 rounded-lg">
+                    <div className="p-2 bg-yellow-100 rounded">
                       <AlertTriangle className="h-5 w-5 text-yellow-600" />
                     </div>
                   )}
                   <div className="flex-1">
-                    <p className="text-sm font-bold text-gray-900 mb-1">Job Queue</p>
+                    <p className="text-sm font-semibold text-gray-900 mb-1">Job Queue</p>
                     <p className="text-xs text-gray-600">
                       {systemStatus.jobQueue?.message || 'No active jobs'}
                     </p>
@@ -359,23 +359,23 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-              <div className={`p-5 rounded-xl border-2 transition-all duration-200 ${
+              <div className={`p-4 rounded border ${
                 systemStatus.locationSync?.lastSync
-                  ? 'bg-gradient-to-br from-green-50 to-emerald-50 border-green-200'
-                  : 'bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200'
+                  ? 'bg-green-50 border-green-200'
+                  : 'bg-yellow-50 border-yellow-200'
               }`}>
                 <div className="flex items-start gap-3">
                   {systemStatus.locationSync?.lastSync ? (
-                    <div className="p-2 bg-green-100 rounded-lg">
+                    <div className="p-2 bg-green-100 rounded">
                       <CheckCircle className="h-5 w-5 text-green-600" />
                     </div>
                   ) : (
-                    <div className="p-2 bg-yellow-100 rounded-lg">
+                    <div className="p-2 bg-yellow-100 rounded">
                       <AlertTriangle className="h-5 w-5 text-yellow-600" />
                     </div>
                   )}
                   <div className="flex-1">
-                    <p className="text-sm font-bold text-gray-900 mb-1">Location Sync</p>
+                    <p className="text-sm font-semibold text-gray-900 mb-1">Location Sync</p>
                     <p className="text-xs text-gray-600">
                       {systemStatus.locationSync?.message || 'No location syncs recorded'}
                     </p>
@@ -401,14 +401,14 @@ export default function Dashboard() {
 
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100">
-          <CardHeader className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 border-b border-gray-200">
+        <Card>
+          <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-white rounded-lg shadow-sm">
-                <CheckCircle className="w-5 h-5 text-green-600" />
+              <div className="p-2 bg-gray-100 rounded">
+                <CheckCircle className="w-5 h-5 text-gray-700" />
               </div>
               <div>
-                <CardTitle className="text-xl font-bold text-gray-900">Recent Verification Results</CardTitle>
+                <CardTitle className="text-lg font-semibold text-gray-900">Recent Verification Results</CardTitle>
                 <p className="text-sm text-gray-600 mt-1">Latest source verification tests</p>
               </div>
             </div>
@@ -423,10 +423,10 @@ export default function Dashboard() {
           ) : recentVerifications.length > 0 ? (
             <div className="space-y-3">
               {recentVerifications.map((test: any, index: number) => (
-                <div key={index} className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${
+                <div key={index} className={`flex items-center justify-between p-4 rounded border ${
                   test.status === 'PASSED' 
-                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' 
-                    : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-200'
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-red-50 border-red-200'
                 }`}>
                   <div className="flex-1">
                     <p className="font-bold text-gray-900 mb-1">{test.name}</p>
@@ -437,8 +437,7 @@ export default function Dashboard() {
                   <div className="flex items-center gap-3">
                     <Badge 
                       variant={test.status === 'PASSED' ? 'success' : 'danger'}
-                      size="md"
-                      className="font-bold"
+                      size="sm"
                     >
                       {test.status}
                     </Badge>
@@ -463,14 +462,14 @@ export default function Dashboard() {
         </CardContent>
         </Card>
 
-        <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100">
-          <CardHeader className="bg-gradient-to-r from-red-50 via-rose-50 to-pink-50 border-b border-gray-200">
+        <Card>
+          <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-white rounded-lg shadow-sm">
-                <Heart className="w-5 h-5 text-red-600" />
+              <div className="p-2 bg-gray-100 rounded">
+                <Heart className="w-5 h-5 text-gray-700" />
               </div>
               <div>
-                <CardTitle className="text-xl font-bold text-gray-900">System Health</CardTitle>
+                <CardTitle className="text-lg font-semibold text-gray-900">System Health</CardTitle>
                 <p className="text-sm text-gray-600 mt-1">Source health monitoring status</p>
               </div>
             </div>
@@ -485,12 +484,12 @@ export default function Dashboard() {
           ) : health && Array.isArray(health) && health.length > 0 ? (
             <div className="space-y-3">
               {health.slice(0, 5).map((source: any) => (
-                <div key={source.companyId || source.sourceId} className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${
+                <div key={source.companyId || source.sourceId} className={`flex items-center justify-between p-4 rounded border ${
                   source.status === 'HEALTHY' 
-                    ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
+                    ? 'bg-green-50 border-green-200'
                     : source.status === 'SLOW'
-                    ? 'bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200'
-                    : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-200'
+                    ? 'bg-yellow-50 border-yellow-200'
+                    : 'bg-red-50 border-red-200'
                 }`}>
                   <div className="flex-1">
                     <p className="font-bold text-gray-900 mb-1">{source.companyName || 'Unknown'}</p>
@@ -504,8 +503,7 @@ export default function Dashboard() {
                         source.status === 'HEALTHY' ? 'success' : 
                         source.status === 'SLOW' ? 'warning' : 'danger'
                       }
-                      size="md"
-                      className="font-bold"
+                      size="sm"
                     >
                       {source.status || 'UNKNOWN'}
                     </Badge>
@@ -532,14 +530,14 @@ export default function Dashboard() {
       </div>
 
       {/* Last 5 bookings */}
-      <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100">
-        <CardHeader className="bg-gradient-to-r from-purple-50 via-pink-50 to-rose-50 border-b border-gray-200">
+      <Card>
+        <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white rounded-lg shadow-sm">
-              <FileText className="w-5 h-5 text-purple-600" />
+            <div className="p-2 bg-gray-100 rounded">
+              <FileText className="w-5 h-5 text-gray-700" />
             </div>
             <div>
-              <CardTitle className="text-xl font-bold text-gray-900">Recent Bookings</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-900">Recent Bookings</CardTitle>
               <p className="text-sm text-gray-600 mt-1">Last 5 booking transactions</p>
             </div>
           </div>
@@ -561,15 +559,15 @@ export default function Dashboard() {
                 const sourceId = b.source_id || b.sourceId || 'unknown'
                 const createdAt = b.created_at || b.createdAt || b.createdAt
                 return (
-                  <div key={b.id || idx} className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${
+                  <div key={b.id || idx} className={`flex items-center justify-between p-4 rounded border ${
                     variant === 'success' 
-                      ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
+                      ? 'bg-green-50 border-green-200'
                       : variant === 'danger'
-                      ? 'bg-gradient-to-r from-red-50 to-rose-50 border-red-200'
-                      : 'bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200'
+                      ? 'bg-red-50 border-red-200'
+                      : 'bg-yellow-50 border-yellow-200'
                   }`}>
                     <div className="flex items-center gap-3">
-                      <Badge variant={variant as any} size="md" className="font-bold">{status || 'PENDING'}</Badge>
+                      <Badge variant={variant as any} size="sm">{status || 'PENDING'}</Badge>
                       <div>
                         <div className="text-sm font-semibold text-gray-900">{vehicleInfo}</div>
                         <div className="text-xs text-gray-600">Source: {sourceId.slice(0, 10)}</div>
@@ -598,14 +596,14 @@ export default function Dashboard() {
       </Card>
 
       {/* Recent Logs */}
-      <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100">
-        <CardHeader className="bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50 border-b border-gray-200">
+      <Card>
+        <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white rounded-lg shadow-sm">
-              <FileText className="w-5 h-5 text-gray-600" />
+            <div className="p-2 bg-gray-100 rounded">
+              <FileText className="w-5 h-5 text-gray-700" />
             </div>
             <div>
-              <CardTitle className="text-xl font-bold text-gray-900">Recent Logs</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-900">Recent Logs</CardTitle>
               <p className="text-sm text-gray-600 mt-1">Latest system activity and events</p>
             </div>
           </div>
@@ -620,12 +618,12 @@ export default function Dashboard() {
           ) : recentLogs?.data && Array.isArray(recentLogs.data) && recentLogs.data.length > 0 ? (
             <div className="space-y-3">
               {recentLogs.data.map((log) => (
-                <div key={log.id} className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${
+                <div key={log.id} className={`flex items-center justify-between p-4 rounded border ${
                   log.level === 'ERROR' 
-                    ? 'bg-gradient-to-r from-red-50 to-rose-50 border-red-200'
+                    ? 'bg-red-50 border-red-200'
                     : log.level === 'WARN'
-                    ? 'bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200'
-                    : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
+                    ? 'bg-yellow-50 border-yellow-200'
+                    : 'bg-blue-50 border-blue-200'
                 }`}>
                   <div className="flex items-center gap-3">
                     <Badge 
@@ -633,8 +631,7 @@ export default function Dashboard() {
                         log.level === 'ERROR' ? 'danger' :
                         log.level === 'WARN' ? 'warning' : 'info'
                       }
-                      size="md"
-                      className="font-bold"
+                      size="sm"
                     >
                       {log.level || 'INFO'}
                     </Badge>
@@ -669,35 +666,35 @@ export default function Dashboard() {
       </Card>
 
       {/* Quick Actions */}
-      <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100">
-        <CardHeader className="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border-b border-gray-200">
+      <Card>
+        <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white rounded-lg shadow-sm">
-              <TrendingUp className="w-5 h-5 text-indigo-600" />
+            <div className="p-2 bg-gray-100 rounded">
+              <TrendingUp className="w-5 h-5 text-gray-700" />
             </div>
             <div>
-              <CardTitle className="text-xl font-bold text-gray-900">Quick Actions</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-900">Quick Actions</CardTitle>
               <p className="text-sm text-gray-600 mt-1">Common administrative tasks</p>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-6">
+        <CardContent className="pt-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Link to="/verification">
-              <Button className="w-full justify-start group hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg" variant="primary">
-                <CheckCircle className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform" />
+              <Button className="w-full justify-start" variant="primary">
+                <CheckCircle className="h-4 w-4 mr-2" />
                 Run Source Verification
               </Button>
             </Link>
             <Link to="/health">
-              <Button className="w-full justify-start group hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg" variant="primary">
-                <Heart className="h-4 w-4 mr-2 group-hover:animate-pulse" />
+              <Button className="w-full justify-start" variant="primary">
+                <Heart className="h-4 w-4 mr-2" />
                 Check System Health
               </Button>
             </Link>
             <Link to="/metrics">
-              <Button className="w-full justify-start group hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg" variant="primary">
-                <TrendingUp className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
+              <Button className="w-full justify-start" variant="primary">
+                <TrendingUp className="h-4 w-4 mr-2" />
                 View Metrics
               </Button>
             </Link>

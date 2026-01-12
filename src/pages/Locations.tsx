@@ -68,32 +68,32 @@ export default function Locations() {
     <div className="space-y-6">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-sm">
-            <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-gray-100 rounded">
+            <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-semibold text-gray-900">
               Locations
             </h1>
-            <p className="mt-2 text-gray-600 font-medium">Manage supported locations and UN/LOCODE data</p>
+            <p className="mt-1 text-sm text-gray-600">Manage supported locations and UN/LOCODE data</p>
           </div>
         </div>
       </div>
 
-      <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100">
-        <CardHeader className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b border-gray-200">
+      <Card>
+        <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-white rounded-lg shadow-sm">
-              <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="p-2 bg-gray-100 rounded">
+              <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
               </svg>
             </div>
             <div>
-              <CardTitle className="text-xl font-bold text-gray-900">Location Management</CardTitle>
+              <CardTitle className="text-lg font-semibold text-gray-900">Location Management</CardTitle>
               <p className="text-sm text-gray-600 mt-1">Browse and filter locations by different criteria</p>
             </div>
           </div>
@@ -106,7 +106,6 @@ export default function Locations() {
                 variant={tab === 'all' ? 'primary' : 'secondary'} 
                 size="sm" 
                 onClick={() => setTab('all')}
-                className={tab === 'all' ? 'shadow-md' : ''}
               >
                 <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -172,7 +171,7 @@ export default function Locations() {
                   </div>
                 </div>
                 {(searchQuery || countryFilter) && (
-                  <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded">
                     <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                     </svg>
@@ -193,7 +192,7 @@ export default function Locations() {
                 <div>
                   {filteredAllLocations.length === 0 ? (
                     <div className="text-center py-16">
-                      <div className="mx-auto w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
+                      <div className="mx-auto w-16 h-16 bg-gray-100 rounded flex items-center justify-center mb-4">
                         <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -219,9 +218,9 @@ export default function Locations() {
                       )}
                     </div>
                   ) : (
-                    <div className="overflow-x-auto rounded-lg border border-gray-200">
+                    <div className="overflow-x-auto rounded border border-gray-200">
                       <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                        <thead className="bg-gray-50">
                           <tr>
                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">UN/LOCODE</th>
                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
@@ -231,9 +230,9 @@ export default function Locations() {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           {filteredAllLocations.map((loc: any, index: number) => (
-                            <tr key={loc.unlocode} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                            <tr key={loc.unlocode} className={`hover:bg-gray-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <code className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-mono font-semibold">{loc.unlocode}</code>
+                                <code className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-mono font-semibold">{loc.unlocode}</code>
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="text-sm font-semibold text-gray-900">{loc.place || loc.name || '—'}</div>
@@ -260,7 +259,7 @@ export default function Locations() {
               {tab === 'byAgreement' && (
                 <div>
                   {(byAgreementLocations?.inherited) && (
-                    <div className="mb-4 p-3 bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 border-l-4 border-amber-400 rounded-lg">
+                    <div className="mb-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
                       <div className="flex items-center gap-2">
                         <svg className="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -271,7 +270,7 @@ export default function Locations() {
                   )}
                   {(byAgreementLocations?.items ?? []).length === 0 ? (
                     <div className="text-center py-16">
-                      <div className="mx-auto w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
+                      <div className="mx-auto w-16 h-16 bg-gray-100 rounded flex items-center justify-center mb-4">
                         <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
@@ -280,18 +279,18 @@ export default function Locations() {
                       <p className="text-sm text-gray-500">This agreement has no specific locations assigned</p>
                     </div>
                   ) : (
-                    <div className="overflow-x-auto rounded-lg border border-gray-200">
+                    <div className="overflow-x-auto rounded border border-gray-200">
                       <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                        <thead className="bg-gray-50">
                           <tr>
                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">UN/LOCODE</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           {(byAgreementLocations?.items ?? []).map((loc: any, index: number) => (
-                            <tr key={loc.unlocode} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                            <tr key={loc.unlocode} className={`hover:bg-gray-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                               <td className="px-6 py-4 whitespace-nowrap">
-                                <code className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-mono font-semibold">{loc.unlocode}</code>
+                                <code className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-mono font-semibold">{loc.unlocode}</code>
                               </td>
                             </tr>
                           ))}
@@ -306,7 +305,7 @@ export default function Locations() {
                 <div>
                   {(sourceCounts?.items ?? []).length === 0 ? (
                     <div className="text-center py-16">
-                      <div className="mx-auto w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-4">
+                      <div className="mx-auto w-16 h-16 bg-gray-100 rounded flex items-center justify-center mb-4">
                         <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
@@ -315,9 +314,9 @@ export default function Locations() {
                       <p className="text-sm text-gray-500">No location counts found for sources</p>
                     </div>
                   ) : (
-                    <div className="overflow-x-auto rounded-lg border border-gray-200">
+                    <div className="overflow-x-auto rounded border border-gray-200">
                       <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                        <thead className="bg-gray-50">
                           <tr>
                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Source</th>
                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
@@ -344,7 +343,7 @@ export default function Locations() {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center gap-2">
-                                  <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                                  <div className="text-2xl font-semibold text-gray-900">
                                     {s.locations}
                                   </div>
                                   <span className="text-xs text-gray-500">locations</span>

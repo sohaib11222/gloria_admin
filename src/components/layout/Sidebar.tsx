@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { NAVIGATION_ITEMS } from '../../lib/constants'
 import * as Icons from 'lucide-react'
@@ -12,6 +12,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileToggle }) => {
   const location = useLocation()
+  const navigate = useNavigate()
 
   return (
     <>
@@ -27,29 +28,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileTo
       <div
         className={cn(
           'fixed lg:static inset-y-0 left-0 z-50',
-          'w-64 bg-white border-r border-gray-200 shadow-xl',
-          'transform transition-transform duration-300 ease-in-out',
+          'w-64 bg-white border-r border-gray-200',
+          'transform transition-transform duration-200 ease-in-out',
           'flex flex-col h-screen lg:h-auto',
-          'backdrop-blur-sm bg-white/95',
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
-        <div className="flex items-center px-6 py-5 border-b border-blue-500/20 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-700 shadow-lg">
+        <div className="flex items-center px-6 py-4 border-b border-gray-200 bg-gray-900">
           <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
-              <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="h-8 w-8 rounded bg-blue-600 flex items-center justify-center">
+              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
               </svg>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Gloria Connect</h1>
-              <p className="text-xs text-blue-100 font-medium">Platform</p>
+              <h1 className="text-lg font-semibold text-white tracking-tight">Gloria Connect</h1>
+              <p className="text-xs text-gray-400 font-medium">Platform</p>
             </div>
           </div>
           {onMobileToggle && (
             <button
               onClick={onMobileToggle}
-              className="lg:hidden ml-auto p-2 text-white hover:bg-white/20 rounded-lg transition-colors backdrop-blur-sm"
+              className="lg:hidden ml-auto p-2 text-gray-400 hover:bg-gray-800 rounded transition-colors"
               aria-label="Close menu"
             >
               <X className="h-5 w-5" />
@@ -64,35 +64,37 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileTo
             
           // Open docs in new tab
           if (item.path === '/docs') {
-            // Get base path for production
-            const basePath = import.meta.env.PROD ? '/admin' : ''
-            const docsPath = `${basePath}/docs-fullscreen`
+            const handleDocsClick = (e: React.MouseEvent) => {
+              e.preventDefault()
+              onMobileToggle?.()
+              // Construct the full URL for docs-fullscreen
+              // Base path is always /admin to match vite.config.js and React Router basename
+              const basePath = '/admin'
+              const docsPath = `${basePath}/docs-fullscreen`
+              const docsUrl = `${window.location.origin}${docsPath}`
+              window.open(docsUrl, '_blank', 'noopener,noreferrer')
+            }
             return (
-              <a
+              <button
                 key={item.path}
-                href={docsPath}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={onMobileToggle}
+                onClick={handleDocsClick}
                 className={cn(
-                  'flex items-center px-3 py-2.5 text-sm font-medium rounded-lg',
-                  'transition-all duration-200 group',
-                  'text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50',
-                  'hover:text-blue-700 hover:shadow-sm',
-                  'border border-transparent hover:border-blue-200'
+                  'flex items-center px-3 py-2 text-sm font-medium rounded w-full text-left',
+                  'transition-colors duration-150',
+                  'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                 )}
               >
-                  <Icon className={cn(
-                    'mr-3 h-5 w-5 transition-all duration-200',
-                    'text-gray-500 group-hover:text-blue-600 group-hover:scale-110'
-                  )} />
-                  {item.label}
-                  <svg className="ml-auto h-3 w-3 text-gray-400 group-hover:text-blue-600 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
-              )
-            }
+                <Icon className={cn(
+                  'mr-3 h-5 w-5',
+                  'text-gray-500'
+                )} />
+                {item.label}
+                <svg className="ml-auto h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </button>
+            )
+          }
             
             return (
               <Link
@@ -100,27 +102,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileTo
                 to={item.path}
                 onClick={onMobileToggle}
                 className={cn(
-                  'flex items-center px-3 py-2.5 text-sm font-medium rounded-lg',
-                  'transition-all duration-200 group relative',
-                  'border border-transparent',
+                  'flex items-center px-3 py-2 text-sm font-medium rounded',
+                  'transition-colors duration-150',
                   isActive
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/30 border-blue-500'
-                    : 'text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 hover:shadow-sm hover:border-blue-200'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                 )}
               >
-                {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full shadow-sm" />
-                )}
                 <Icon className={cn(
-                  'mr-3 h-5 w-5 transition-all duration-200',
+                  'mr-3 h-5 w-5',
                   isActive 
-                    ? 'text-white scale-110' 
-                    : 'text-gray-500 group-hover:text-blue-600 group-hover:scale-110'
+                    ? 'text-white' 
+                    : 'text-gray-500'
                 )} />
-                <span className={cn(
-                  'transition-all duration-200',
-                  isActive ? 'font-semibold' : 'font-medium group-hover:font-semibold'
-                )}>
+                <span className={isActive ? 'font-semibold' : 'font-medium'}>
                   {item.label}
                 </span>
               </Link>

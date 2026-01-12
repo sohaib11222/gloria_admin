@@ -105,7 +105,7 @@ export default function LocationRequests() {
       case 'APPROVED':
         return <Badge variant="success">Approved</Badge>
       case 'REJECTED':
-        return <Badge variant="error">Rejected</Badge>
+        return <Badge variant="danger">Rejected</Badge>
       case 'PENDING':
         return <Badge variant="warning">Pending</Badge>
       default:
@@ -123,36 +123,36 @@ export default function LocationRequests() {
     <div className="space-y-6">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-sm">
-            <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-gray-100 rounded">
+            <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </div>
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-semibold text-gray-900">
               Location Requests
             </h1>
-            <p className="mt-2 text-gray-600 font-medium">Review and manage location requests from sources</p>
+            <p className="mt-1 text-sm text-gray-600">Review and manage location requests from sources</p>
           </div>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100">
+        <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Total Requests</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-1">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Total Requests</p>
+                <p className="text-3xl font-semibold text-gray-900 mb-1">
                   {totalRequests}
                 </p>
                 <p className="text-xs text-gray-500">All location requests</p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl shadow-lg">
-                <svg className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="p-3 bg-gray-100 rounded">
+                <svg className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
@@ -160,52 +160,52 @@ export default function LocationRequests() {
           </CardContent>
         </Card>
 
-        <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-yellow-100">
+        <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pending</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent mb-1">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Pending</p>
+                <p className="text-3xl font-semibold text-gray-900 mb-1">
                   {pendingCount}
                 </p>
                 <p className="text-xs text-gray-500">Awaiting review</p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-yellow-100 to-amber-100 rounded-2xl shadow-lg">
-                <Clock className="h-8 w-8 text-yellow-600" />
+              <div className="p-3 bg-gray-100 rounded">
+                <Clock className="h-6 w-6 text-gray-700" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-green-100">
+        <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Approved</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-1">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Approved</p>
+                <p className="text-3xl font-semibold text-gray-900 mb-1">
                   {approvedCount}
                 </p>
                 <p className="text-xs text-gray-500">Successfully approved</p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl shadow-lg">
-                <CheckCircle className="h-8 w-8 text-green-600" />
+              <div className="p-3 bg-gray-100 rounded">
+                <CheckCircle className="h-6 w-6 text-gray-700" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-red-100">
+        <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Rejected</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent mb-1">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Rejected</p>
+                <p className="text-3xl font-semibold text-gray-900 mb-1">
                   {rejectedCount}
                 </p>
                 <p className="text-xs text-gray-500">Rejected requests</p>
               </div>
-              <div className="p-4 bg-gradient-to-br from-red-100 to-rose-100 rounded-2xl shadow-lg">
-                <XCircle className="h-8 w-8 text-red-600" />
+              <div className="p-3 bg-gray-100 rounded">
+                <XCircle className="h-6 w-6 text-gray-700" />
               </div>
             </div>
           </CardContent>
@@ -213,15 +213,15 @@ export default function LocationRequests() {
       </div>
 
       {/* Filters */}
-      <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100">
-        <CardHeader className="bg-gradient-to-r from-gray-50 via-slate-50 to-zinc-50 border-b border-gray-200">
+      <Card>
+        <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-white rounded-lg shadow-sm">
-                <Search className="w-5 h-5 text-gray-600" />
+              <div className="p-2 bg-gray-100 rounded">
+                <Search className="w-5 h-5 text-gray-700" />
               </div>
               <div>
-                <CardTitle className="text-xl font-bold text-gray-900">Filters</CardTitle>
+                <CardTitle className="text-lg font-semibold text-gray-900">Filters</CardTitle>
                 <p className="text-sm text-gray-600 mt-1">Filter location requests by source and status</p>
               </div>
             </div>
@@ -270,7 +270,7 @@ export default function LocationRequests() {
             </div>
           </div>
           {hasActiveFilters && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
               <div className="text-sm text-blue-800">
                 <span className="font-semibold">Active filters:</span> Showing {requestsData?.items?.length ?? 0} of {requestsData?.total ?? 0} requests
               </div>
@@ -280,24 +280,23 @@ export default function LocationRequests() {
       </Card>
 
       {/* Requests Table */}
-      <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100">
-        <CardHeader className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b border-gray-200">
+      <Card>
+        <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-white rounded-lg shadow-sm">
-                <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="p-2 bg-gray-100 rounded">
+                <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
               <div>
-                <CardTitle className="text-xl font-bold text-gray-900">Location Requests</CardTitle>
+                <CardTitle className="text-lg font-semibold text-gray-900">Location Requests</CardTitle>
                 <p className="text-sm text-gray-600 mt-1">{totalRequests} total request{totalRequests !== 1 ? 's' : ''}</p>
               </div>
             </div>
             <Button 
               variant="secondary" 
               onClick={() => queryClient.invalidateQueries({ queryKey: ['locationRequests'] })}
-              className="shadow-md hover:shadow-lg"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
@@ -332,9 +331,9 @@ export default function LocationRequests() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto rounded-lg border border-gray-200">
+              <div className="overflow-x-auto rounded border border-gray-200">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gradient-to-r from-gray-50 to-slate-50">
+                  <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                         Location Name
@@ -360,7 +359,7 @@ export default function LocationRequests() {
                     {requests.map((request) => (
                       <tr 
                         key={request.id} 
-                        className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-150 cursor-pointer"
+                        className="hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
                         onClick={() => {
                           setSelectedRequest(request)
                           setIsDetailModalOpen(true)
@@ -368,7 +367,7 @@ export default function LocationRequests() {
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
-                            <div className="p-1.5 bg-blue-100 rounded-lg">
+                            <div className="p-1.5 bg-blue-100 rounded">
                               <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -463,7 +462,6 @@ export default function LocationRequests() {
                       size="sm"
                       onClick={() => setPage((p) => Math.max(0, p - 1))}
                       disabled={page === 0}
-                      className="shadow-sm hover:shadow-md"
                     >
                       Previous
                     </Button>
@@ -472,7 +470,6 @@ export default function LocationRequests() {
                       size="sm"
                       onClick={() => setPage((p) => p + 1)}
                       disabled={!requestsData.hasMore}
-                      className="shadow-sm hover:shadow-md"
                     >
                       Next
                     </Button>
@@ -498,7 +495,7 @@ export default function LocationRequests() {
             {/* Header with Status */}
             <div className="flex items-start justify-between pb-4 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
+                <div className="p-2 bg-blue-100 rounded">
                   <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -514,25 +511,25 @@ export default function LocationRequests() {
 
             {/* Main Information */}
             <div className="grid grid-cols-2 gap-6">
-              <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+              <div className="p-4 bg-blue-50 rounded border border-blue-100">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 block">Location Name</label>
                 <div className="text-sm font-semibold text-gray-900">{selectedRequest.locationName}</div>
               </div>
-              <div className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-100">
+              <div className="p-4 bg-purple-50 rounded border border-purple-100">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 block">Source</label>
                 <div className="text-sm font-semibold text-gray-900">
                   {selectedRequest.source?.companyName || <span className="text-gray-400">—</span>}
                 </div>
               </div>
-              <div className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-100">
+              <div className="p-4 bg-green-50 rounded border border-green-100">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 block">Country</label>
                 <div className="text-sm font-semibold text-gray-900">{selectedRequest.country}</div>
               </div>
-              <div className="p-4 bg-gradient-to-br from-amber-50 to-yellow-50 rounded-lg border border-amber-100">
+              <div className="p-4 bg-yellow-50 rounded border border-yellow-100">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 block">City</label>
                 <div className="text-sm font-semibold text-gray-900">{selectedRequest.city || <span className="text-gray-400">—</span>}</div>
               </div>
-              <div className="p-4 bg-gradient-to-br from-teal-50 to-cyan-50 rounded-lg border border-teal-100">
+              <div className="p-4 bg-gray-50 rounded border border-gray-200">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 block">IATA Code</label>
                 <div className="text-sm font-semibold text-gray-900">{selectedRequest.iataCode || <span className="text-gray-400">—</span>}</div>
               </div>
@@ -540,19 +537,19 @@ export default function LocationRequests() {
 
             {/* Additional Information */}
             {selectedRequest.address && (
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="p-4 bg-gray-50 rounded border border-gray-200">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 block">Address</label>
                 <div className="text-sm text-gray-900">{selectedRequest.address}</div>
               </div>
             )}
             {selectedRequest.reason && (
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="p-4 bg-blue-50 rounded border border-blue-200">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 block">Reason</label>
                 <div className="text-sm text-gray-900">{selectedRequest.reason}</div>
               </div>
             )}
             {selectedRequest.adminNotes && (
-              <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+              <div className="p-4 bg-yellow-50 rounded border border-yellow-200">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 block">Admin Notes</label>
                 <div className="text-sm text-gray-900">{selectedRequest.adminNotes}</div>
               </div>
@@ -586,8 +583,8 @@ export default function LocationRequests() {
         title="Approve Location Request"
       >
         <div className="space-y-6">
-          <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-            <div className="p-2 bg-green-100 rounded-lg">
+          <div className="flex items-start gap-4 p-4 bg-green-50 rounded border border-green-200">
+            <div className="p-2 bg-green-100 rounded">
               <CheckCircle className="w-6 h-6 text-green-600" />
             </div>
             <div className="flex-1">
@@ -603,7 +600,7 @@ export default function LocationRequests() {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Admin Notes (Optional)</label>
             <textarea
-              className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                className="w-full border border-gray-300 rounded px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
               rows={4}
               value={adminNotes}
               onChange={(e) => setAdminNotes(e.target.value)}
@@ -628,7 +625,6 @@ export default function LocationRequests() {
               variant="primary"
               onClick={handleApprove}
               loading={approveMutation.isPending}
-              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-md hover:shadow-lg"
             >
               <CheckCircle className="w-4 h-4 mr-2" />
               Approve Request
@@ -648,8 +644,8 @@ export default function LocationRequests() {
         title="Reject Location Request"
       >
         <div className="space-y-6">
-          <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-red-50 to-rose-50 rounded-lg border border-red-200">
-            <div className="p-2 bg-red-100 rounded-lg">
+          <div className="flex items-start gap-4 p-4 bg-red-50 rounded border border-red-200">
+            <div className="p-2 bg-red-100 rounded">
               <XCircle className="w-6 h-6 text-red-600" />
             </div>
             <div className="flex-1">
@@ -665,7 +661,7 @@ export default function LocationRequests() {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Admin Notes (Optional)</label>
             <textarea
-              className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
+                className="w-full border border-gray-300 rounded px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
               rows={4}
               value={adminNotes}
               onChange={(e) => setAdminNotes(e.target.value)}
@@ -690,7 +686,6 @@ export default function LocationRequests() {
               variant="danger"
               onClick={handleReject}
               loading={rejectMutation.isPending}
-              className="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 shadow-md hover:shadow-lg"
             >
               <XCircle className="w-4 h-4 mr-2" />
               Reject Request

@@ -544,11 +544,11 @@ export default function Companies() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-4 mb-4">
-          <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-sm">
-            <Building2 className="w-8 h-8 text-blue-600" />
+          <div className="p-3 bg-gray-100 rounded">
+            <Building2 className="w-6 h-6 text-gray-700" />
           </div>
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-semibold text-gray-900">
               Companies
             </h1>
             <p className="mt-2 text-gray-600 font-medium">
@@ -560,97 +560,97 @@ export default function Companies() {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <Card className="transform transition-all duration-300 hover:shadow-lg border-2 border-gray-100">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total</p>
-                <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total</p>
+                <p className="text-2xl font-semibold text-gray-900">
                   {stats.total}
                 </p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <Users className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-gray-100 rounded">
+                <Users className="w-5 h-5 text-gray-700" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="transform transition-all duration-300 hover:shadow-lg border-2 border-blue-100">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Sources</p>
-                <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Sources</p>
+                <p className="text-2xl font-semibold text-gray-900">
                   {stats.sources}
                 </p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <Building2 className="w-6 h-6 text-blue-600" />
+              <div className="p-3 bg-gray-100 rounded">
+                <Building2 className="w-5 h-5 text-gray-700" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="transform transition-all duration-300 hover:shadow-lg border-2 border-purple-100">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Agents</p>
-                <p className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Agents</p>
+                <p className="text-2xl font-semibold text-gray-900">
                   {stats.agents}
                 </p>
               </div>
-              <div className="p-3 bg-purple-100 rounded-xl">
-                <Users className="w-6 h-6 text-purple-600" />
+              <div className="p-3 bg-gray-100 rounded">
+                <Users className="w-5 h-5 text-gray-700" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="transform transition-all duration-300 hover:shadow-lg border-2 border-green-100">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Active</p>
-                <p className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Active</p>
+                <p className="text-2xl font-semibold text-gray-900">
                   {stats.active}
                 </p>
               </div>
-              <div className="p-3 bg-green-100 rounded-xl">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+              <div className="p-3 bg-gray-100 rounded">
+                <CheckCircle className="w-5 h-5 text-gray-700" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="transform transition-all duration-300 hover:shadow-lg border-2 border-yellow-100">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Pending</p>
-                <p className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Pending</p>
+                <p className="text-2xl font-semibold text-gray-900">
                   {stats.pending}
                 </p>
               </div>
-              <div className="p-3 bg-yellow-100 rounded-xl">
-                <Clock className="w-6 h-6 text-yellow-600" />
+              <div className="p-3 bg-gray-100 rounded">
+                <Clock className="w-5 h-5 text-gray-700" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="transform transition-all duration-300 hover:shadow-lg border-2 border-red-100">
+        <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Suspended</p>
-                <p className="text-3xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Suspended</p>
+                <p className="text-2xl font-semibold text-gray-900">
                   {stats.suspended}
                 </p>
               </div>
-              <div className="p-3 bg-red-100 rounded-xl">
-                <XCircle className="w-6 h-6 text-red-600" />
+              <div className="p-3 bg-gray-100 rounded">
+                <XCircle className="w-5 h-5 text-gray-700" />
               </div>
             </div>
           </CardContent>
@@ -658,8 +658,8 @@ export default function Companies() {
       </div>
 
       {/* Main Companies Table Card */}
-      <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-gray-50 via-blue-50/30 to-purple-50/30 border-b border-gray-200">
+      <Card>
+        <CardHeader>
           <div className="flex items-center justify-between mb-4">
             <div>
               <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -742,7 +742,7 @@ export default function Companies() {
           {filteredCompanies.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gradient-to-r from-gray-50 to-gray-100/50">
+                <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Company
@@ -768,7 +768,7 @@ export default function Companies() {
                   {filteredCompanies.map((company) => (
                     <tr 
                       key={company.id} 
-                      className="hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-purple-50/30 transition-all duration-200 cursor-pointer"
+                      className="hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
                       onClick={() => handleCompanyClick(company)}
                     >
                       <td className="px-6 py-4 whitespace-nowrap">

@@ -9,8 +9,7 @@ export const Card: React.FC<CardProps> = ({ className, children, ...props }) => 
   return (
     <div
       className={cn(
-        'bg-white rounded-xl shadow-sm border border-gray-200',
-        'hover:shadow-md transition-all duration-200',
+        'bg-white rounded border border-gray-200',
         'card-hover',
         className
       )}
@@ -25,8 +24,8 @@ export const CardHeader: React.FC<CardProps> = ({ className, children, ...props 
   return (
     <div
       className={cn(
-        'px-6 py-5 border-b border-gray-200',
-        'bg-gradient-to-r from-gray-50/80 to-white',
+        'px-6 py-4 border-b border-gray-200',
+        'bg-gray-50',
         className
       )}
       {...props}
@@ -39,7 +38,7 @@ export const CardHeader: React.FC<CardProps> = ({ className, children, ...props 
 export const CardContent: React.FC<CardProps> = ({ className, children, ...props }) => {
   return (
     <div
-      className={cn('px-6 py-5', className)}
+      className={cn('px-6 py-4', className)}
       {...props}
     >
       {children}

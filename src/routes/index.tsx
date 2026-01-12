@@ -18,6 +18,7 @@ import Health from '../pages/Health'
 import Metrics from '../pages/Metrics'
 import Logs from '../pages/Logs'
 import Settings from '../pages/Settings'
+import Support from '../pages/Support'
 import Integrations from '../pages/Integrations'
 import BookingLogs from '../pages/BookingLogs'
 import DocsPage from '../pages/Docs'
@@ -150,6 +151,14 @@ export const AppRoutes: React.FC = () => {
           }
         />
         <Route
+          path="support"
+          element={
+            <RequireAgreement>
+              <Support />
+            </RequireAgreement>
+          }
+        />
+        <Route
           path="settings"
           element={
             <RequireAgreement>
@@ -267,6 +276,7 @@ export const AppRoutes: React.FC = () => {
 
       {/* Fullscreen docs route (no sidebar) */}
       <Route path="/docs-fullscreen/:endpointId" element={<DocsFullscreen />} />
+      <Route path="/docs-fullscreen/sdk" element={<DocsFullscreen />} />
       <Route path="/docs-fullscreen" element={<DocsFullscreen />} />
 
       {/* Legacy Routes (kept for backward compatibility) */}

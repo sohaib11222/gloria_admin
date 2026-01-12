@@ -19,9 +19,11 @@ const queryClient = new QueryClient({
 })
 
 // Get base path from Vite config (matches vite.config.js base setting)
+// Vite config uses '/admin/' so we need to use '/admin' for React Router basename
 const getBasePath = () => {
-  // In production, use /admin/, in dev use /
-  return import.meta.env.PROD ? '/admin' : ''
+  // Always use /admin to match vite.config.js base: '/admin/'
+  // This ensures routes work correctly in both dev and prod
+  return '/admin'
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(

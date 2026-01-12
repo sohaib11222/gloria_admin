@@ -28,14 +28,14 @@ table {
 table thead th {
   letter-spacing: 0.05em;
   font-weight: 600;
-  background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+  background: #f9fafb;
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
 table tbody tr {
-  transition: all 0.15s ease-in-out;
+  transition: background-color 0.15s ease;
 }
 
 table tbody tr:nth-child(even) {
@@ -43,14 +43,11 @@ table tbody tr:nth-child(even) {
 }
 
 table tbody tr:hover {
-  background-color: #f0f9ff;
-  transform: scale(1.001);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: #f3f4f6;
 }
 
 table tbody tr:active {
-  background-color: #e0f2fe;
-  transform: scale(0.999);
+  background-color: #e5e7eb;
 }
 
 /* Enhanced focus styles */
@@ -59,9 +56,9 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid #2563eb;
   outline-offset: 2px;
-  border-radius: 0.375rem;
+  border-radius: 0.25rem;
 }
 
 /* Improved input and select styling */
@@ -72,7 +69,7 @@ input[type="number"],
 input[type="search"],
 select,
 textarea {
-  transition: all 0.2s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 input[type="text"]:focus,
@@ -82,8 +79,8 @@ input[type="number"]:focus,
 input[type="search"]:focus,
 select:focus,
 textarea:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 /* Loading spinner animation */
@@ -100,24 +97,20 @@ textarea:focus {
 /* Smooth transitions for modals and overlays */
 .modal-enter {
   opacity: 0;
-  transform: scale(0.95);
 }
 
 .modal-enter-active {
   opacity: 1;
-  transform: scale(1);
-  transition: opacity 300ms ease-out, transform 300ms ease-out;
+  transition: opacity 200ms ease-out;
 }
 
 .modal-exit {
   opacity: 1;
-  transform: scale(1);
 }
 
 .modal-exit-active {
   opacity: 0;
-  transform: scale(0.95);
-  transition: opacity 200ms ease-in, transform 200ms ease-in;
+  transition: opacity 150ms ease-in;
 }
 
 /* Scrollbar styling */
@@ -128,17 +121,16 @@ textarea:focus {
 
 ::-webkit-scrollbar-track {
   background: #f1f1f1;
-  border-radius: 5px;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #cbd5e1, #94a3b8);
-  border-radius: 5px;
-  border: 2px solid #f1f1f1;
+  background: #d1d5db;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(to bottom, #94a3b8, #64748b);
+  background: #9ca3af;
 }
 
 /* Custom scrollbar classes */
@@ -148,7 +140,7 @@ textarea:focus {
 
 .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
   background: #d1d5db;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb:hover {
@@ -159,54 +151,23 @@ textarea:focus {
   background: transparent;
 }
 
-/* Card hover effects */
+/* Card hover effects - removed transform, simplified */
 .card-hover {
-  transition: all 0.2s ease;
+  transition: box-shadow 0.15s ease;
 }
 
 .card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-/* Smooth page transitions */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-main > div {
-  animation: fadeIn 0.3s ease-out;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* Enhanced focus rings */
 *:focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid #2563eb;
   outline-offset: 2px;
-  border-radius: 0.375rem;
+  border-radius: 0.25rem;
 }
 
 /* Better link transitions */
 a {
-  transition: all 0.2s ease;
-}
-
-/* Glass morphism effect */
-.backdrop-blur-sm {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.bg-white\/95 {
-  background-color: rgba(255, 255, 255, 0.95);
-}
-
-.bg-white\/80 {
-  background-color: rgba(255, 255, 255, 0.8);
+  transition: color 0.15s ease;
 }

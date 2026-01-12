@@ -25,7 +25,7 @@ const searchItems: SearchItem[] = [
   { id: 'logs', label: 'System Logs', category: 'Logs', path: '/logs', icon: '📋' },
   { id: 'metrics', label: 'Metrics', category: 'Monitoring', path: '/metrics', icon: '📈' },
   { id: 'verification', label: 'Verification', category: 'Tools', path: '/verification', icon: '✅' },
-  { id: 'docs', label: 'API Reference', category: 'Documentation', path: '/docs', icon: '📖' },
+  { id: 'docs', label: 'API Reference', category: 'Documentation', path: '/docs-fullscreen', icon: '📖' },
   { id: 'integrations', label: 'Integrations', category: 'Settings', path: '/integrations', icon: '🔧' },
   { id: 'changelog', label: "What's New", category: 'Documentation', path: '/changelog', icon: '🆕' },
   { id: 'settings', label: 'Settings', category: 'Settings', path: '/settings', icon: '⚙️' },
@@ -129,7 +129,15 @@ export const SearchPalette: React.FC<{ isOpen: boolean; onClose: () => void }> =
                         <button
                           key={item.id}
                           onClick={() => {
-                            navigate(item.path)
+                            if (item.id === 'docs') {
+                              // Open docs in new tab
+                              // Base path is always /admin to match vite.config.js and React Router basename
+                              const basePath = '/admin'
+                              const docsUrl = `${window.location.origin}${basePath}/docs-fullscreen`
+                              window.open(docsUrl, '_blank', 'noopener,noreferrer')
+                            } else {
+                              navigate(item.path)
+                            }
                             onClose()
                           }}
                           onMouseEnter={() => setSelectedIndex(globalIdx)}

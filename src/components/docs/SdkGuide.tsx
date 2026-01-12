@@ -1,10 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import http from '../../lib/http';
 import './docs.css';
 
 type SdkType = 'javascript' | 'typescript' | 'go' | 'php' | 'python' | 'java' | 'perl';
 
+type DocEndpoint = {
+  id: string;
+  name: string;
+  method: string;
+  path: string;
+  description?: string;
+};
+
+type DocCategory = {
+  id: string;
+  name: string;
+  description?: string;
+  endpoints: DocEndpoint[];
+};
+
 const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'admin' }) => {
   const [activeSdk, setActiveSdk] = useState<SdkType>('typescript');
+  const [categories, setCategories] = useState<DocCategory[]>([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Load endpoints filtered by role
+    http.get(`/docs/${role}`)
+      .then((res) => {
+        setCategories(res.data);
+      })
+      .catch((err) => {
+        console.error('Failed to load endpoints:', err);
+      });
+  }, [role]);
   const prefaceText = {
     agent: 'Start here: login → approve agreement → availability → booking',
     source: 'Start here: login → offer agreement → locations → verification',
@@ -17,7 +47,7 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
       <p>Get started with Gloria Connect SDKs for integrating with our API.</p>
 
       {role && (
-        <div style={{ marginBottom: '2rem', padding: '1rem', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '0.5rem' }}>
+        <div style={{ marginBottom: '2rem', padding: '1rem', backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.25rem' }}>
           <p style={{ margin: 0, fontWeight: 600, color: '#1e40af' }}>{prefaceText[role]}</p>
         </div>
       )}
@@ -26,11 +56,11 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
         <h2>Available SDKs</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
           {/* JavaScript Card */}
-          <div style={{ border: '2px solid #10b981', borderRadius: '0.5rem', padding: '1.5rem', backgroundColor: '#f0fdf4' }}>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: '0.25rem', padding: '1.5rem', backgroundColor: 'white' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <span style={{ fontSize: '1.5rem' }}>📦</span>
               <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>JavaScript</h3>
-              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '9999px', fontWeight: 600 }}>Available</span>
+              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '0.25rem', fontWeight: 500 }}>Available</span>
             </div>
             <p style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '1rem' }}>
               Production-ready SDK for Node.js 18+ and modern browsers.
@@ -47,11 +77,11 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
           </div>
 
           {/* PHP Card */}
-          <div style={{ border: '2px solid #10b981', borderRadius: '0.5rem', padding: '1.5rem', backgroundColor: '#f0fdf4' }}>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: '0.25rem', padding: '1.5rem', backgroundColor: 'white' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <span style={{ fontSize: '1.5rem' }}>🐘</span>
               <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>PHP</h3>
-              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '9999px', fontWeight: 600 }}>Available</span>
+              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '0.25rem', fontWeight: 500 }}>Available</span>
             </div>
             <p style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '1rem' }}>
               Production-ready PHP SDK for server-side integration.
@@ -68,11 +98,11 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
           </div>
 
           {/* TypeScript Card */}
-          <div style={{ border: '2px solid #10b981', borderRadius: '0.5rem', padding: '1.5rem', backgroundColor: '#f0fdf4' }}>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: '0.25rem', padding: '1.5rem', backgroundColor: 'white' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <span style={{ fontSize: '1.5rem' }}>📘</span>
               <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>TypeScript</h3>
-              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '9999px', fontWeight: 600 }}>Available</span>
+              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '0.25rem', fontWeight: 500 }}>Available</span>
             </div>
             <p style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '1rem' }}>
               Production-ready TypeScript SDK with full type definitions.
@@ -89,11 +119,11 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
           </div>
 
           {/* Go Card */}
-          <div style={{ border: '2px solid #10b981', borderRadius: '0.5rem', padding: '1.5rem', backgroundColor: '#f0fdf4' }}>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: '0.25rem', padding: '1.5rem', backgroundColor: 'white' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <span style={{ fontSize: '1.5rem' }}>🐹</span>
               <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>Go</h3>
-              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '9999px', fontWeight: 600 }}>Available</span>
+              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '0.25rem', fontWeight: 500 }}>Available</span>
             </div>
             <p style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '1rem' }}>
               Production-ready Go SDK for high-performance integrations.
@@ -110,11 +140,11 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
           </div>
 
           {/* Python Card */}
-          <div style={{ border: '2px solid #10b981', borderRadius: '0.5rem', padding: '1.5rem', backgroundColor: '#f0fdf4' }}>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: '0.25rem', padding: '1.5rem', backgroundColor: 'white' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <span style={{ fontSize: '1.5rem' }}>🐍</span>
               <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>Python</h3>
-              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '9999px', fontWeight: 600 }}>Available</span>
+              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '0.25rem', fontWeight: 500 }}>Available</span>
             </div>
             <p style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '1rem' }}>
               Production-ready Python SDK for data science and automation.
@@ -131,11 +161,11 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
           </div>
           
           {/* Java Card */}
-          <div style={{ border: '2px solid #10b981', borderRadius: '0.5rem', padding: '1.5rem', backgroundColor: '#f0fdf4' }}>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: '0.25rem', padding: '1.5rem', backgroundColor: 'white' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <span style={{ fontSize: '1.5rem' }}>☕</span>
               <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>Java</h3>
-              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '9999px', fontWeight: 600 }}>Available</span>
+              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '0.25rem', fontWeight: 500 }}>Available</span>
             </div>
             <p style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '1rem' }}>
               Production-ready Java SDK with CompletableFuture support.
@@ -152,11 +182,11 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
           </div>
           
           {/* Perl Card */}
-          <div style={{ border: '2px solid #10b981', borderRadius: '0.5rem', padding: '1.5rem', backgroundColor: '#f0fdf4' }}>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: '0.25rem', padding: '1.5rem', backgroundColor: 'white' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <span style={{ fontSize: '1.5rem' }}>🐪</span>
               <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>Perl</h3>
-              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '9999px', fontWeight: 600 }}>Available</span>
+              <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', backgroundColor: '#10b981', color: 'white', borderRadius: '0.25rem', fontWeight: 500 }}>Available</span>
             </div>
             <p style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '1rem' }}>
               Production-ready Perl SDK for legacy systems.
@@ -183,15 +213,14 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
             style={{
               background: activeSdk === 'typescript' ? '#eff6ff' : 'transparent',
               border: 'none',
-              padding: '0.625rem 1.25rem',
+              padding: '0.625rem 1rem',
               fontSize: '0.875rem',
-              fontWeight: activeSdk === 'typescript' ? 700 : 600,
+              fontWeight: activeSdk === 'typescript' ? 600 : 500,
               color: activeSdk === 'typescript' ? '#3b82f6' : '#6b7280',
               cursor: 'pointer',
-              borderBottom: activeSdk === 'typescript' ? '3px solid #3b82f6' : '3px solid transparent',
+              borderBottom: activeSdk === 'typescript' ? '2px solid #3b82f6' : '2px solid transparent',
               marginBottom: activeSdk === 'typescript' ? '-0.5rem' : '-0.5rem',
-              transition: 'all 0.2s',
-              borderRadius: '0.5rem 0.5rem 0 0',
+              transition: 'color 0.15s',
               whiteSpace: 'nowrap'
             }}
             onMouseEnter={(e) => {
@@ -213,15 +242,14 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
             style={{
               background: activeSdk === 'javascript' ? '#eff6ff' : 'transparent',
               border: 'none',
-              padding: '0.625rem 1.25rem',
+              padding: '0.625rem 1rem',
               fontSize: '0.875rem',
-              fontWeight: activeSdk === 'javascript' ? 700 : 600,
+              fontWeight: activeSdk === 'javascript' ? 600 : 500,
               color: activeSdk === 'javascript' ? '#3b82f6' : '#6b7280',
               cursor: 'pointer',
-              borderBottom: activeSdk === 'javascript' ? '3px solid #3b82f6' : '3px solid transparent',
+              borderBottom: activeSdk === 'javascript' ? '2px solid #3b82f6' : '2px solid transparent',
               marginBottom: activeSdk === 'javascript' ? '-0.5rem' : '-0.5rem',
-              transition: 'all 0.2s',
-              borderRadius: '0.5rem 0.5rem 0 0',
+              transition: 'color 0.15s',
               whiteSpace: 'nowrap'
             }}
             onMouseEnter={(e) => {
@@ -243,15 +271,14 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
             style={{
               background: activeSdk === 'go' ? '#eff6ff' : 'transparent',
               border: 'none',
-              padding: '0.625rem 1.25rem',
+              padding: '0.625rem 1rem',
               fontSize: '0.875rem',
-              fontWeight: activeSdk === 'go' ? 700 : 600,
+              fontWeight: activeSdk === 'go' ? 600 : 500,
               color: activeSdk === 'go' ? '#3b82f6' : '#6b7280',
               cursor: 'pointer',
-              borderBottom: activeSdk === 'go' ? '3px solid #3b82f6' : '3px solid transparent',
+              borderBottom: activeSdk === 'go' ? '2px solid #3b82f6' : '2px solid transparent',
               marginBottom: activeSdk === 'go' ? '-0.5rem' : '-0.5rem',
-              transition: 'all 0.2s',
-              borderRadius: '0.5rem 0.5rem 0 0',
+              transition: 'color 0.15s',
               whiteSpace: 'nowrap'
             }}
             onMouseEnter={(e) => {
@@ -275,13 +302,12 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
               border: 'none',
               padding: '0.625rem 1.25rem',
               fontSize: '0.875rem',
-              fontWeight: activeSdk === 'php' ? 700 : 600,
+              fontWeight: activeSdk === 'php' ? 600 : 500,
               color: activeSdk === 'php' ? '#3b82f6' : '#6b7280',
               cursor: 'pointer',
-              borderBottom: activeSdk === 'php' ? '3px solid #3b82f6' : '3px solid transparent',
+              borderBottom: activeSdk === 'php' ? '2px solid #3b82f6' : '2px solid transparent',
               marginBottom: activeSdk === 'php' ? '-0.5rem' : '-0.5rem',
-              transition: 'all 0.2s',
-              borderRadius: '0.5rem 0.5rem 0 0',
+              transition: 'color 0.15s',
               whiteSpace: 'nowrap'
             }}
             onMouseEnter={(e) => {
@@ -305,13 +331,12 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
               border: 'none',
               padding: '0.625rem 1.25rem',
               fontSize: '0.875rem',
-              fontWeight: activeSdk === 'python' ? 700 : 600,
+              fontWeight: activeSdk === 'python' ? 600 : 500,
               color: activeSdk === 'python' ? '#3b82f6' : '#6b7280',
               cursor: 'pointer',
-              borderBottom: activeSdk === 'python' ? '3px solid #3b82f6' : '3px solid transparent',
+              borderBottom: activeSdk === 'python' ? '2px solid #3b82f6' : '2px solid transparent',
               marginBottom: activeSdk === 'python' ? '-0.5rem' : '-0.5rem',
-              transition: 'all 0.2s',
-              borderRadius: '0.5rem 0.5rem 0 0',
+              transition: 'color 0.15s',
               whiteSpace: 'nowrap'
             }}
             onMouseEnter={(e) => {
@@ -335,13 +360,12 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
               border: 'none',
               padding: '0.625rem 1.25rem',
               fontSize: '0.875rem',
-              fontWeight: activeSdk === 'java' ? 700 : 600,
+              fontWeight: activeSdk === 'java' ? 600 : 500,
               color: activeSdk === 'java' ? '#3b82f6' : '#6b7280',
               cursor: 'pointer',
-              borderBottom: activeSdk === 'java' ? '3px solid #3b82f6' : '3px solid transparent',
+              borderBottom: activeSdk === 'java' ? '2px solid #3b82f6' : '2px solid transparent',
               marginBottom: activeSdk === 'java' ? '-0.5rem' : '-0.5rem',
-              transition: 'all 0.2s',
-              borderRadius: '0.5rem 0.5rem 0 0',
+              transition: 'color 0.15s',
               whiteSpace: 'nowrap'
             }}
             onMouseEnter={(e) => {
@@ -365,13 +389,12 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
               border: 'none',
               padding: '0.625rem 1.25rem',
               fontSize: '0.875rem',
-              fontWeight: activeSdk === 'perl' ? 700 : 600,
+              fontWeight: activeSdk === 'perl' ? 600 : 500,
               color: activeSdk === 'perl' ? '#3b82f6' : '#6b7280',
               cursor: 'pointer',
-              borderBottom: activeSdk === 'perl' ? '3px solid #3b82f6' : '3px solid transparent',
+              borderBottom: activeSdk === 'perl' ? '2px solid #3b82f6' : '2px solid transparent',
               marginBottom: activeSdk === 'perl' ? '-0.5rem' : '-0.5rem',
-              transition: 'all 0.2s',
-              borderRadius: '0.5rem 0.5rem 0 0',
+              transition: 'color 0.15s',
               whiteSpace: 'nowrap'
             }}
             onMouseEnter={(e) => {
@@ -393,76 +416,138 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
       {/* TypeScript SDK Section */}
       {activeSdk === 'typescript' && (
       <section>
-        <h2>TypeScript Quick Start</h2>
-        <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-          <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`import { CarHireClient } from '@carhire/sdk';
+        <h1 style={{ fontSize: '1.875rem', fontWeight: 600, marginBottom: '1rem', color: '#1f2937' }}>TypeScript/Node.js SDK</h1>
+        <p style={{ fontSize: '1rem', color: '#6b7280', marginBottom: '2rem' }}>
+          Production-ready TypeScript SDK for Node.js 18+ with full type definitions, async/await support, and both REST and gRPC transports.
+        </p>
 
-const client = new CarHireClient({
-  baseUrl: 'https://api.carhire.example.com',
+        <section>
+          <h2>Installation</h2>
+          <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.25rem', padding: '1rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`npm install @carhire/nodejs-sdk
+# or
+yarn add @carhire/nodejs-sdk`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Quick Start (REST)</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`import { CarHireClient, Config, AvailabilityCriteria, BookingCreate } from '@carhire/nodejs-sdk';
+
+const config = Config.forRest({
+  baseUrl: 'https://your-gateway.example.com',
+  token: 'Bearer <JWT>',
+  apiKey: '<YOUR_API_KEY>', // Optional
+  agentId: 'ag_123',
+  callTimeoutMs: 12000,
+  availabilitySlaMs: 120000,
+  longPollWaitMs: 10000,
 });
 
-// Login
-const { access, user } = await client.auth.login('user@example.com', 'password');
-client.setToken(access);
+const client = new CarHireClient(config);
 
-// Submit availability
-const { request_id } = await client.availability.submit({
-  pickup_unlocode: 'GBMAN',
-  dropoff_unlocode: 'GBGLA',
-  pickup_iso: '2025-01-15T10:00:00Z',
-  dropoff_iso: '2025-01-20T10:00:00Z',
-  driver_age: 30,
-  residency_country: 'GB',
-  vehicle_classes: ['ECONOMY'],
-  agreement_refs: ['AG-2025-001'],
+// Search availability
+const criteria = AvailabilityCriteria.make({
+  pickupLocode: 'PKKHI',
+  returnLocode: 'PKLHE',
+  pickupAt: new Date('2025-11-03T10:00:00Z'),
+  returnAt: new Date('2025-11-05T10:00:00Z'),
+  driverAge: 28,
+  currency: 'USD',
+  agreementRefs: ['AGR-001'],
 });
 
-// Stream results
-for await (const offers of client.availability.stream({ 
-  requestId: request_id 
-})) {
-  console.log('New offers:', offers);
+for await (const chunk of client.getAvailability().search(criteria)) {
+  console.log(\`[\${chunk.status}] items=\${chunk.items.length} cursor=\${chunk.cursor ?? 0}\`);
+  if (chunk.status === 'COMPLETE') break;
+}
+
+// Create booking
+const booking = BookingCreate.fromOffer({
+  agreement_ref: 'AGR-001',
+  supplier_id: 'SRC-AVIS',
+  offer_id: 'off_123',
+  driver: {
+    firstName: 'Ali',
+    lastName: 'Raza',
+    email: 'ali@example.com',
+    phone: '+92...',
+    age: 28,
+  },
+});
+
+const result = await client.getBooking().create(booking, 'idem-123');
+console.log(result.supplierBookingRef);`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Configuration</h2>
+          <p>Both REST and gRPC transports are supported:</p>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`// REST Configuration
+const restConfig = Config.forRest({
+  baseUrl: 'https://api.example.com', // Required
+  token: 'Bearer <JWT>', // Required
+  apiKey: '<API_KEY>', // Optional
+  agentId: 'ag_123', // Optional
+  callTimeoutMs: 10000, // Default: 10000
+  availabilitySlaMs: 120000, // Default: 120000
+  longPollWaitMs: 10000, // Default: 10000
+});
+
+// gRPC Configuration
+const grpcConfig = Config.forGrpc({
+  host: 'api.example.com:50051', // Required
+  caCert: '<CA_CERT>', // Required
+  clientCert: '<CLIENT_CERT>', // Required
+  clientKey: '<CLIENT_KEY>', // Required
+  agentId: 'ag_123', // Optional
+});`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Error Handling</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`import { TransportException } from '@carhire/nodejs-sdk';
+
+try {
+  await client.getBooking().create(booking, 'idem-123');
+} catch (error) {
+  if (error instanceof TransportException) {
+    console.error(\`Status: \${error.statusCode}, Code: \${error.code}\`);
+  }
+  throw error;
 }`}</pre>
-        </div>
-        <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#6b7280' }}>
-          <p>
-            <strong>Full Documentation:</strong>{' '}
-            <a href="../../sdk/typescript/README.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
-              README
-            </a>{' '}
-            |{' '}
-            <a href="../../sdk/typescript/REFERENCE.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
-              API Reference
-            </a>
-          </p>
-        </div>
-          <section>
-            <h2>Installation</h2>
-            <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.5rem', padding: '1rem', marginTop: '1rem' }}>
-              <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`npm install @carhire/sdk
-# or
-yarn add @carhire/sdk
-# or
-pnpm add @carhire/sdk`}</pre>
-            </div>
-          </section>
-          <section>
-            <h2>Documentation Links</h2>
-            <div style={{ marginTop: '1rem' }}>
-              <ul style={{ listStyle: 'none', padding: 0 }}>
-                <li style={{ marginBottom: '0.75rem' }}>
-                  <a href="../../sdk/typescript/README.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
-                    📖 Full README
-                  </a>
-                </li>
-                <li style={{ marginBottom: '0.75rem' }}>
-                  <a href="../../sdk/typescript/REFERENCE.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
-                    📚 API Reference
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </section>
+          </div>
+        </section>
+
+        <section>
+          <h2>Features</h2>
+          <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', color: '#374151' }}>
+            <li>Availability Search: Submit → Poll pattern with streaming results</li>
+            <li>Booking Management: Create, modify, cancel, and check bookings</li>
+            <li>Agreement Enforcement: All operations require valid agreement references</li>
+            <li>Idempotency: Booking creation supports idempotency keys</li>
+            <li>TypeScript Support: Full type definitions included</li>
+            <li>Both REST and gRPC transports supported</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Documentation Links</h2>
+          <div style={{ marginTop: '1rem' }}>
+            <ul style={{ listStyle: 'none', padding: 0 }}>
+              <li style={{ marginBottom: '0.75rem' }}>
+                <a href="../../sdk/nodejs-agent/README.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+                  📖 Full README
+                </a>
+              </li>
+            </ul>
+          </div>
+        </section>
         </section>
       )}
 
@@ -470,48 +555,116 @@ pnpm add @carhire/sdk`}</pre>
       {activeSdk === 'javascript' && (
         <>
           <section>
-            <h2>JavaScript Quick Start</h2>
-        <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-          <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`import { CarHireClient } from '@carhire/sdk';
+            <h1 style={{ fontSize: '1.875rem', fontWeight: 600, marginBottom: '1rem', color: '#1f2937' }}>JavaScript SDK</h1>
+            <p style={{ fontSize: '1rem', color: '#6b7280', marginBottom: '2rem' }}>
+              Production-ready JavaScript SDK for Node.js 18+ and modern browsers. Same API as TypeScript SDK but without type definitions.
+            </p>
 
-const client = new CarHireClient({
-  baseUrl: 'https://api.carhire.example.com',
-});
-
-// Login
-const { access } = await client.auth.login('user@example.com', 'password');
-client.setToken(access);
-
-// Submit availability
-const { request_id } = await client.availability.submit({
-  pickup_unlocode: 'GBMAN',
-  dropoff_unlocode: 'GBGLA',
-  pickup_iso: '2025-01-15T10:00:00Z',
-  dropoff_iso: '2025-01-20T10:00:00Z',
-  driver_age: 30,
-  residency_country: 'GB',
-  vehicle_classes: ['ECONOMY'],
-  agreement_refs: ['AG-2025-001'],
-});
-
-// Stream results
-for await (const offers of client.availability.stream({ 
-  requestId: request_id 
-})) {
-  console.log('New offers:', offers);
-}`}</pre>
-        </div>
-      </section>
+            <h2>Installation</h2>
+            <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.25rem', padding: '1rem', marginTop: '1rem' }}>
+              <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`npm install @carhire/nodejs-sdk
+# or
+yarn add @carhire/nodejs-sdk`}</pre>
+            </div>
+          </section>
 
           <section>
-            <h2>Installation</h2>
-            <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.5rem', padding: '1rem', marginTop: '1rem' }}>
-              <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`npm install @carhire/sdk
-# or
-yarn add @carhire/sdk
-# or
-pnpm add @carhire/sdk`}</pre>
+            <h2>Quick Start (REST)</h2>
+            <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+              <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`import { CarHireClient, Config, AvailabilityCriteria, BookingCreate } from '@carhire/nodejs-sdk';
+
+const config = Config.forRest({
+  baseUrl: 'https://your-gateway.example.com',
+  token: 'Bearer <JWT>',
+  apiKey: '<YOUR_API_KEY>', // Optional
+  agentId: 'ag_123',
+  callTimeoutMs: 12000,
+  availabilitySlaMs: 120000,
+  longPollWaitMs: 10000,
+});
+
+const client = new CarHireClient(config);
+
+// Search availability
+const criteria = AvailabilityCriteria.make({
+  pickupLocode: 'PKKHI',
+  returnLocode: 'PKLHE',
+  pickupAt: new Date('2025-11-03T10:00:00Z'),
+  returnAt: new Date('2025-11-05T10:00:00Z'),
+  driverAge: 28,
+  currency: 'USD',
+  agreementRefs: ['AGR-001'],
+});
+
+for await (const chunk of client.getAvailability().search(criteria)) {
+  console.log(\`[\${chunk.status}] items=\${chunk.items.length} cursor=\${chunk.cursor ?? 0}\`);
+  if (chunk.status === 'COMPLETE') break;
+}
+
+// Create booking
+const booking = BookingCreate.fromOffer({
+  agreement_ref: 'AGR-001',
+  supplier_id: 'SRC-AVIS',
+  offer_id: 'off_123',
+  driver: {
+    firstName: 'Ali',
+    lastName: 'Raza',
+    email: 'ali@example.com',
+    phone: '+92...',
+    age: 28,
+  },
+});
+
+const result = await client.getBooking().create(booking, 'idem-123');
+console.log(result.supplierBookingRef);`}</pre>
             </div>
+          </section>
+
+          <section>
+            <h2>Availability Streaming</h2>
+            <p>The SDK uses async iterators for streaming availability results:</p>
+            <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+              <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`// The search() method returns an async iterator
+for await (const chunk of client.getAvailability().search(criteria)) {
+  // Process each chunk as it arrives
+  console.log(\`Status: \${chunk.status}, Items: \${chunk.items.length}\`);
+  
+  // Break when complete
+  if (chunk.status === 'COMPLETE') {
+    break;
+  }
+}`}</pre>
+            </div>
+          </section>
+
+          <section>
+            <h2>Error Handling</h2>
+            <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+              <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`import { TransportException } from '@carhire/nodejs-sdk';
+
+try {
+  await client.getBooking().create(booking, 'idem-123');
+} catch (error) {
+  if (error instanceof TransportException) {
+    console.error(\`Status: \${error.statusCode}, Code: \${error.code}\`);
+    console.error('Message:', error.message);
+  }
+  throw error;
+}`}</pre>
+            </div>
+          </section>
+
+          <section>
+            <h2>REST Endpoints</h2>
+            <p>The SDK uses the following REST endpoints:</p>
+            <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', color: '#374151' }}>
+              <li><code>POST /availability/submit</code> - Submit availability request</li>
+              <li><code>GET /availability/poll?request_id&since_seq&wait_ms</code> - Poll availability results</li>
+              <li><code>POST /bookings</code> - Create booking (with Idempotency-Key header)</li>
+              <li><code>{'PATCH /bookings/{supplierBookingRef}?agreement_ref'}</code> - Modify booking</li>
+              <li><code>{'POST /bookings/{supplierBookingRef}/cancel?agreement_ref'}</code> - Cancel booking</li>
+              <li><code>{'GET /bookings/{supplierBookingRef}?agreement_ref'}</code> - Check booking status</li>
+            </ul>
           </section>
 
           <section>
@@ -519,62 +672,11 @@ pnpm add @carhire/sdk`}</pre>
             <div style={{ marginTop: '1rem' }}>
               <ul style={{ listStyle: 'none', padding: 0 }}>
                 <li style={{ marginBottom: '0.75rem' }}>
-                  <a href="../../sdk/javascript/README.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+                  <a href="../../sdk/nodejs-agent/README.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
                     📖 Full README
                   </a>
                 </li>
-                <li style={{ marginBottom: '0.75rem' }}>
-                  <a href="../../sdk/javascript/REFERENCE.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
-                    📚 API Reference
-                  </a>
-                </li>
-                <li style={{ marginBottom: '0.75rem' }}>
-                  <a href="../../sdk/javascript/examples/" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
-                    💡 Examples
-                  </a>
-                </li>
               </ul>
-            </div>
-          </section>
-
-          <section>
-            <h2>Availability Long-polling</h2>
-            <p>The SDK supports multiple patterns for polling availability results:</p>
-            <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-              <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`// Async Iterator (Recommended)
-for await (const offers of client.availability.stream({
-  requestId: request_id,
-  waitMs: 10000,
-  overallTimeoutMs: 120000,
-})) {
-  console.log(\`Received \${offers.length} new offer(s)\`);
-}
-
-// Promise-based
-const final = await client.availability.untilComplete({
-  requestId: request_id,
-  waitMs: 10000,
-  overallTimeoutMs: 120000,
-});`}</pre>
-            </div>
-          </section>
-
-          <section>
-            <h2>Error Handling</h2>
-            <p>All errors are thrown as <code>SDKError</code> with structured information:</p>
-            <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-              <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`import { SDKError } from '@carhire/sdk';
-
-try {
-  await client.agreements.list();
-} catch (error) {
-  if (error instanceof SDKError) {
-    console.error('Status:', error.status);
-    console.error('Code:', error.code);
-    console.error('Message:', error.message);
-    console.error('Details:', error.details);
-  }
-}`}</pre>
             </div>
           </section>
         </>
@@ -583,77 +685,151 @@ try {
       {/* Go SDK Section */}
       {activeSdk === 'go' && (
       <section>
-        <h1 style={{ fontSize: '1.875rem', fontWeight: 700, marginBottom: '1rem' }}>Go SDK</h1>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: 600, marginBottom: '1rem', color: '#1f2937' }}>Go SDK</h1>
         <p style={{ fontSize: '1rem', color: '#6b7280', marginBottom: '2rem' }}>
           Production-ready Go SDK for high-performance integrations with full type safety and channel-based streaming.
         </p>
 
         <section>
-          <h2>Go Quick Start</h2>
-          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
+          <h2>Installation</h2>
+          <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.25rem', padding: '1rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`go get github.com/carhire/go-sdk
+# or
+go mod init your-project
+go get ./go-agent`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Quick Start (REST)</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
             <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`package main
 
 import (
     "context"
     "fmt"
     "time"
-    
-    "carhire/middleware-go/carhire"
+    "github.com/carhire/go-sdk"
 )
 
 func main() {
-    cfg := carhire.DefaultConfig()
-    cfg.BaseURL = "https://api.carhire.example.com"
+    config := sdk.Config{
+        BaseURL: "https://your-gateway.example.com",
+        Token: "Bearer <JWT>",
+        APIKey: "<YOUR_API_KEY>", // Optional
+        AgentID: "ag_123",
+        CallTimeoutMs: 12000,
+        AvailabilitySlaMs: 120000,
+        LongPollWaitMs: 10000,
+    }
     
-    client := carhire.NewClient(cfg)
+    client := sdk.NewClient(config)
     ctx := context.Background()
     
-    // Login
-    loginResp, err := client.Auth.Login(ctx, "user@example.com", "password")
-    if err != nil {
-        panic(err)
-    }
-    client.SetToken(loginResp.Access)
-    
-    // Submit availability
-    submitReq := carhire.AvailabilitySubmit{
-        PickupUnlocode:   "GBMAN",
-        DropoffUnlocode:  "GBGLA",
-        PickupISO:        time.Now().Add(7 * 24 * time.Hour).Format(time.RFC3339),
-        DropoffISO:       time.Now().Add(14 * 24 * time.Hour).Format(time.RFC3339),
-        DriverAge:        30,
-        ResidencyCountry: "GB",
-        VehicleClasses:   []string{"ECONOMY"},
-        AgreementRefs:    []string{"AG-2025-001"},
+    // Search availability
+    criteria := sdk.AvailabilityCriteria{
+        PickupLocode: "PKKHI",
+        ReturnLocode: "PKLHE",
+        PickupAt: time.Date(2025, 11, 3, 10, 0, 0, 0, time.UTC),
+        ReturnAt: time.Date(2025, 11, 5, 10, 0, 0, 0, time.UTC),
+        DriverAge: 28,
+        Currency: "USD",
+        AgreementRefs: []string{"AGR-001"},
     }
     
-    submitResp, err := client.Availability.Submit(ctx, submitReq)
+    chunks, err := client.Availability().Search(ctx, criteria)
     if err != nil {
         panic(err)
     }
     
-    // Stream results
-    opts := &carhire.PollOptions{
-        Wait:           10 * time.Second,
-        OverallTimeout: 120 * time.Second,
+    for chunk := range chunks {
+        fmt.Printf("[%s] items=%d cursor=%d\\n", chunk.Status, len(chunk.Items), chunk.Cursor)
+        if chunk.Status == "COMPLETE" {
+            break
+        }
     }
     
-    offersChan, errChan := client.Availability.Stream(ctx, submitResp.RequestID, opts)
-    for offers := range offersChan {
-        fmt.Printf("Received %d offer(s)\\n", len(offers))
+    // Create booking
+    booking := sdk.BookingCreate{
+        AgreementRef: "AGR-001",
+        SupplierID: "SRC-AVIS",
+        OfferID: "off_123",
+        Driver: sdk.Driver{
+            FirstName: "Ali",
+            LastName: "Raza",
+            Email: "ali@example.com",
+            Phone: "+92...",
+            Age: 28,
+        },
     }
-    if err := <-errChan; err != nil {
-        fmt.Printf("Error: %v\\n", err)
+    
+    result, err := client.Booking().Create(ctx, booking, "idem-123")
+    if err != nil {
+        panic(err)
     }
+    fmt.Println(result.SupplierBookingRef)
 }`}</pre>
           </div>
         </section>
 
         <section>
-          <h2>Installation</h2>
-          <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.5rem', padding: '1rem', marginTop: '1rem' }}>
-            <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`go get carhire/middleware-go`}</pre>
+          <h2>Configuration</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`// REST Configuration
+config := sdk.Config{
+    BaseURL: "https://api.example.com", // Required
+    Token: "Bearer <JWT>", // Required
+    APIKey: "<API_KEY>", // Optional
+    AgentID: "ag_123", // Optional
+    CallTimeoutMs: 10000, // Default: 10000
+    AvailabilitySlaMs: 120000, // Default: 120000
+    LongPollWaitMs: 10000, // Default: 10000
+}
+
+// gRPC Configuration
+config := sdk.Config{
+    Host: "api.example.com:50051", // Required
+    CACert: "<CA_CERT>", // Required
+    ClientCert: "<CLIENT_CERT>", // Required
+    ClientKey: "<CLIENT_KEY>", // Required
+    AgentID: "ag_123", // Optional
+}`}</pre>
           </div>
+        </section>
+
+        <section>
+          <h2>Error Handling</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`result, err := client.Booking().Create(ctx, booking, "idem-123")
+if err != nil {
+    if sdkErr, ok := err.(*sdk.TransportException); ok {
+        fmt.Printf("Status: %d, Code: %s\\n", sdkErr.StatusCode, sdkErr.Code)
+        fmt.Printf("Message: %s\\n", sdkErr.Message)
+    }
+    return err
+}`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Features</h2>
+          <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', color: '#374151' }}>
+            <li>Availability Search: Submit → Poll pattern with streaming results</li>
+            <li>Booking Management: Create, modify, cancel, and check bookings</li>
+            <li>Agreement Enforcement: All operations require valid agreement references</li>
+            <li>Idempotency: Booking creation supports idempotency keys</li>
+            <li>Context Support: Full context.Context support for cancellation and timeouts</li>
+            <li>Channel-based Streaming: Uses Go channels for availability polling</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Requirements</h2>
+          <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', color: '#374151' }}>
+            <li>Go 1.18+</li>
+            <li>Standard library: net/http, encoding/json, context</li>
+            <li>For gRPC: google.golang.org/grpc and generated proto stubs</li>
+          </ul>
         </section>
 
         <section>
@@ -661,137 +837,11 @@ func main() {
           <div style={{ marginTop: '1rem' }}>
             <ul style={{ listStyle: 'none', padding: 0 }}>
               <li style={{ marginBottom: '0.75rem' }}>
-                <a href="../../sdk/golang/README.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+                <a href="../../sdk/go-agent/README.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
                   📖 Full README
                 </a>
               </li>
-              <li style={{ marginBottom: '0.75rem' }}>
-                <a href="../../sdk/golang/REFERENCE.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
-                  📚 API Reference
-                </a>
-              </li>
-              <li style={{ marginBottom: '0.75rem' }}>
-                <a href="../../sdk/golang/examples/" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
-                  💡 Examples
-                </a>
-              </li>
             </ul>
-          </div>
-        </section>
-
-        <section>
-          <h2>Availability Long-polling</h2>
-          <p>The SDK supports channel-based streaming for real-time availability updates:</p>
-          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`// Channel-based streaming (Recommended)
-opts := &carhire.PollOptions{
-    Wait:           10 * time.Second,
-    OverallTimeout: 120 * time.Second,
-}
-
-offersChan, errChan := client.Availability.Stream(ctx, requestID, opts)
-for offers := range offersChan {
-    fmt.Printf("Received %d offer(s)\\n", len(offers))
-}
-if err := <-errChan; err != nil {
-    fmt.Printf("Error: %v\\n", err)
-}
-
-// Promise-based completion
-final, err := client.Availability.UntilComplete(ctx, requestID, opts)
-if err != nil {
-    panic(err)
-}
-fmt.Printf("Final status: %s\\n", final.Status)`}</pre>
-          </div>
-        </section>
-
-        <section>
-          <h2>Booking Pass-through</h2>
-          <p>Create, modify, cancel, and check bookings with full context support:</p>
-          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`// Create booking with idempotency
-createReq := carhire.BookingCreateRequest{
-    SupplierBookingRef: "BOOK-123",
-    AgreementRef:        "AG-2025-001",
-    PickupUnlocode:      "GBMAN",
-    DropoffUnlocode:     "GBGLA",
-    PickupISO:           time.Now().Add(7 * 24 * time.Hour).Format(time.RFC3339),
-    DropoffISO:          time.Now().Add(14 * 24 * time.Hour).Format(time.RFC3339),
-    DriverAge:           30,
-    ResidencyCountry:    "GB",
-    VehicleClass:        "ECONOMY",
-}
-
-booking, err := client.Bookings.Create(ctx, createReq, "")
-if err != nil {
-    panic(err)
-}
-
-// Check booking status
-status, err := client.Bookings.Check(ctx, "BOOK-123")
-if err != nil {
-    panic(err)
-}
-
-// Cancel booking
-cancelReq := carhire.BookingCancelRequest{
-    SupplierBookingRef: "BOOK-123",
-    AgreementRef:       "AG-2025-001",
-}
-cancelResp, err := client.Bookings.Cancel(ctx, cancelReq)
-if err != nil {
-    panic(err)
-}`}</pre>
-          </div>
-        </section>
-
-        <section>
-          <h2>Error Handling</h2>
-          <p>All errors are returned as <code>SDKError</code> with structured information:</p>
-          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`import (
-    "errors"
-    "carhire/middleware-go/carhire"
-)
-
-agreements, err := client.Agreements.List(ctx, nil)
-if err != nil {
-    var sdkErr *carhire.SDKError
-    if errors.As(err, &sdkErr) {
-        fmt.Printf("Status: %d\\n", sdkErr.Status)
-        fmt.Printf("Code: %s\\n", sdkErr.Code)
-        fmt.Printf("Message: %s\\n", sdkErr.Message)
-        fmt.Printf("Details: %v\\n", sdkErr.Details)
-    } else {
-        fmt.Printf("Network error: %v\\n", err)
-    }
-}`}</pre>
-          </div>
-        </section>
-
-        <section>
-          <h2>Retries Configuration</h2>
-          <p>Enable automatic retries with exponential backoff for transient failures:</p>
-          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`cfg := carhire.DefaultConfig()
-cfg.BaseURL = "https://api.carhire.example.com"
-
-// Enable retries globally
-cfg.Retry = carhire.RetryConfig{
-    Enabled:    true,
-    MaxRetries: 3,
-    Base:       300 * time.Millisecond,
-    Factor:     2.0,
-}
-
-client := carhire.NewClient(cfg)
-
-// Retries automatically apply to:
-// - 5xx server errors
-// - 429 (Too Many Requests)
-// - Network timeouts
-// - Idempotent operations (GET, HEAD, OPTIONS, PUT, DELETE)`}</pre>
           </div>
         </section>
         </section>
@@ -800,51 +850,139 @@ client := carhire.NewClient(cfg)
       {/* PHP SDK Section */}
       {activeSdk === 'php' && (
       <section>
-        <h1 style={{ fontSize: '1.875rem', fontWeight: 700, marginBottom: '1rem' }}>PHP SDK</h1>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: 600, marginBottom: '1rem', color: '#1f2937' }}>PHP SDK</h1>
         <p style={{ fontSize: '1rem', color: '#6b7280', marginBottom: '2rem' }}>
           Production-ready PHP SDK for server-side integration with generator-based streaming and full API coverage.
         </p>
 
         <section>
-          <h2>PHP Quick Start</h2>
-          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`<?php
+          <h2>Installation</h2>
+          <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.25rem', padding: '1rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`cd sdks/php-agent
+composer install`}</pre>
+          </div>
+        </section>
 
-require_once 'vendor/autoload.php';
+        <section>
+          <h2>Quick Start (REST)</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`use HMS\\CarHire\\Config;
+use HMS\\CarHire\\CarHireClient;
+use HMS\\CarHire\\DTO\\AvailabilityCriteria;
+use HMS\\CarHire\\DTO\\BookingCreate;
 
-use CarHire\\Client;
-
-$client = new Client([
-    'baseUrl' => 'https://api.carhire.example.com',
+$config = Config::forRest([
+  'baseUrl' => 'https://your-gateway.example.com/v1',
+  'token'   => 'Bearer <JWT>',
+  'apiKey'  => '<YOUR_API_KEY>', // Optional
+  'agentId' => 'ag_123',
+  'callTimeoutMs' => 12000,
+  'availabilitySlaMs' => 120000,
+  'longPollWaitMs' => 10000
 ]);
 
-// Login
-$loginResponse = $client->auth->login('user@example.com', 'password');
+$client = new CarHireClient($config);
 
-// Submit availability
-$submitResponse = $client->availability->submit([
-    'pickup_unlocode' => 'GBMAN',
-    'dropoff_unlocode' => 'GBGLA',
-    'pickup_iso' => date('Y-m-d\\TH:i:s\\Z', time() + 7 * 24 * 3600),
-    'dropoff_iso' => date('Y-m-d\\TH:i:s\\Z', time() + 14 * 24 * 3600),
-    'driver_age' => 30,
-    'residency_country' => 'GB',
-    'vehicle_classes' => ['ECONOMY'],
-    'agreement_refs' => ['AG-2025-001'],
+$criteria = AvailabilityCriteria::make(
+  pickupLocode: 'PKKHI',
+  returnLocode: 'PKLHE',
+  pickupAt: new DateTimeImmutable('2025-11-03T10:00:00Z'),
+  returnAt: new DateTimeImmutable('2025-11-05T10:00:00Z'),
+  driverAge: 28,
+  currency: 'USD',
+  agreementRefs: ['AGR-001']
+);
+
+foreach ($client->availability()->search($criteria) as $chunk) {
+  echo "[{$chunk->status}] items=" . count($chunk->items) . 
+       " cursor=" . ($chunk->cursor ?? 0) . PHP_EOL;
+}
+
+$booking = BookingCreate::fromOffer([
+  'agreement_ref' => 'AGR-001',
+  'supplier_id'   => 'SRC-AVIS',
+  'offer_id'      => 'off_123',
+  'driver'        => [
+    'firstName' => 'Ali',
+    'lastName' => 'Raza',
+    'email' => 'ali@example.com',
+    'phone' => '+92...',
+    'age' => 28
+  ]
 ]);
 
-// Stream results
-foreach ($client->availability->stream($submitResponse['request_id']) as $offers) {
-    echo "Received " . count($offers) . " offer(s)\\n";
+$res = $client->booking()->create($booking, 'idem-123');
+echo $res['supplierBookingRef'] ?? '';`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Configuration</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`// REST Configuration
+$config = Config::forRest([
+  'baseUrl' => 'https://api.example.com/v1', // Required
+  'token' => 'Bearer <JWT>', // Required
+  'apiKey' => '<API_KEY>', // Optional
+  'agentId' => 'ag_123', // Optional
+  'callTimeoutMs' => 10000, // Default: 10000
+  'availabilitySlaMs' => 120000, // Default: 120000
+  'longPollWaitMs' => 10000, // Default: 10000
+]);
+
+// gRPC Configuration
+$grpcConfig = Config::forGrpc([
+  'host' => 'api.example.com:50051', // Required
+  'caCert' => '<CA_CERT>', // Required
+  'clientCert' => '<CLIENT_CERT>', // Required
+  'clientKey' => '<CLIENT_KEY>', // Required
+  'agentId' => 'ag_123', // Optional
+]);`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Availability Streaming</h2>
+          <p>The SDK uses generators for streaming availability results:</p>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`// The search() method returns a Generator
+foreach ($client->availability()->search($criteria) as $chunk) {
+  // Process each chunk as it arrives
+  echo "Status: {$chunk->status}, Items: " . count($chunk->items) . PHP_EOL;
+  
+  // Break when complete
+  if ($chunk->status === 'COMPLETE') {
+    break;
+  }
 }`}</pre>
           </div>
         </section>
 
         <section>
-          <h2>Installation</h2>
-          <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.5rem', padding: '1rem', marginTop: '1rem' }}>
-            <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`composer require carhire/middleware-php`}</pre>
+          <h2>Error Handling</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`use HMS\\CarHire\\Exceptions\\TransportException;
+
+try {
+  $result = $client->booking()->create($booking, 'idem-123');
+} catch (TransportException $e) {
+  echo "Transport error: " . $e->getMessage() . PHP_EOL;
+  throw $e;
+}`}</pre>
           </div>
+        </section>
+
+        <section>
+          <h2>REST Endpoints</h2>
+          <p>The SDK uses the following REST endpoints:</p>
+            <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', color: '#374151' }}>
+              <li><code>POST /availability/submit</code> - Submit availability request</li>
+              <li><code>GET /availability/poll?request_id&since_seq&wait_ms</code> - Poll availability results</li>
+              <li><code>POST /bookings</code> - Create booking (with Idempotency-Key header)</li>
+              <li><code>{'PATCH /bookings/{supplierBookingRef}?agreement_ref'}</code> - Modify booking</li>
+              <li><code>{'POST /bookings/{supplierBookingRef}/cancel?agreement_ref'}</code> - Cancel booking</li>
+              <li><code>{'GET /bookings/{supplierBookingRef}?agreement_ref'}</code> - Check booking status</li>
+            </ul>
         </section>
 
         <section>
@@ -852,110 +990,11 @@ foreach ($client->availability->stream($submitResponse['request_id']) as $offers
           <div style={{ marginTop: '1rem' }}>
             <ul style={{ listStyle: 'none', padding: 0 }}>
               <li style={{ marginBottom: '0.75rem' }}>
-                <a href="../../sdk/php/README.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+                <a href="../../sdk/php-agent/README.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
                   📖 Full README
                 </a>
               </li>
-              <li style={{ marginBottom: '0.75rem' }}>
-                <a href="../../sdk/php/REFERENCE.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
-                  📚 API Reference
-                </a>
-              </li>
-              <li style={{ marginBottom: '0.75rem' }}>
-                <a href="../../sdk/php/examples/" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
-                  💡 Examples
-                </a>
-              </li>
             </ul>
-          </div>
-        </section>
-
-        <section>
-          <h2>Availability Long-polling</h2>
-          <p>The SDK supports generator-based streaming for real-time availability updates:</p>
-          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`// Generator-based streaming (Recommended)
-foreach ($client->availability->stream($requestId) as $offers) {
-    echo "Received " . count($offers) . " offer(s)\\n";
-}
-
-// Blocking until complete
-$final = $client->availability->untilComplete($requestId);
-echo "Final status: {$final['status']}\\n";
-
-// Custom options
-$options = [
-    'waitMs' => 15000,
-    'overallTimeout' => 180000,
-];
-foreach ($client->availability->stream($requestId, $options) as $offers) {
-    // Process offers...
-}`}</pre>
-          </div>
-        </section>
-
-        <section>
-          <h2>Booking Pass-through</h2>
-          <p>Create, modify, cancel, and check bookings with automatic idempotency:</p>
-          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`// Create booking (idempotency key auto-generated)
-$booking = $client->bookings->create([
-    'agreement_ref' => 'AG-2025-001',
-    'agent_booking_ref' => 'BOOK-123',
-], 'custom-idempotency-key'); // Optional custom key
-
-// Check booking status
-$status = $client->bookings->check(
-    'supplier-booking-ref',
-    'AG-2025-001'
-);
-
-// Cancel booking
-$cancelled = $client->bookings->cancel(
-    'supplier-booking-ref',
-    'AG-2025-001'
-);`}</pre>
-          </div>
-        </section>
-
-        <section>
-          <h2>Error Handling</h2>
-          <p>All errors are thrown as <code>CarHireException</code> with structured information:</p>
-          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`use CarHire\\CarHireException;
-
-try {
-    $agreements = $client->agreements->list();
-} catch (CarHireException $e) {
-    echo "Status: {$e->status}\\n";
-    echo "Code: {$e->sdkCode}\\n";
-    echo "Message: {$e->getMessage()}\\n";
-    echo "Details: " . json_encode($e->details, JSON_PRETTY_PRINT) . "\\n";
-}`}</pre>
-          </div>
-        </section>
-
-        <section>
-          <h2>Retries Configuration</h2>
-          <p>Enable automatic retries with exponential backoff for transient failures:</p>
-          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`use CarHire\\Client;
-use CarHire\\Retry;
-
-$client = new Client([
-    'baseUrl' => 'https://api.carhire.example.com',
-    'retry' => new Retry(
-        enabled: true,
-        maxRetries: 3,
-        baseMs: 300,
-        factor: 2.0
-    ),
-]);
-
-// Retries automatically apply to:
-// - 5xx server errors
-// - 429 (Too Many Requests)
-// - Network timeouts (status 0)`}</pre>
           </div>
         </section>
         </section>
@@ -964,33 +1003,143 @@ $client = new Client([
       {/* Python SDK Section */}
       {activeSdk === 'python' && (
       <section>
-        <h1 style={{ fontSize: '1.875rem', fontWeight: 700, marginBottom: '1rem' }}>Python SDK</h1>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: 600, marginBottom: '1rem', color: '#1f2937' }}>Python SDK</h1>
         <p style={{ fontSize: '1rem', color: '#6b7280', marginBottom: '2rem' }}>
           Production-ready Python SDK for data science and automation with async iterator support and full type hints.
         </p>
 
         <section>
-          <h2>Python Quick Start</h2>
-          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`from datetime import datetime
-from carhire import CarHireClient, Config
-
-config = Config.for_rest({
-    "baseUrl": "https://api.carhire.example.com",
-    "token": "Bearer <JWT>",
-})
-
-client = CarHireClient(config)
-
-# List companies (admin)
-companies = await client.admin.companies.list()`}</pre>
+          <h2>Installation</h2>
+          <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.25rem', padding: '1rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`pip install carhire-python-sdk
+# or
+pip install -e .`}</pre>
           </div>
         </section>
 
         <section>
-          <h2>Installation</h2>
-          <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.5rem', padding: '1rem', marginTop: '1rem' }}>
-            <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`pip install carhire-python-sdk`}</pre>
+          <h2>Quick Start (REST)</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`from datetime import datetime
+from carhire import CarHireClient, Config, AvailabilityCriteria, BookingCreate
+
+config = Config.for_rest({
+    "baseUrl": "https://your-gateway.example.com",
+    "token": "Bearer <JWT>",
+    "apiKey": "<YOUR_API_KEY>",  # Optional
+    "agentId": "ag_123",
+    "callTimeoutMs": 12000,
+    "availabilitySlaMs": 120000,
+    "longPollWaitMs": 10000,
+})
+
+client = CarHireClient(config)
+
+# Search availability
+criteria = AvailabilityCriteria.make(
+    pickup_locode="PKKHI",
+    return_locode="PKLHE",
+    pickup_at=datetime.fromisoformat("2025-11-03T10:00:00Z"),
+    return_at=datetime.fromisoformat("2025-11-05T10:00:00Z"),
+    driver_age=28,
+    currency="USD",
+    agreement_refs=["AGR-001"],
+)
+
+async for chunk in client.get_availability().search(criteria):
+    print(f"[{chunk.status}] items={len(chunk.items)} cursor={chunk.cursor or 0}")
+    if chunk.status == "COMPLETE":
+        break
+
+# Create booking
+booking = BookingCreate.from_offer({
+    "agreement_ref": "AGR-001",
+    "supplier_id": "SRC-AVIS",
+    "offer_id": "off_123",
+    "driver": {
+        "firstName": "Ali",
+        "lastName": "Raza",
+        "email": "ali@example.com",
+        "phone": "+92...",
+        "age": 28,
+    },
+})
+
+result = await client.get_booking().create(booking, "idem-123")
+print(result["supplierBookingRef"])`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Configuration</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`# REST Configuration
+config = Config.for_rest({
+    "baseUrl": "https://api.example.com",  # Required
+    "token": "Bearer <JWT>",  # Required
+    "apiKey": "<API_KEY>",  # Optional
+    "agentId": "ag_123",  # Optional
+    "callTimeoutMs": 10000,  # Default: 10000
+    "availabilitySlaMs": 120000,  # Default: 120000
+    "longPollWaitMs": 10000,  # Default: 10000
+})
+
+# gRPC Configuration
+config = Config.for_grpc({
+    "host": "api.example.com:50051",  # Required
+    "caCert": "<CA_CERT>",  # Required
+    "clientCert": "<CLIENT_CERT>",  # Required
+    "clientKey": "<CLIENT_KEY>",  # Required
+    "agentId": "ag_123",  # Optional
+})`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Error Handling</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`from carhire import TransportException
+
+try:
+    await client.get_booking().create(booking, "idem-123")
+except TransportException as e:
+    print(f"Status: {e.status_code}, Code: {e.code}")
+    print(f"Message: {e.message}")
+    raise`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Features</h2>
+          <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', color: '#374151' }}>
+            <li>Availability Search: Submit → Poll pattern with streaming results</li>
+            <li>Booking Management: Create, modify, cancel, and check bookings</li>
+            <li>Agreement Enforcement: All operations require valid agreement references</li>
+            <li>Idempotency: Booking creation supports idempotency keys</li>
+            <li>Type Hints: Full type annotations included</li>
+            <li>Async/Await: Native async iterator support</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Requirements</h2>
+          <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', color: '#374151' }}>
+            <li>Python 3.8+</li>
+            <li>requests {'>='} 2.31.0</li>
+            <li>grpcio {'>='} 1.60.0 (for gRPC transport)</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Documentation Links</h2>
+          <div style={{ marginTop: '1rem' }}>
+            <ul style={{ listStyle: 'none', padding: 0 }}>
+              <li style={{ marginBottom: '0.75rem' }}>
+                <a href="../../sdk/python-agent/README.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+                  📖 Full README
+                </a>
+              </li>
+            </ul>
           </div>
         </section>
         </section>
@@ -999,37 +1148,138 @@ companies = await client.admin.companies.list()`}</pre>
       {/* Java SDK Section */}
       {activeSdk === 'java' && (
       <section>
-        <h1 style={{ fontSize: '1.875rem', fontWeight: 700, marginBottom: '1rem' }}>Java SDK</h1>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: 600, marginBottom: '1rem', color: '#1f2937' }}>Java SDK</h1>
         <p style={{ fontSize: '1rem', color: '#6b7280', marginBottom: '2rem' }}>
           Production-ready Java SDK with CompletableFuture support for asynchronous operations.
         </p>
 
         <section>
-          <h2>Java Quick Start</h2>
-          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
+          <h2>Installation</h2>
+          <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.25rem', padding: '1rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`<dependency>
+    <groupId>com.carhire</groupId>
+    <artifactId>carhire-java-sdk</artifactId>
+    <version>1.0.0</version>
+</dependency>`}</pre>
+          </div>
+          <p style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.5rem' }}>Or install locally: <code>mvn install</code></p>
+        </section>
+
+        <section>
+          <h2>Quick Start (REST)</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
             <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`import com.carhire.sdk.*;
 import java.util.*;
 
 Map<String, Object> configData = new HashMap<>();
-configData.put("baseUrl", "https://api.carhire.example.com");
+configData.put("baseUrl", "https://your-gateway.example.com");
 configData.put("token", "Bearer <JWT>");
+configData.put("apiKey", "<YOUR_API_KEY>"); // Optional
+configData.put("agentId", "ag_123");
+configData.put("callTimeoutMs", 12000);
+configData.put("availabilitySlaMs", 120000);
+configData.put("longPollWaitMs", 10000);
 
 Config config = Config.forRest(configData);
 CarHireClient client = new CarHireClient(config);
 
-// List companies (admin)
-List<Company> companies = client.admin().companies().list().join();`}</pre>
+// Search availability
+Map<String, Object> criteria = new HashMap<>();
+criteria.put("pickup_unlocode", "PKKHI");
+criteria.put("dropoff_unlocode", "PKLHE");
+criteria.put("pickup_iso", "2025-11-03T10:00:00Z");
+criteria.put("dropoff_iso", "2025-11-05T10:00:00Z");
+criteria.put("driver_age", 28);
+criteria.put("currency", "USD");
+criteria.put("agreement_refs", Arrays.asList("AGR-001"));
+
+client.getAvailability().search(criteria).forEach(chunkFuture -> {
+    Map<String, Object> chunk = chunkFuture.join();
+    System.out.println("Status: " + chunk.get("status"));
+    if ("COMPLETE".equals(chunk.get("status"))) {
+        // Process complete
+    }
+});
+
+// Create booking
+Map<String, Object> booking = new HashMap<>();
+booking.put("agreement_ref", "AGR-001");
+booking.put("supplier_id", "SRC-AVIS");
+booking.put("offer_id", "off_123");
+
+Map<String, Object> result = client.getBooking().create(booking, "idem-123").join();
+System.out.println(result.get("supplierBookingRef"));`}</pre>
           </div>
         </section>
 
         <section>
-          <h2>Installation</h2>
-          <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.5rem', padding: '1rem', marginTop: '1rem' }}>
-            <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`<dependency>
-  <groupId>com.carhire</groupId>
-  <artifactId>carhire-java-sdk</artifactId>
-  <version>1.0.0</version>
-</dependency>`}</pre>
+          <h2>Configuration</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`// REST Configuration
+Map<String, Object> configData = new HashMap<>();
+configData.put("baseUrl", "https://api.example.com"); // Required
+configData.put("token", "Bearer <JWT>"); // Required
+configData.put("apiKey", "<API_KEY>"); // Optional
+configData.put("agentId", "ag_123"); // Optional
+configData.put("callTimeoutMs", 10000); // Default: 10000
+configData.put("availabilitySlaMs", 120000); // Default: 120000
+configData.put("longPollWaitMs", 10000); // Default: 10000
+
+Config config = Config.forRest(configData);
+
+// gRPC Configuration
+Map<String, Object> grpcConfig = new HashMap<>();
+grpcConfig.put("host", "api.example.com:50051"); // Required
+grpcConfig.put("caCert", "<CA_CERT>"); // Required
+grpcConfig.put("clientCert", "<CLIENT_CERT>"); // Required
+grpcConfig.put("clientKey", "<CLIENT_KEY>"); // Required
+
+Config grpcConfigObj = Config.forGrpc(grpcConfig);`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Error Handling</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`try {
+    Map<String, Object> result = client.getBooking().create(booking, "idem-123").join();
+} catch (TransportException e) {
+    System.err.println("Status: " + e.getStatusCode() + ", Code: " + e.getCode());
+    throw e;
+}`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Features</h2>
+          <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', color: '#374151' }}>
+            <li>Availability Search: Submit → Poll pattern with streaming results</li>
+            <li>Booking Management: Create, modify, cancel, and check bookings</li>
+            <li>Agreement Enforcement: All operations require valid agreement references</li>
+            <li>Idempotency: Booking creation supports idempotency keys</li>
+            <li>Async Support: Uses CompletableFuture for asynchronous operations</li>
+            <li>Error Handling: Comprehensive error handling with TransportException</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Requirements</h2>
+          <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', color: '#374151' }}>
+            <li>Java 11+</li>
+            <li>Maven 3.6+</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Documentation Links</h2>
+          <div style={{ marginTop: '1rem' }}>
+            <ul style={{ listStyle: 'none', padding: 0 }}>
+              <li style={{ marginBottom: '0.75rem' }}>
+                <a href="../../sdk/java-agent/README.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+                  📖 Full README
+                </a>
+              </li>
+            </ul>
           </div>
         </section>
         </section>
@@ -1038,36 +1288,240 @@ List<Company> companies = client.admin().companies().list().join();`}</pre>
       {/* Perl SDK Section */}
       {activeSdk === 'perl' && (
       <section>
-        <h1 style={{ fontSize: '1.875rem', fontWeight: 700, marginBottom: '1rem' }}>Perl SDK</h1>
+        <h1 style={{ fontSize: '1.875rem', fontWeight: 600, marginBottom: '1rem', color: '#1f2937' }}>Perl SDK</h1>
         <p style={{ fontSize: '1rem', color: '#6b7280', marginBottom: '2rem' }}>
           Production-ready Perl SDK for legacy systems with generator-based streaming.
         </p>
 
         <section>
-          <h2>Perl Quick Start</h2>
-          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', marginTop: '1rem' }}>
-            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`use CarHire::SDK;
-
-my $config = CarHire::SDK::Config->for_rest({
-    baseUrl => 'https://api.carhire.example.com',
-    token   => 'Bearer <JWT>',
-});
-
-my $client = CarHire::SDK::Client->new($config);
-
-# List companies (admin)
-my $companies = $client->admin()->companies()->list();`}</pre>
+          <h2>Installation</h2>
+          <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.25rem', padding: '1rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`cpanm CarHire::SDK`}</pre>
           </div>
         </section>
 
         <section>
-          <h2>Installation</h2>
-          <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '0.5rem', padding: '1rem', marginTop: '1rem' }}>
-            <pre style={{ margin: 0, fontSize: '0.875rem', fontFamily: 'Monaco, Menlo, monospace' }}>{`cpanm CarHire::SDK`}</pre>
+          <h2>Quick Start (REST)</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`use CarHire::SDK;
+
+my $config = CarHire::SDK::Config->for_rest({
+    baseUrl => 'https://your-gateway.example.com',
+    token   => 'Bearer <JWT>',
+    apiKey  => '<YOUR_API_KEY>',  # Optional
+    agentId => 'ag_123',
+    callTimeoutMs     => 12000,
+    availabilitySlaMs => 120000,
+    longPollWaitMs    => 10000,
+});
+
+my $client = CarHire::SDK::Client->new($config);
+
+# Search availability
+my $criteria = {
+    pickup_unlocode  => 'PKKHI',
+    dropoff_unlocode => 'PKLHE',
+    pickup_iso       => '2025-11-03T10:00:00Z',
+    dropoff_iso      => '2025-11-05T10:00:00Z',
+    driver_age       => 28,
+    currency         => 'USD',
+    agreement_refs   => ['AGR-001'],
+};
+
+for my $chunk ($client->availability()->search($criteria)) {
+    print "[$chunk->{status}] items=" . scalar(@{$chunk->{items}}) . 
+          " cursor=" . ($chunk->{cursor} || 0) . "\\n";
+    last if $chunk->{status} eq 'COMPLETE';
+}
+
+# Create booking
+my $booking = {
+    agreement_ref => 'AGR-001',
+    supplier_id   => 'SRC-AVIS',
+    offer_id      => 'off_123',
+    driver        => {
+        firstName => 'Ali',
+        lastName  => 'Raza',
+        email     => 'ali@example.com',
+        phone     => '+92...',
+        age       => 28,
+    },
+};
+
+my $result = $client->booking()->create($booking, 'idem-123');
+print $result->{supplierBookingRef}, "\\n";`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Configuration</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`# REST Configuration
+my $config = CarHire::SDK::Config->for_rest({
+    baseUrl => 'https://api.example.com',  # Required
+    token   => 'Bearer <JWT>',              # Required
+    apiKey  => '<API_KEY>',                 # Optional
+    agentId => 'ag_123',                    # Optional
+    callTimeoutMs     => 10000,             # Default: 10000
+    availabilitySlaMs => 120000,            # Default: 120000
+    longPollWaitMs    => 10000,             # Default: 10000
+});
+
+# gRPC Configuration
+my $grpcConfig = CarHire::SDK::Config->for_grpc({
+    host       => 'api.example.com:50051',  # Required
+    caCert     => '<CA_CERT>',              # Required
+    clientCert => '<CLIENT_CERT>',          # Required
+    clientKey  => '<CLIENT_KEY>',           # Required
+    agentId    => 'ag_123',                 # Optional
+});`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Error Handling</h2>
+          <div style={{ backgroundColor: '#1f2937', color: '#f9fafb', padding: '1.5rem', borderRadius: '0.25rem', marginTop: '1rem' }}>
+            <pre style={{ margin: 0, fontSize: '0.875rem', lineHeight: '1.5', fontFamily: 'Monaco, Menlo, monospace', whiteSpace: 'pre-wrap' }}>{`eval {
+    my $result = $client->booking()->create($booking, 'idem-123');
+    print $result->{supplierBookingRef}, "\\n";
+};
+if ($@) {
+    warn "Error: $@\\n";
+    die;
+}`}</pre>
+          </div>
+        </section>
+
+        <section>
+          <h2>Features</h2>
+          <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', color: '#374151' }}>
+            <li>Availability Search: Submit → Poll pattern with streaming results</li>
+            <li>Booking Management: Create, modify, cancel, and check bookings</li>
+            <li>Agreement Enforcement: All operations require valid agreement references</li>
+            <li>Idempotency: Booking creation supports idempotency keys</li>
+            <li>Generator-based Streaming: Uses Perl generators for availability polling</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Requirements</h2>
+          <ul style={{ listStyle: 'disc', paddingLeft: '1.5rem', color: '#374151' }}>
+            <li>Perl 5.10+</li>
+            <li>LWP::UserAgent</li>
+            <li>JSON</li>
+            <li>HTTP::Request</li>
+            <li>HTTP::Response</li>
+            <li>Time::HiRes</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Documentation Links</h2>
+          <div style={{ marginTop: '1rem' }}>
+            <ul style={{ listStyle: 'none', padding: 0 }}>
+              <li style={{ marginBottom: '0.75rem' }}>
+                <a href="../../sdk/perl-agent/README.md" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+                  📖 Full README
+                </a>
+              </li>
+            </ul>
           </div>
         </section>
         </section>
       )}
+
+      {/* Available Endpoints Section */}
+      <section style={{ marginTop: '3rem', marginBottom: '2rem' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1f2937', marginBottom: '1rem' }}>Available API Endpoints</h2>
+        <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1.5rem' }}>
+          Click on any endpoint below to view detailed documentation, request/response examples, and code samples.
+        </p>
+        
+        {categories.length === 0 ? (
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
+            Loading endpoints...
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            {categories.map((category) => (
+              <div key={category.id} style={{ background: 'white', border: '1px solid #e5e7eb', borderRadius: '0.25rem', padding: '1.5rem' }}>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#1f2937', marginBottom: '0.5rem' }}>
+                  {category.name}
+                </h3>
+                {category.description && (
+                  <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem' }}>
+                    {category.description}
+                  </p>
+                )}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '0.75rem' }}>
+                  {category.endpoints.map((endpoint) => {
+                    const methodColor: Record<string, string> = {
+                      GET: '#10b981',
+                      POST: '#3b82f6',
+                      PUT: '#f97316',
+                      DELETE: '#ef4444',
+                      PATCH: '#a855f7',
+                      gRPC: '#8b5cf6',
+                    };
+                    const color = methodColor[endpoint.method] || '#6b7280';
+                    
+                    return (
+                      <button
+                        key={endpoint.id}
+                        onClick={() => navigate(`/docs-fullscreen/${endpoint.id}`)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.75rem',
+                          padding: '0.75rem 1rem',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '0.25rem',
+                          background: 'white',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'all 0.15s',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#f9fafb';
+                          e.currentTarget.style.borderColor = '#d1d5db';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'white';
+                          e.currentTarget.style.borderColor = '#e5e7eb';
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: '0.625rem',
+                            color: 'white',
+                            padding: '0.25rem 0.5rem',
+                            borderRadius: '0.25rem',
+                            fontWeight: 600,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            background: color,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {endpoint.method}
+                        </span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1f2937', marginBottom: '0.25rem' }}>
+                            {endpoint.name}
+                          </div>
+                          <code style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'Monaco, Menlo, monospace', wordBreak: 'break-all' }}>
+                            {endpoint.path}
+                          </code>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 };

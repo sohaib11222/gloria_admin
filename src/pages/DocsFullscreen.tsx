@@ -44,12 +44,22 @@ const DocsFullscreen: React.FC = () => {
   const [categories, setCategories] = useState<DocCategory[]>([]);
   const [selectedEndpoint, setSelectedEndpoint] = useState<DocEndpoint | null>(null);
   const [activeCode, setActiveCode] = useState<string>('curl');
-  const [showSdkGuide, setShowSdkGuide] = useState<boolean>(view === 'sdk');
+  // Check if we should show SDK guide - either from view param or if endpointId is 'sdk'
+  const shouldShowSdk = view === 'sdk' || endpointId === 'sdk';
+  const [showSdkGuide, setShowSdkGuide] = useState<boolean>(shouldShowSdk);
 
   useEffect(() => {
+    // Update showSdkGuide when route changes
+    const shouldShow = view === 'sdk' || endpointId === 'sdk';
+    setShowSdkGuide(shouldShow);
+    
     http.get('/docs').then((res) => {
       setCategories(res.data);
-      if (endpointId) {
+      // Don't load endpoint if showing SDK guide
+      if (shouldShow) {
+        return;
+      }
+      if (endpointId && endpointId !== 'sdk') {
         const endpoint = res.data
           .flatMap(cat => cat.endpoints)
           .find(ep => ep.id === endpointId);
@@ -57,7 +67,7 @@ const DocsFullscreen: React.FC = () => {
           setSelectedEndpoint(endpoint);
           setActiveCode(endpoint.codeSamples?.[0]?.lang ?? 'curl');
         }
-      } else if (!view) {
+      } else if (!view && !shouldShow) {
         const firstCat = res.data[0];
         if (firstCat && firstCat.endpoints && firstCat.endpoints[0]) {
           setSelectedEndpoint(firstCat.endpoints[0]);

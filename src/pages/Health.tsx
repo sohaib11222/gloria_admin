@@ -94,27 +94,24 @@ export default function Health() {
 
   return (
     <div className="space-y-8 pb-8">
-      {/* Enhanced Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-red-600 via-rose-600 to-pink-600 rounded-2xl p-8 md:p-10 text-white shadow-2xl border border-red-400/20">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -mr-48 -mt-48"></div>
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-pink-500/20 rounded-full blur-2xl -ml-36 -mb-36"></div>
-        <div className="relative flex items-center justify-between flex-wrap gap-6">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <div className="p-4 bg-white/20 backdrop-blur-sm rounded-2xl border border-white/30 shadow-lg">
-              <HeartPulse className="w-8 h-8" />
+            <div className="p-3 bg-gray-100 rounded">
+              <HeartPulse className="w-6 h-6 text-gray-700" />
             </div>
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-white to-pink-100 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-semibold text-gray-900">
                 System Health
               </h1>
-              <p className="text-pink-100 text-lg md:text-xl">Monitor source health and manage backoff policies</p>
+              <p className="mt-1 text-sm text-gray-600">Monitor source health and manage backoff policies</p>
             </div>
           </div>
           <Button
             onClick={() => resetHealthMutation.mutate()}
             loading={resetHealthMutation.isPending}
             variant="secondary"
-            className="bg-white/20 hover:bg-white/30 text-white border-white/30 backdrop-blur-sm shadow-lg"
           >
             <RotateCcw className="w-4 h-4 mr-2" />
             Reset All Health
@@ -124,84 +121,81 @@ export default function Health() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-2 border-green-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden relative group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-green-200/30 rounded-full blur-2xl -mr-16 -mt-16 group-hover:bg-green-300/40 transition-all"></div>
-          <CardContent className="p-6 relative">
+        <Card>
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Healthy Sources</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
+                <p className="text-xs font-medium text-gray-600 uppercase tracking-wider mb-2">Healthy Sources</p>
+                <p className="text-3xl font-semibold text-gray-900 mb-2">
                   {healthyCount}
                 </p>
-                <Badge variant="success" className="mt-2">
+                <Badge variant="success" size="sm" className="mt-2">
                   <CheckCircle2 className="w-3 h-3 mr-1" />
                   Operational
                 </Badge>
               </div>
-              <div className="p-4 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-xl transform group-hover:scale-110 transition-transform">
-                <CheckCircle2 className="h-8 w-8 text-white" />
+              <div className="p-3 bg-gray-100 rounded">
+                <CheckCircle2 className="h-6 w-6 text-gray-700" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-yellow-50 via-amber-50 to-orange-50 border-2 border-yellow-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden relative group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-200/30 rounded-full blur-2xl -mr-16 -mt-16 group-hover:bg-yellow-300/40 transition-all"></div>
-          <CardContent className="p-6 relative">
+        <Card>
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Slow Sources</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent mb-2">
+                <p className="text-xs font-medium text-gray-600 uppercase tracking-wider mb-2">Slow Sources</p>
+                <p className="text-3xl font-semibold text-gray-900 mb-2">
                   {slowCount}
                 </p>
-                <Badge variant="warning" className="mt-2">
+                <Badge variant="warning" size="sm" className="mt-2">
                   <Clock className="w-3 h-3 mr-1" />
                   Performance Issues
                 </Badge>
               </div>
-              <div className="p-4 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-2xl shadow-xl transform group-hover:scale-110 transition-transform">
-                <Activity className="h-8 w-8 text-white" />
+              <div className="p-3 bg-gray-100 rounded">
+                <Activity className="h-6 w-6 text-gray-700" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-50 via-rose-50 to-pink-50 border-2 border-red-200 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden relative group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-red-200/30 rounded-full blur-2xl -mr-16 -mt-16 group-hover:bg-red-300/40 transition-all"></div>
-          <CardContent className="p-6 relative">
+        <Card>
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-xs font-bold text-gray-600 uppercase tracking-wider mb-2">Excluded Sources</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-red-600 to-rose-600 bg-clip-text text-transparent mb-2">
+                <p className="text-xs font-medium text-gray-600 uppercase tracking-wider mb-2">Excluded Sources</p>
+                <p className="text-3xl font-semibold text-gray-900 mb-2">
                   {excludedCount}
                 </p>
-                <Badge variant="danger" className="mt-2">
+                <Badge variant="danger" size="sm" className="mt-2">
                   <Shield className="w-3 h-3 mr-1" />
                   Temporarily Disabled
                 </Badge>
               </div>
-              <div className="p-4 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl shadow-xl transform group-hover:scale-110 transition-transform">
-                <AlertCircle className="h-8 w-8 text-white" />
+              <div className="p-3 bg-gray-100 rounded">
+                <AlertCircle className="h-6 w-6 text-gray-700" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="border-2 border-gray-200 shadow-xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-gray-50 via-blue-50 to-indigo-50 border-b-2 border-gray-200">
+      <Card>
+        <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-md">
-                <BarChart3 className="w-6 h-6 text-white" />
+              <div className="p-2 bg-gray-100 rounded">
+                <BarChart3 className="w-6 h-6 text-gray-700" />
               </div>
               <div>
-                <CardTitle className="text-2xl font-bold text-gray-900">Source Health Status</CardTitle>
+                <CardTitle className="text-lg font-semibold text-gray-900">Source Health Status</CardTitle>
                 <p className="text-sm text-gray-600 mt-1">Monitor and manage source performance metrics</p>
               </div>
             </div>
             {(searchQuery || statusFilter !== 'ALL' || showExcludedOnly) && (
-              <div className="px-4 py-2 bg-white rounded-lg border border-gray-200 shadow-sm">
+              <div className="px-4 py-2 bg-white rounded border border-gray-200">
                 <p className="text-sm font-semibold text-gray-700">
                   Showing <span className="text-blue-600">{rows.length}</span> of <span className="text-gray-900">{rowsAll.length}</span> sources
                 </p>
@@ -219,7 +213,7 @@ export default function Health() {
                   placeholder="Search by company name or ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 sm:text-sm hover:border-gray-400"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 sm:text-sm hover:border-gray-400"
                 />
               </div>
             </div>
@@ -240,7 +234,7 @@ export default function Health() {
               </div>
             </div>
             <div className="flex items-end">
-              <label className="flex items-center space-x-2 text-sm text-gray-700 cursor-pointer px-4 py-2 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+              <label className="flex items-center space-x-2 text-sm text-gray-700 cursor-pointer px-4 py-2 bg-white rounded border border-gray-200 hover:bg-gray-50 transition-colors">
                 <input 
                   type="checkbox" 
                   checked={showExcludedOnly} 
@@ -284,7 +278,7 @@ export default function Health() {
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+              <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Source

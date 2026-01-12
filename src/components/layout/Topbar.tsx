@@ -49,7 +49,7 @@ export const Topbar: React.FC = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+      <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200">
         <div className="flex items-center space-x-4">
           <Badge variant="info" size="sm" className="font-mono text-xs">
             {(() => {
@@ -60,21 +60,21 @@ export const Topbar: React.FC = () => {
           </Badge>
           <button
             onClick={openSearch}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-gradient-to-r from-gray-50 to-gray-100 hover:from-blue-50 hover:to-indigo-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow-md group"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-gray-50 hover:bg-gray-100 rounded border border-gray-200 transition-colors duration-150"
           >
-            <Search className="h-4 w-4 text-gray-500 group-hover:text-blue-600 transition-colors" />
-            <span className="hidden md:inline text-gray-600 group-hover:text-blue-700 transition-colors">Quick search...</span>
-            <kbd className="hidden md:inline px-2 py-0.5 text-xs font-semibold text-gray-500 bg-white rounded border border-gray-300 group-hover:border-blue-300 group-hover:text-blue-600 transition-colors">Ctrl K</kbd>
+            <Search className="h-4 w-4 text-gray-500" />
+            <span className="hidden md:inline text-gray-600">Quick search...</span>
+            <kbd className="hidden md:inline px-2 py-0.5 text-xs font-semibold text-gray-500 bg-white rounded border border-gray-300">Ctrl K</kbd>
           </button>
         </div>
         
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3 pr-4 border-r border-gray-200">
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 flex items-center justify-center text-sm font-bold text-white shadow-lg ring-2 ring-blue-200 hover:ring-blue-300 transition-all duration-200 hover:scale-105">
+            <div className="h-8 w-8 rounded bg-blue-600 flex items-center justify-center text-sm font-semibold text-white">
               {(user?.email || 'U').substring(0, 1).toUpperCase()}
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-medium text-gray-900">
                 {user?.email}
               </span>
               <Badge variant="default" size="sm" className="ml-1">
@@ -85,12 +85,12 @@ export const Topbar: React.FC = () => {
 
           <button
             onClick={() => setShowNotifications(true)}
-            className="relative p-2.5 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 rounded-lg transition-all duration-200 hover:shadow-md group"
+            className="relative p-2 text-gray-700 hover:bg-gray-100 rounded transition-colors duration-150"
           >
-            <Bell className="h-5 w-5 group-hover:text-blue-600 transition-colors" />
+            <Bell className="h-5 w-5" />
             {/* Unread badge - show only if there are unread notifications */}
             {unreadCount > 0 && (
-              <span className="absolute top-0 right-0 h-5 w-5 bg-gradient-to-br from-red-500 to-red-600 text-white text-xs font-bold rounded-full border-2 border-white flex items-center justify-center shadow-lg animate-pulse">
+              <span className="absolute top-0 right-0 h-4 w-4 bg-red-600 text-white text-xs font-semibold rounded flex items-center justify-center">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
@@ -100,7 +100,7 @@ export const Topbar: React.FC = () => {
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="flex items-center space-x-2 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 hover:text-red-600 transition-all duration-200 hover:shadow-sm"
+            className="flex items-center space-x-2"
           >
             <LogOut className="h-4 w-4" />
             <span>Logout</span>

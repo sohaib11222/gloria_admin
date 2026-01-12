@@ -44,7 +44,7 @@ const AgreementDetailModal: React.FC<AgreementDetailModalProps> = ({ agreement, 
     <Modal isOpen={isOpen} onClose={onClose} title={`Agreement Details`} size="lg">
       <div className="space-y-6">
         {/* Header Section */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+        <div className="bg-blue-50 rounded p-4 border border-blue-200">
           <div className="flex items-center justify-between">
             <div>
               <code className="text-lg font-bold text-blue-700">{agreement.agreementRef}</code>
@@ -65,28 +65,28 @@ const AgreementDetailModal: React.FC<AgreementDetailModalProps> = ({ agreement, 
             Agreement Information
           </h4>
           <div className="grid grid-cols-2 gap-4">
-            <div className="p-3 bg-gray-50 rounded-lg">
+            <div className="p-3 bg-gray-50 rounded">
               <label className="text-xs font-medium text-gray-500 flex items-center gap-1 mb-1">
                 <Calendar className="w-3 h-3" />
                 Valid From
               </label>
               <p className="text-sm font-semibold text-gray-900">{formatDate(agreement.validFrom)}</p>
             </div>
-            <div className="p-3 bg-gray-50 rounded-lg">
+            <div className="p-3 bg-gray-50 rounded">
               <label className="text-xs font-medium text-gray-500 flex items-center gap-1 mb-1">
                 <Calendar className="w-3 h-3" />
                 Valid To
               </label>
               <p className="text-sm font-semibold text-gray-900">{formatDate(agreement.validTo)}</p>
             </div>
-            <div className="p-3 bg-gray-50 rounded-lg">
+            <div className="p-3 bg-gray-50 rounded">
               <label className="text-xs font-medium text-gray-500 flex items-center gap-1 mb-1">
                 <Clock className="w-3 h-3" />
                 Created At
               </label>
               <p className="text-sm font-semibold text-gray-900">{formatDate(agreement.createdAt)}</p>
             </div>
-            <div className="p-3 bg-gray-50 rounded-lg">
+            <div className="p-3 bg-gray-50 rounded">
               <label className="text-xs font-medium text-gray-500 flex items-center gap-1 mb-1">
                 <Clock className="w-3 h-3" />
                 Updated At
@@ -103,7 +103,7 @@ const AgreementDetailModal: React.FC<AgreementDetailModalProps> = ({ agreement, 
               <Users className="w-4 h-4" />
               Agent Details
             </h4>
-            <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+            <div className="p-4 bg-blue-50 rounded border border-blue-200">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-medium text-gray-500">Company Name</label>
@@ -137,7 +137,7 @@ const AgreementDetailModal: React.FC<AgreementDetailModalProps> = ({ agreement, 
               <Building2 className="w-4 h-4" />
               Source Details
             </h4>
-            <div className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
+            <div className="p-4 bg-purple-50 rounded border border-purple-200">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-medium text-gray-500">Company Name</label>
@@ -382,30 +382,31 @@ export default function AgreementsManagement() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-8 text-white shadow-lg">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-            <FileText className="w-8 h-8" />
+      <div className="mb-8">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-gray-100 rounded">
+            <FileText className="w-6 h-6 text-gray-700" />
           </div>
-          <h1 className="text-4xl font-bold">Agreements Management</h1>
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Agreements Management</h1>
+            <p className="mt-1 text-sm text-gray-600">Manage agreements between agents and sources</p>
+          </div>
         </div>
-        <p className="text-blue-100 text-lg">Manage agreements between agents and sources</p>
       </div>
 
       {/* Filters Card */}
-      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-xl">
+      <Card>
+        <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-white">All Agreements ({filteredAgreements.length})</CardTitle>
-              <p className="text-blue-100 text-sm mt-1">Search and filter your agreements</p>
+              <CardTitle>All Agreements ({filteredAgreements.length})</CardTitle>
+              <p className="text-sm text-gray-600 mt-1">Search and filter your agreements</p>
             </div>
             <Button 
               variant="secondary" 
               onClick={() => queryClient.invalidateQueries({ queryKey: ['agreements'] })}
-              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
@@ -451,20 +452,20 @@ export default function AgreementsManagement() {
         </CardContent>
       </Card>
       {/* Agreements Table Card */}
-      <Card className="bg-gradient-to-br from-white to-gray-50 border-gray-200">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-xl">
-          <CardTitle className="text-white">Agreements List</CardTitle>
-          <p className="text-blue-100 text-sm mt-1">View and manage all agreements</p>
+      <Card>
+        <CardHeader>
+          <CardTitle>Agreements List</CardTitle>
+          <p className="text-sm text-gray-600 mt-1">View and manage all agreements</p>
         </CardHeader>
         <CardContent className="p-6">
           {error ? (
             <ErrorDisplay error={error} title="Failed to load agreements" />
           ) : filteredAgreements.length === 0 ? (
             <div className="text-center py-16">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FileText className="h-10 w-10 text-blue-600" />
+              <div className="w-16 h-16 bg-gray-100 rounded flex items-center justify-center mx-auto mb-4">
+                <FileText className="h-8 w-8 text-gray-700" />
               </div>
-              <h3 className="mt-2 text-lg font-bold text-gray-900">No agreements found</h3>
+              <h3 className="mt-2 text-lg font-semibold text-gray-900">No agreements found</h3>
               <p className="mt-2 text-sm text-gray-600">
                 {filterStatus !== 'ALL' || searchQuery 
                   ? 'Try adjusting your filters or search query' 
@@ -472,9 +473,9 @@ export default function AgreementsManagement() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+            <div className="overflow-x-auto rounded border border-gray-200">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Agreement Ref
@@ -513,14 +514,14 @@ export default function AgreementsManagement() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredAgreements.map((agreement) => (
-                    <tr key={agreement.id} className="hover:bg-blue-50 transition-colors duration-150">
+                    <tr key={agreement.id} className="hover:bg-gray-50 transition-colors duration-150">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <code className="text-xs font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-lg">
+                        <code className="text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded">
                           {agreement.agreementRef}
                         </code>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-bold text-gray-900">
+                        <div className="text-sm font-semibold text-gray-900">
                           {agreement.agent?.companyName || 'Unknown'}
                         </div>
                         {agreement.agent?.email && (
@@ -528,7 +529,7 @@ export default function AgreementsManagement() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-bold text-gray-900">
+                        <div className="text-sm font-semibold text-gray-900">
                           {agreement.source?.companyName || 'Unknown'}
                         </div>
                         {agreement.source?.email && (
@@ -571,7 +572,7 @@ export default function AgreementsManagement() {
       {/* Create Agreement Modal */}
       <Modal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} title="Create New Agreement" size="lg">
         <div className="space-y-6">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+          <div className="bg-blue-50 rounded p-4 border border-blue-200">
             <p className="text-sm text-gray-600 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-blue-600" />
               Fill in all fields to create a new agreement between an agent and source.
@@ -624,7 +625,7 @@ export default function AgreementsManagement() {
               </label>
               <input 
                 type="datetime-local" 
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                 value={form.validFrom} 
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, validFrom: e.target.value })} 
               />
@@ -638,7 +639,7 @@ export default function AgreementsManagement() {
               </label>
               <input 
                 type="datetime-local" 
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                 value={form.validTo} 
                 onChange={(e) => setForm({ ...form, validTo: e.target.value })} 
               />
@@ -660,7 +661,7 @@ export default function AgreementsManagement() {
       {/* Duplicate Confirmation */}
       <Modal isOpen={!!confirmProceed} onClose={() => setConfirmProceed(null)} title="Duplicate Agreement Detected">
         <div className="space-y-4">
-          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-4 border border-yellow-200">
+          <div className="bg-yellow-50 rounded p-4 border border-yellow-200">
             <div className="flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
               <div>

@@ -55,9 +55,9 @@ export const Modal: React.FC<ModalProps> = ({
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
     >
-      {/* Backdrop with blur effect */}
+      {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-out"
+        className="fixed inset-0 bg-black/50 transition-opacity duration-200"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -66,17 +66,16 @@ export const Modal: React.FC<ModalProps> = ({
       <div className="flex min-h-screen items-center justify-center p-4 sm:p-6">
         <div
           className={cn(
-            'relative w-full bg-white rounded-xl shadow-2xl',
-            'transform transition-all duration-300 ease-out',
+            'relative w-full bg-white rounded shadow-lg',
+            'transition-opacity duration-200',
             'border border-gray-200',
-            sizeClasses[size],
-            isOpen ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+            sizeClasses[size]
           )}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           {(title || showCloseButton) && (
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
               {title && (
                 <h3 
                   id="modal-title"
