@@ -13,9 +13,9 @@ interface SystemLogEntry {
   id: string
   direction: string
   endpoint: string
-  requestId: string
-  companyId: string
-  sourceId: string
+  requestId: string | null
+  companyId: string | null
+  sourceId: string | null
   httpStatus: number | null
   grpcStatus: string | null
   maskedRequest: string

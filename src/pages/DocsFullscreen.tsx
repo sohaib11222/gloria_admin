@@ -47,6 +47,7 @@ const DocsFullscreen: React.FC = () => {
   // Check if we should show SDK guide - either from view param or if endpointId is 'sdk'
   const shouldShowSdk = view === 'sdk' || endpointId === 'sdk';
   const [showSdkGuide, setShowSdkGuide] = useState<boolean>(shouldShowSdk);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
 
   useEffect(() => {
     // Update showSdkGuide when route changes
@@ -130,7 +131,51 @@ const DocsFullscreen: React.FC = () => {
         {showSdkGuide ? (
           <SdkGuide role="admin" />
         ) : selectedEndpoint ? (
-          <div className="docs-endpoint-content">
+          <div className="docs-content-wrapper">
+            <aside 
+              className={`docs-sidebar ${sidebarOpen ? 'open' : 'closed'}`}
+            >
+              <div className="docs-sidebar-header">
+                <h3>API Endpoints</h3>
+                <button 
+                  className="docs-sidebar-toggle"
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+                >
+                  {sidebarOpen ? '◀' : '▶'}
+                </button>
+              </div>
+              {sidebarOpen && (
+                <nav className="docs-sidebar-nav">
+                  {categories.map((cat) => (
+                    <div key={cat.id} className="docs-sidebar-category">
+                      <div className="docs-sidebar-category-title">{cat.name}</div>
+                      {cat.endpoints.map((ep) => (
+                        <button
+                          key={ep.id}
+                          className={`docs-sidebar-endpoint ${selectedEndpoint?.id === ep.id ? 'active' : ''}`}
+                          onClick={() => {
+                            setSelectedEndpoint(ep);
+                            setActiveCode(ep.codeSamples?.[0]?.lang ?? 'curl');
+                            setShowSdkGuide(false);
+                            navigate(`/docs-fullscreen/${ep.id}`, { replace: true });
+                          }}
+                        >
+                          <span 
+                            className="docs-nav-method" 
+                            style={{ background: METHOD_COLORS[ep.method] || '#6b7280' }}
+                          >
+                            {ep.method}
+                          </span>
+                          <span className="docs-nav-path">{ep.path}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </nav>
+              )}
+            </aside>
+            <div className="docs-endpoint-content">
             <div className="docs-endpoint-header">
               <h1>{selectedEndpoint.name}</h1>
               {selectedEndpoint.description && (
@@ -288,6 +333,7 @@ const DocsFullscreen: React.FC = () => {
                 </pre>
               </section>
             )}
+            </div>
           </div>
         ) : (
           <div className="docs-empty-state">

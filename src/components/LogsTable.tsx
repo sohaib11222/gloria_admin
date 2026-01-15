@@ -9,9 +9,9 @@ interface SystemLogEntry {
   id: string
   direction: string
   endpoint: string
-  requestId: string
-  companyId: string
-  sourceId: string
+  requestId: string | null
+  companyId: string | null
+  sourceId: string | null
   httpStatus: number | null
   grpcStatus: string | null
   maskedRequest: string
@@ -38,11 +38,28 @@ export const LogsTable: React.FC<LogsTableProps> = ({ logs, isLoading }) => {
     setIsModalOpen(true)
   }
 
-  const formatJson = (jsonString: string) => {
+  const formatJson = (data: string | any) => {
     try {
-      return JSON.stringify(JSON.parse(jsonString), null, 2)
+      // If it's already an object, stringify it directly
+      if (typeof data === 'object' && data !== null) {
+        return JSON.stringify(data, null, 2)
+      }
+      // If it's a string, try to parse and re-stringify for formatting
+      if (typeof data === 'string') {
+        return JSON.stringify(JSON.parse(data), null, 2)
+      }
+      // Fallback: convert to string
+      return String(data)
     } catch {
-      return jsonString
+      // If parsing fails, try to stringify if it's an object
+      if (typeof data === 'object' && data !== null) {
+        try {
+          return JSON.stringify(data, null, 2)
+        } catch {
+          return String(data)
+        }
+      }
+      return String(data)
     }
   }
 
@@ -96,7 +113,7 @@ export const LogsTable: React.FC<LogsTableProps> = ({ logs, isLoading }) => {
                     <tr key={log.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-mono text-gray-900">
-                          {log.requestId.substring(0, 8)}...
+                          {log.requestId ? `${log.requestId.substring(0, 8)}...` : 'N/A'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -134,12 +151,12 @@ export const LogsTable: React.FC<LogsTableProps> = ({ logs, isLoading }) => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {log.companyId.substring(0, 8)}...
+                          {log.companyId ? `${log.companyId.substring(0, 8)}...` : 'N/A'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">
-                          {log.sourceId.substring(0, 8)}...
+                          {log.sourceId ? `${log.sourceId.substring(0, 8)}...` : 'N/A'}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -184,7 +201,7 @@ export const LogsTable: React.FC<LogsTableProps> = ({ logs, isLoading }) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-700">Request ID</label>
-                <p className="text-sm text-gray-900 font-mono">{selectedLog.requestId}</p>
+                <p className="text-sm text-gray-900 font-mono">{selectedLog.requestId || 'N/A'}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700">Endpoint</label>
@@ -222,11 +239,11 @@ export const LogsTable: React.FC<LogsTableProps> = ({ logs, isLoading }) => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-700">Company ID</label>
-                <p className="text-sm text-gray-900 font-mono">{selectedLog.companyId}</p>
+                <p className="text-sm text-gray-900 font-mono">{selectedLog.companyId || 'N/A'}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700">Source ID</label>
-                <p className="text-sm text-gray-900 font-mono">{selectedLog.sourceId}</p>
+                <p className="text-sm text-gray-900 font-mono">{selectedLog.sourceId || 'N/A'}</p>
               </div>
             </div>
 
@@ -264,10 +281,7 @@ export const LogsTable: React.FC<LogsTableProps> = ({ logs, isLoading }) => {
                 <label className="text-sm font-medium text-gray-700">Response Data</label>
                 <div className="mt-1 p-3 bg-gray-50 rounded-lg">
                   <pre className="text-xs text-gray-800 overflow-auto max-h-40">
-                    {typeof selectedLog.maskedResponse === 'string' 
-                      ? formatJson(selectedLog.maskedResponse)
-                      : JSON.stringify(selectedLog.maskedResponse, null, 2)
-                    }
+                    {formatJson(selectedLog.maskedResponse)}
                   </pre>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">Size: {selectedLog.responseSize} bytes</p>
