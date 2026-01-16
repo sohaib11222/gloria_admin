@@ -82,19 +82,23 @@ export const supportApi = {
   sendMessage: async (ticketId: string, data: SendMessageRequest): Promise<SupportMessage> => {
     const formData = new FormData()
     
-    if (data.content) {
+    // ALWAYS append content - if provided, use it; if image-only, use empty string
+    // This ensures backend always receives a content field
+    if (data.content !== undefined && data.content !== null) {
       formData.append('content', data.content)
+    } else if (data.image) {
+      // If we have image but no content, send empty string to satisfy backend requirement
+      formData.append('content', '')
     }
     
+    // Append image if provided - this is critical for image-only messages
     if (data.image) {
       formData.append('image', data.image)
     }
 
-    const response = await http.post(`/api/support/tickets/${ticketId}/messages`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    // Don't set Content-Type header - axios will set it automatically with boundary for FormData
+    // This ensures Authorization header is properly included
+    const response = await http.post(`/api/support/tickets/${ticketId}/messages`, formData)
     return response.data
   },
 

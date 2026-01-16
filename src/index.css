@@ -171,3 +171,26 @@ textarea:focus {
 a {
   transition: color 0.15s ease;
 }
+
+/* Toast close button fix */
+[data-hot-toast] {
+  z-index: 9999 !important;
+}
+
+[data-hot-toast] button[aria-label] {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  z-index: 10000 !important;
+  position: relative !important;
+}
+
+/* Ensure toast container is above everything */
+.go4109123758 {
+  z-index: 9999 !important;
+}
+
+.go4109123758 button {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  z-index: 10000 !important;
+}

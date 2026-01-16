@@ -21,6 +21,7 @@ export interface LogsResponse {
   page: number
   limit: number
   nextCursor?: string
+  hasMore?: boolean
 }
 
 export const logsApi = {

@@ -818,20 +818,79 @@ function ImportUNLocodeModal({
 }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Import UN/LOCODEs from CSV" size="xl">
-      <div className="space-y-4">
+      <div className="space-y-6">
+        {/* Format Instructions */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="text-sm font-semibold text-blue-900 mb-3">CSV Format Requirements</h3>
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs font-medium text-blue-800 mb-1">Required Fields:</p>
+              <code className="text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded">unlocode,country,place</code>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-blue-800 mb-1">Optional Fields:</p>
+              <code className="text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded">iataCode,latitude,longitude</code>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-blue-800 mb-2">Full Format:</p>
+              <code className="text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded block">
+                unlocode,country,place,iataCode,latitude,longitude
+              </code>
+            </div>
+          </div>
+        </div>
+
+        {/* Sample CSV */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">CSV Data</label>
-          <p className="text-xs text-gray-500 mb-2">
-            Format: unlocode,country,place,iataCode,latitude,longitude
-            <br />
-            Example: GBMAN,GB,Manchester,MAN,53.3656,-2.2729
+          <label className="block text-sm font-medium text-gray-700 mb-2">Sample CSV Data</label>
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-3">
+            <pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap">
+{`GBMAN,GB,Manchester,MAN,53.3656,-2.2729
+GBGLA,GB,Glasgow,GLA,55.8642,-4.4331
+USNYC,US,New York,JFK,40.7128,-74.0060
+FRPAR,FR,Paris,CDG,48.8566,2.3522
+DEMUN,DE,Munich,MUC,48.1351,11.5820`}
+            </pre>
+          </div>
+          <p className="text-xs text-gray-500 mb-1">
+            <strong>Note:</strong> Each line represents one UN/LOCODE entry. Optional fields (iataCode, latitude, longitude) can be left empty.
           </p>
+        </div>
+
+        {/* JSON Sample */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Example: How CSV is converted to JSON</label>
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+            <p className="text-xs text-gray-600 mb-2 font-medium">CSV Line:</p>
+            <code className="text-xs font-mono text-gray-700 block mb-3 bg-white px-2 py-1 rounded border">
+              GBMAN,GB,Manchester,MAN,53.3656,-2.2729
+            </code>
+            <p className="text-xs text-gray-600 mb-2 font-medium">Becomes:</p>
+            <pre className="text-xs font-mono text-gray-700 bg-white p-2 rounded border overflow-x-auto">
+{`{
+  "unlocode": "GBMAN",
+  "country": "GB",
+  "place": "Manchester",
+  "iataCode": "MAN",
+  "latitude": 53.3656,
+  "longitude": -2.2729
+}`}
+            </pre>
+          </div>
+        </div>
+
+        {/* CSV Input */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Your CSV Data</label>
           <textarea
-            className="w-full h-64 p-3 border border-gray-300 rounded-lg font-mono text-sm"
+            className="w-full h-48 p-3 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             value={csv}
             onChange={(e) => onCsvChange(e.target.value)}
-            placeholder="GBMAN,GB,Manchester,MAN,53.3656,-2.2729&#10;GBGLA,GB,Glasgow,GLA,55.8642,-4.4331"
+            placeholder="Paste your CSV data here...&#10;&#10;Example:&#10;GBMAN,GB,Manchester,MAN,53.3656,-2.2729&#10;GBGLA,GB,Glasgow,GLA,55.8642,-4.4331"
           />
+          <p className="text-xs text-gray-500 mt-1">
+            Paste your CSV data above. Each line should follow the format: <code className="bg-gray-100 px-1 rounded">unlocode,country,place,iataCode,latitude,longitude</code>
+          </p>
         </div>
         {errors && errors.length > 0 && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg">

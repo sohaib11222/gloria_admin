@@ -13,11 +13,17 @@ export const ProfessionalToaster = () => {
       containerStyle={{
         top: 20,
         right: 20,
+        zIndex: 9999,
       }}
+      // Limit visible toasts to prevent stacking
+      visibleToasts={5}
+      // Prevent duplicate toasts
       toastOptions={{
         // Default options
         className: 'font-medium',
         duration: 4000,
+        // Enable close button
+        closeButton: true,
         style: {
           background: '#ffffff',
           color: '#111827',
@@ -31,10 +37,12 @@ export const ProfessionalToaster = () => {
           minWidth: '300px',
           lineHeight: '1.6',
           letterSpacing: '0.01em',
+          zIndex: 9999,
         },
         // Success toast
         success: {
           duration: 3000,
+          closeButton: true,
           iconTheme: {
             primary: '#10b981',
             secondary: '#ffffff',
@@ -45,6 +53,7 @@ export const ProfessionalToaster = () => {
             border: '1px solid #10b981',
             borderLeft: '5px solid #10b981',
             boxShadow: '0 20px 25px -5px rgba(16, 185, 129, 0.1), 0 10px 10px -5px rgba(16, 185, 129, 0.04)',
+            zIndex: 9999,
           },
           icon: <CheckCircle size={22} className="text-green-500 flex-shrink-0" />,
           className: 'toast-success',
@@ -52,6 +61,7 @@ export const ProfessionalToaster = () => {
         // Error toast
         error: {
           duration: 5000,
+          closeButton: true,
           iconTheme: {
             primary: '#ef4444',
             secondary: '#ffffff',
@@ -62,6 +72,7 @@ export const ProfessionalToaster = () => {
             border: '1px solid #ef4444',
             borderLeft: '5px solid #ef4444',
             boxShadow: '0 20px 25px -5px rgba(239, 68, 68, 0.1), 0 10px 10px -5px rgba(239, 68, 68, 0.04)',
+            zIndex: 9999,
           },
           icon: <XCircle size={22} className="text-red-500 flex-shrink-0" />,
           className: 'toast-error',
@@ -100,6 +111,8 @@ export const ProfessionalToaster = () => {
 export const showToast = {
   success: (message: string) => {
     return toast.success(message, {
+      id: `success-${message.substring(0, 50)}`, // Prevent duplicates
+      closeButton: true,
       style: {
         background: '#ffffff',
         color: '#111827',
@@ -112,6 +125,7 @@ export const showToast = {
         fontWeight: '500',
         maxWidth: '450px',
         minWidth: '300px',
+        zIndex: 9999,
       },
       icon: <CheckCircle size={22} className="text-green-500 flex-shrink-0" />,
       duration: 3000,
@@ -119,6 +133,8 @@ export const showToast = {
   },
   error: (message: string) => {
     return toast.error(message, {
+      id: `error-${message.substring(0, 50)}`, // Prevent duplicates
+      closeButton: true,
       style: {
         background: '#ffffff',
         color: '#111827',
@@ -131,6 +147,7 @@ export const showToast = {
         fontWeight: '500',
         maxWidth: '450px',
         minWidth: '300px',
+        zIndex: 9999,
       },
       icon: <XCircle size={22} className="text-red-500 flex-shrink-0" />,
       duration: 5000,

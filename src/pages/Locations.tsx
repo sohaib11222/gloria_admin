@@ -1,19 +1,217 @@
 import React, { useMemo, useState } from 'react'
 import { Input } from '../components/ui/Input'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Select } from '../components/ui/Select'
 import { Loader } from '../components/ui/Loader'
 import { Badge } from '../components/ui/Badge'
+import { Modal } from '../components/ui/Modal'
 import { locationsApi } from '../api/locations'
 import { agreementsApi } from '../api/agreements'
+import { unlocodesApi, CreateUNLocodeRequest } from '../api/unlocodes'
+import { Plus } from 'lucide-react'
+import toast from 'react-hot-toast'
+
+interface AddLocationModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onSuccess: () => void
+}
+
+const AddLocationModal: React.FC<AddLocationModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const [formData, setFormData] = useState<CreateUNLocodeRequest>({
+    unlocode: '',
+    country: '',
+    place: '',
+    iataCode: null,
+    latitude: null,
+    longitude: null,
+  })
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const queryClient = useQueryClient()
+
+  const createMutation = useMutation({
+    mutationFn: (data: CreateUNLocodeRequest) => unlocodesApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['locations'] })
+      queryClient.invalidateQueries({ queryKey: ['locations', 'all'] })
+      toast.success('Location added successfully')
+      setFormData({
+        unlocode: '',
+        country: '',
+        place: '',
+        iataCode: null,
+        latitude: null,
+        longitude: null,
+      })
+      setErrors({})
+      onSuccess()
+      onClose()
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || 'Failed to add location'
+      const errorCode = error.response?.data?.error
+      
+      if (errorCode === 'UNLOCODE_EXISTS') {
+        setErrors({ unlocode: 'This UN/LOCODE already exists' })
+      } else if (errorCode === 'VALIDATION_ERROR') {
+        const details = error.response?.data?.details || []
+        const newErrors: Record<string, string> = {}
+        details.forEach((err: any) => {
+          if (err.path) {
+            newErrors[err.path[0]] = err.message
+          }
+        })
+        setErrors(newErrors)
+      } else {
+        toast.error(errorMessage)
+      }
+    },
+  })
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {}
+    
+    if (!formData.unlocode || formData.unlocode.length < 2 || formData.unlocode.length > 10) {
+      newErrors.unlocode = 'UN/LOCODE must be between 2 and 10 characters'
+    }
+    
+    if (!formData.country || formData.country.length !== 2) {
+      newErrors.country = 'Country code must be exactly 2 characters (e.g., GB, US)'
+    }
+    
+    if (!formData.place || formData.place.trim().length === 0) {
+      newErrors.place = 'Place name is required'
+    }
+    
+    if (formData.iataCode && formData.iataCode.length > 3) {
+      newErrors.iataCode = 'IATA code must be 3 characters or less'
+    }
+    
+    if (formData.latitude !== null && (formData.latitude < -90 || formData.latitude > 90)) {
+      newErrors.latitude = 'Latitude must be between -90 and 90'
+    }
+    
+    if (formData.longitude !== null && (formData.longitude < -180 || formData.longitude > 180)) {
+      newErrors.longitude = 'Longitude must be between -180 and 180'
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (validateForm()) {
+      createMutation.mutate(formData)
+    }
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Add New Location">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="UN/LOCODE *"
+            placeholder="e.g., GBMAN"
+            value={formData.unlocode}
+            onChange={(e) => setFormData({ ...formData, unlocode: e.target.value.toUpperCase() })}
+            error={errors.unlocode}
+            required
+            helperText="2-10 characters, will be converted to uppercase"
+          />
+          <Input
+            label="Country Code *"
+            placeholder="e.g., GB"
+            value={formData.country}
+            onChange={(e) => setFormData({ ...formData, country: e.target.value.toUpperCase() })}
+            error={errors.country}
+            required
+            helperText="2-letter ISO country code"
+            maxLength={2}
+          />
+        </div>
+
+        <Input
+          label="Place Name *"
+          placeholder="e.g., Manchester"
+          value={formData.place}
+          onChange={(e) => setFormData({ ...formData, place: e.target.value })}
+          error={errors.place}
+          required
+        />
+
+        <div className="grid grid-cols-3 gap-4">
+          <Input
+            label="IATA Code"
+            placeholder="e.g., MAN"
+            value={formData.iataCode || ''}
+            onChange={(e) => setFormData({ ...formData, iataCode: e.target.value.toUpperCase() || null })}
+            error={errors.iataCode}
+            helperText="Optional, 3 characters"
+            maxLength={3}
+          />
+          <Input
+            label="Latitude"
+            type="number"
+            step="any"
+            placeholder="e.g., 53.3656"
+            value={formData.latitude !== null ? formData.latitude.toString() : ''}
+            onChange={(e) => {
+              const val = e.target.value
+              setFormData({ ...formData, latitude: val ? parseFloat(val) : null })
+            }}
+            error={errors.latitude}
+            helperText="Optional, -90 to 90"
+          />
+          <Input
+            label="Longitude"
+            type="number"
+            step="any"
+            placeholder="e.g., -2.2729"
+            value={formData.longitude !== null ? formData.longitude.toString() : ''}
+            onChange={(e) => {
+              const val = e.target.value
+              setFormData({ ...formData, longitude: val ? parseFloat(val) : null })
+            }}
+            error={errors.longitude}
+            helperText="Optional, -180 to 180"
+          />
+        </div>
+
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            disabled={createMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={createMutation.isPending}
+            loading={createMutation.isPending}
+          >
+            {createMutation.isPending ? 'Adding...' : 'Add Location'}
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
 
 export default function Locations() {
   const [tab, setTab] = useState<'all' | 'byAgreement' | 'bySource'>('all')
   const [agreementId, setAgreementId] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState('')
   const [countryFilter, setCountryFilter] = useState<string>('')
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const queryClient = useQueryClient()
 
   const { data: agreements } = useQuery({
     queryKey: ['agreements'],
@@ -68,19 +266,31 @@ export default function Locations() {
     <div className="space-y-6">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-gray-100 rounded">
-            <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-gray-100 rounded">
+              <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                Locations
+              </h1>
+              <p className="mt-1 text-sm text-gray-600">Manage supported locations and UN/LOCODE data</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">
-              Locations
-            </h1>
-            <p className="mt-1 text-sm text-gray-600">Manage supported locations and UN/LOCODE data</p>
-          </div>
+          {tab === 'all' && (
+            <Button
+              variant="primary"
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add Location
+            </Button>
+          )}
         </div>
       </div>
 
@@ -361,6 +571,14 @@ export default function Locations() {
           )}
         </CardContent>
       </Card>
+
+      <AddLocationModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={() => {
+          // Query invalidation is handled in the mutation's onSuccess
+        }}
+      />
     </div>
   )
 }

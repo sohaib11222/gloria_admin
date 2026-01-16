@@ -24,7 +24,6 @@ import BookingLogs from '../pages/BookingLogs'
 import DocsPage from '../pages/Docs'
 import DocsFullscreen from '../pages/DocsFullscreen'
 import Activity from '../pages/Activity'
-import Changelog from '../pages/Changelog'
 import IpWhitelist from '../pages/IpWhitelist'
 import LocationValidation from '../pages/LocationValidation'
 import Branches from '../pages/Branches'
@@ -219,14 +218,6 @@ export const AppRoutes: React.FC = () => {
           element={
             <RequireAgreement>
               <Activity />
-            </RequireAgreement>
-          }
-        />
-        <Route
-          path="changelog"
-          element={
-            <RequireAgreement>
-              <Changelog />
             </RequireAgreement>
           }
         />

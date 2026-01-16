@@ -115,11 +115,26 @@ export default function Dashboard() {
 
   const isLoading = sourcesLoading || agentsLoading || agreementsLoading || healthLoading || verificationLoading || logsLoading || bookingsLoading || systemStatusLoading
 
-  // Calculate derived values (after all hooks)
-  const activeSources = sources?.data?.filter(s => s.status === 'ACTIVE').length || 0
-  const activeAgents = agents?.data?.filter(a => a.status === 'ACTIVE').length || 0
-  const activeAgreements = agreements?.data?.filter(a => a.status === 'ACTIVE').length || 0
-  const excludedSources = Array.isArray(health) ? health.filter((h) => h.status === 'EXCLUDED').length : 0
+  // Calculate derived values (after all hooks) - using real backend data
+  const activeSources = React.useMemo(() => {
+    if (!sources?.data || !Array.isArray(sources.data)) return 0
+    return sources.data.filter(s => s.status === 'ACTIVE').length
+  }, [sources?.data])
+  
+  const activeAgents = React.useMemo(() => {
+    if (!agents?.data || !Array.isArray(agents.data)) return 0
+    return agents.data.filter(a => a.status === 'ACTIVE').length
+  }, [agents?.data])
+  
+  const activeAgreements = React.useMemo(() => {
+    if (!agreements?.data || !Array.isArray(agreements.data)) return 0
+    return agreements.data.filter(a => a.status === 'ACTIVE').length
+  }, [agreements?.data])
+  
+  const excludedSources = React.useMemo(() => {
+    if (!health || !Array.isArray(health)) return 0
+    return health.filter((h) => h.status === 'EXCLUDED').length
+  }, [health])
   const hasBookingErrors = (recentLogs?.data || []).some((log) =>
     (log.endpoint || '').toLowerCase().includes('booking') && (log.level === 'ERROR' || (log.http_status && log.http_status >= 400))
   )

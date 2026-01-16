@@ -51,6 +51,25 @@ export interface BranchStats {
   }>;
 }
 
+export interface CreateBranchRequest {
+  sourceId: string;
+  branchCode: string;
+  name: string;
+  status?: string | null;
+  locationType?: string | null;
+  collectionType?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  addressLine?: string | null;
+  city?: string | null;
+  postalCode?: string | null;
+  country?: string | null;
+  countryCode?: string | null;
+  natoLocode?: string | null;
+}
+
 export interface UpdateBranchRequest {
   name?: string;
   status?: string;
@@ -69,6 +88,11 @@ export interface UpdateBranchRequest {
 }
 
 export const branchesApi = {
+  createBranch: async (data: CreateBranchRequest): Promise<Branch> => {
+    const response = await http.post("/admin/branches", data);
+    return response.data;
+  },
+
   listBranches: async (params?: {
     sourceId?: string;
     status?: string;

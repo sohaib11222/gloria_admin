@@ -78,7 +78,6 @@ export const NAVIGATION_ITEMS = [
   { path: '/logs', label: 'System Logs', icon: 'FileText' },
   { path: '/metrics', label: 'Metrics', icon: 'BarChart3' },
   { path: '/docs', label: 'API Reference', icon: 'BookOpen' },
-  { path: '/changelog', label: "What's New", icon: 'HelpCircle' },
   { path: '/settings', label: 'Settings', icon: 'Settings' },
 ] as const
 

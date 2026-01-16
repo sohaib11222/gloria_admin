@@ -43,27 +43,13 @@ export default function Health() {
     },
   })
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="text-center space-y-4">
-          <div className="relative">
-            <Loader className="min-h-96" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <HeartPulse className="w-8 h-8 text-blue-500 animate-pulse" />
-            </div>
-          </div>
-          <div>
-            <p className="text-lg font-semibold text-gray-900">Loading health data...</p>
-            <p className="text-sm text-gray-500 mt-1">Please wait while we fetch system health information</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const rowsAll = Array.isArray(health) ? health : (health?.items ?? [])
+  // Calculate rowsAll - must be before any conditional returns
+  const rowsAll = React.useMemo(() => {
+    if (isLoading || !health) return []
+    return Array.isArray(health) ? health : (health?.items ?? [])
+  }, [health, isLoading])
   
+  // Filter rows - must be before any conditional returns
   const filteredRows = React.useMemo(() => {
     let filtered = rowsAll
     
@@ -86,11 +72,41 @@ export default function Health() {
     return filtered
   }, [rowsAll, showExcludedOnly, statusFilter, searchQuery])
   
+  // Calculate counts - must be before any conditional returns
+  const healthyCount = React.useMemo(() => 
+    rowsAll.filter((s: any) => s.status === 'HEALTHY').length,
+    [rowsAll]
+  )
+  const slowCount = React.useMemo(() => 
+    rowsAll.filter((s: any) => s.status === 'SLOW').length,
+    [rowsAll]
+  )
+  const excludedCount = React.useMemo(() => 
+    rowsAll.filter((s: any) => s.status === 'EXCLUDED').length,
+    [rowsAll]
+  )
+
   const rows = filteredRows
 
-  const healthyCount = rowsAll.filter((s: any) => s.status === 'HEALTHY').length
-  const slowCount = rowsAll.filter((s: any) => s.status === 'SLOW').length
-  const excludedCount = rowsAll.filter((s: any) => s.status === 'EXCLUDED').length
+  // Now we can do conditional returns after all hooks
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <Loader className="min-h-96" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <HeartPulse className="w-8 h-8 text-blue-500 animate-pulse" />
+            </div>
+          </div>
+          <div>
+            <p className="text-lg font-semibold text-gray-900">Loading health data...</p>
+            <p className="text-sm text-gray-500 mt-1">Please wait while we fetch system health information</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8 pb-8">

@@ -27,7 +27,6 @@ const searchItems: SearchItem[] = [
   { id: 'verification', label: 'Verification', category: 'Tools', path: '/verification', icon: '✅' },
   { id: 'docs', label: 'API Reference', category: 'Documentation', path: '/docs-fullscreen', icon: '📖' },
   { id: 'integrations', label: 'Integrations', category: 'Settings', path: '/integrations', icon: '🔧' },
-  { id: 'changelog', label: "What's New", category: 'Documentation', path: '/changelog', icon: '🆕' },
   { id: 'settings', label: 'Settings', category: 'Settings', path: '/settings', icon: '⚙️' },
 ]
 
@@ -88,43 +87,45 @@ export const SearchPalette: React.FC<{ isOpen: boolean; onClose: () => void }> =
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black bg-opacity-30 z-50" onClick={onClose} />
+      <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50" onClick={onClose} />
       
       {/* Palette */}
-      <div className="fixed left-1/2 top-1/4 -translate-x-1/2 w-full max-w-2xl z-50">
-        <div className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden">
+      <div className="fixed left-1/2 top-1/4 -translate-x-1/2 w-full max-w-2xl z-50 transform transition-all duration-200 ease-out">
+        <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden">
           {/* Search input */}
-          <div className="px-4 py-3 border-b border-gray-200">
+          <div className="px-4 py-4 border-b border-gray-200 bg-gray-50">
             <div className="flex items-center gap-3">
-              <Search className="h-5 w-5 text-gray-400" />
+              <Search className="h-5 w-5 text-gray-400 flex-shrink-0" />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Search pages, agreements, logs..."
-                className="flex-1 outline-none text-base"
+                className="flex-1 outline-none text-base bg-white border border-gray-300 rounded-md px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 transition-all"
                 autoFocus
               />
-              <kbd className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 rounded">ESC</kbd>
+              <kbd className="px-2 py-1 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded shadow-sm flex-shrink-0">ESC</kbd>
             </div>
           </div>
 
           {/* Results */}
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
             {filteredItems.length === 0 ? (
-              <div className="px-4 py-12 text-center text-gray-500">
-                <p>No results found</p>
+              <div className="px-4 py-12 text-center">
+                <p className="text-gray-500 text-sm">No results found</p>
+                <p className="text-gray-400 text-xs mt-1">Try a different search term</p>
               </div>
             ) : (
               <div className="py-2">
                 {Object.entries(groupedItems).map(([category, items]) => (
                   <div key={category}>
-                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide bg-gray-50 border-b border-gray-100">
                       {category}
                     </div>
-                    {items.map((item, idx) => {
+                    {items.map((item) => {
                       const globalIdx = filteredItems.indexOf(item)
+                      const isSelected = selectedIndex === globalIdx
                       return (
                         <button
                           key={item.id}
@@ -142,15 +143,22 @@ export const SearchPalette: React.FC<{ isOpen: boolean; onClose: () => void }> =
                           }}
                           onMouseEnter={() => setSelectedIndex(globalIdx)}
                           className={cn(
-                            'w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-blue-50 transition-colors',
-                            selectedIndex === globalIdx && 'bg-blue-50'
+                            'w-full px-4 py-3 flex items-center gap-3 text-left transition-colors duration-150',
+                            isSelected 
+                              ? 'bg-blue-50 border-l-2 border-blue-600' 
+                              : 'hover:bg-gray-50 border-l-2 border-transparent'
                           )}
                         >
                           <span className="text-xl flex-shrink-0">{item.icon}</span>
-                          <span className="flex-1 text-sm font-medium text-gray-900">{item.label}</span>
+                          <span className={cn(
+                            'flex-1 text-sm font-medium',
+                            isSelected ? 'text-blue-900' : 'text-gray-900'
+                          )}>
+                            {item.label}
+                          </span>
                           <ArrowRight className={cn(
-                            'h-4 w-4 text-gray-400',
-                            selectedIndex === globalIdx && 'text-blue-600'
+                            'h-4 w-4 flex-shrink-0 transition-colors',
+                            isSelected ? 'text-blue-600' : 'text-gray-400'
                           )} />
                         </button>
                       )
@@ -162,10 +170,10 @@ export const SearchPalette: React.FC<{ isOpen: boolean; onClose: () => void }> =
           </div>
 
           {/* Footer hint */}
-          <div className="px-4 py-2 border-t border-gray-200 bg-gray-50">
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <span>Navigate with ↑↓ and press Enter</span>
-              <kbd className="px-2 py-1 bg-white rounded border border-gray-300">↵</kbd>
+          <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-600">Navigate with <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-700 bg-white rounded border border-gray-300 shadow-sm">↑</kbd> <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-700 bg-white rounded border border-gray-300 shadow-sm">↓</kbd> and press Enter</span>
+              <kbd className="px-2 py-1 text-xs font-semibold text-gray-700 bg-white rounded border border-gray-300 shadow-sm">↵</kbd>
             </div>
           </div>
         </div>

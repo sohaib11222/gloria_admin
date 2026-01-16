@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { Plus } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
@@ -8,14 +9,174 @@ import { Modal } from '../components/ui/Modal'
 import { Input } from '../components/ui/Input'
 import { Select } from '../components/ui/Select'
 import { ErrorDisplay } from '../components/ui/ErrorDisplay'
-import { companiesApi } from '../api/companies'
+import { companiesApi, Company } from '../api/companies'
 import { agreementsApi } from '../api/agreements'
 import { formatDate } from '../lib/utils'
 import toast from 'react-hot-toast'
 
+interface AgentFormModalProps {
+  agent: Company | null
+  isOpen: boolean
+  onClose: () => void
+  onSave: () => void
+}
+
+const getInitialFormData = () => ({
+  companyName: '',
+  email: '',
+  password: '',
+  grpcEndpoint: '',
+  status: 'ACTIVE' as 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED',
+})
+
+const AgentFormModal: React.FC<AgentFormModalProps> = ({ agent, isOpen, onClose, onSave }) => {
+  const [formData, setFormData] = useState(getInitialFormData)
+
+  useEffect(() => {
+    if (isOpen) {
+      if (agent) {
+        // Edit mode: populate with agent data
+        setFormData({
+          companyName: agent.companyName || '',
+          email: agent.email || '',
+          password: '',
+          grpcEndpoint: agent.grpcEndpoint || '',
+          status: agent.status || 'ACTIVE',
+        })
+      } else {
+        // Create mode: reset to empty defaults
+        setFormData(getInitialFormData())
+      }
+    } else {
+      // Reset form when modal closes
+      setFormData(getInitialFormData())
+    }
+  }, [agent, isOpen])
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => companiesApi.createCompany(data),
+    onSuccess: () => {
+      toast.success('Agent created successfully')
+      onSave()
+      onClose()
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to create agent')
+    },
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => companiesApi.updateCompanyDetails(id, data),
+    onSuccess: () => {
+      toast.success('Agent updated successfully')
+      onSave()
+      onClose()
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to update agent')
+    },
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!formData.companyName || !formData.email || (!agent && !formData.password)) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    const dataToSend: any = {
+      companyName: formData.companyName,
+      email: formData.email,
+      type: 'AGENT',
+      status: formData.status,
+    }
+
+    if (formData.password) {
+      dataToSend.password = formData.password
+    }
+
+    if (formData.grpcEndpoint) {
+      dataToSend.grpcEndpoint = formData.grpcEndpoint
+    }
+
+    if (agent) {
+      updateMutation.mutate({ id: agent.id, data: dataToSend })
+    } else {
+      createMutation.mutate(dataToSend)
+    }
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={agent ? 'Edit Agent' : 'Create Agent'}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Company Name"
+            value={formData.companyName}
+            onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+            required
+          />
+          <Input
+            label="Email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            required
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Password"
+            type="password"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            required={!agent}
+            helperText={agent ? 'Leave blank to keep current password' : undefined}
+          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+            >
+              <option value="ACTIVE">Active</option>
+              <option value="PENDING_VERIFICATION">Pending Verification</option>
+              <option value="SUSPENDED">Suspended</option>
+            </select>
+          </div>
+        </div>
+
+        <Input
+          label="gRPC Endpoint (Optional)"
+          placeholder="localhost:51062"
+          value={formData.grpcEndpoint}
+          onChange={(e) => setFormData({ ...formData, grpcEndpoint: e.target.value })}
+          helperText="Format: host:port"
+        />
+
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={onClose} type="button">
+            Cancel
+          </Button>
+          <Button type="submit" loading={createMutation.isPending || updateMutation.isPending}>
+            {agent ? 'Update' : 'Create'}
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
+
 export default function Agents() {
   const [selectedAgent, setSelectedAgent] = useState<any>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [agentToEdit, setAgentToEdit] = useState<Company | null>(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED'>('ALL')
   const [form, setForm] = useState<{
@@ -132,20 +293,28 @@ export default function Agents() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Agents</h1>
-        <p className="mt-2 text-gray-600">
-          Manage car rental agent companies
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Agents</h1>
+          <p className="mt-2 text-gray-600">
+            Manage car rental agent companies
+          </p>
+        </div>
+        <Button onClick={() => setIsCreateModalOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Agent
+        </Button>
       </div>
 
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Agent Companies</CardTitle>
-            <Button variant="secondary" onClick={() => queryClient.invalidateQueries({ queryKey: ['agents'] })}>
-              Refresh
-            </Button>
+            <CardTitle>Agent Companies ({filteredAgents.length})</CardTitle>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" onClick={() => queryClient.invalidateQueries({ queryKey: ['agents'] })}>
+                Refresh
+              </Button>
+            </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
             <div className="flex-1">
@@ -206,14 +375,26 @@ export default function Agents() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(agent.createdAt)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <Button 
-                          size="sm" 
-                          variant="secondary"
-                          onClick={() => handleOfferAgreement(agent)}
-                          disabled={agent.status !== 'ACTIVE'}
-                        >
-                          Offer Agreement
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="secondary"
+                            onClick={() => handleOfferAgreement(agent)}
+                            disabled={agent.status !== 'ACTIVE'}
+                          >
+                            Offer Agreement
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            onClick={() => {
+                              setAgentToEdit(agent)
+                              setIsEditModalOpen(true)
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -223,10 +404,20 @@ export default function Agents() {
           ) : (
             <div className="text-center py-12">
               <div className="text-gray-500 text-lg mb-2">No agents found</div>
-              {(searchQuery || statusFilter !== 'ALL') && (
-                <div className="text-sm text-gray-400">
+              {(searchQuery || statusFilter !== 'ALL') ? (
+                <div className="text-sm text-gray-400 mb-4">
                   Try adjusting your filters or search query
                 </div>
+              ) : (
+                <div className="text-sm text-gray-400 mb-4">
+                  Get started by creating your first agent
+                </div>
+              )}
+              {!searchQuery && statusFilter === 'ALL' && (
+                <Button onClick={() => setIsCreateModalOpen(true)} className="mt-4">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Agent
+                </Button>
               )}
             </div>
           )}
@@ -329,6 +520,31 @@ export default function Agents() {
           </div>
         </div>
       </Modal>
+
+      <AgentFormModal
+        key="create-agent-modal"
+        agent={null}
+        isOpen={isCreateModalOpen}
+        onClose={() => {
+          setIsCreateModalOpen(false)
+        }}
+        onSave={() => {
+          queryClient.invalidateQueries({ queryKey: ['agents'] })
+        }}
+      />
+
+      <AgentFormModal
+        key={`edit-agent-modal-${agentToEdit?.id || 'new'}`}
+        agent={agentToEdit}
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false)
+          setAgentToEdit(null)
+        }}
+        onSave={() => {
+          queryClient.invalidateQueries({ queryKey: ['agents'] })
+        }}
+      />
     </div>
   )
 }

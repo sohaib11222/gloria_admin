@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Download, Building2, RefreshCw, Plus, Search, Filter, Users, CheckCircle, Clock, XCircle } from 'lucide-react'
+import { Download, Building2, RefreshCw, Plus, Search, Filter, Users, CheckCircle, Clock, XCircle, MoreVertical, Eye, Edit, Check, X, Trash2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
@@ -26,44 +27,43 @@ interface CompanyFormModalProps {
   onSave: () => void
 }
 
+const getInitialFormData = () => ({
+  companyName: '',
+  email: '',
+  type: 'AGENT' as 'AGENT' | 'SOURCE',
+  password: '',
+  adapterType: 'mock',
+  grpcEndpoint: '',
+  httpEndpoint: '',
+  companyCode: '',
+  status: 'ACTIVE' as 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED',
+})
+
 const CompanyFormModal: React.FC<CompanyFormModalProps> = ({ company, isOpen, onClose, onSave }) => {
-  const [formData, setFormData] = useState({
-    companyName: '',
-    email: '',
-    type: 'AGENT' as 'AGENT' | 'SOURCE',
-    password: '',
-    adapterType: 'mock',
-    grpcEndpoint: '',
-    httpEndpoint: '',
-    companyCode: '',
-    status: 'ACTIVE' as 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED',
-  })
+  const [formData, setFormData] = useState(getInitialFormData)
 
   useEffect(() => {
-    if (company) {
-      setFormData({
-        companyName: company.companyName || '',
-        email: company.email || '',
-        type: company.type || 'AGENT',
-        password: '',
-        adapterType: company.adapterType || 'mock',
-        grpcEndpoint: company.grpcEndpoint || '',
-        httpEndpoint: company.httpEndpoint || '',
-        companyCode: company.companyCode || '',
-        status: company.status || 'ACTIVE',
-      })
+    if (isOpen) {
+      if (company) {
+        // Edit mode: populate with company data
+        setFormData({
+          companyName: company.companyName || '',
+          email: company.email || '',
+          type: company.type || 'AGENT',
+          password: '',
+          adapterType: company.adapterType || 'mock',
+          grpcEndpoint: company.grpcEndpoint || '',
+          httpEndpoint: company.httpEndpoint || '',
+          companyCode: company.companyCode || '',
+          status: company.status || 'ACTIVE',
+        })
+      } else {
+        // Create mode: reset to empty defaults
+        setFormData(getInitialFormData())
+      }
     } else {
-      setFormData({
-        companyName: '',
-        email: '',
-        type: 'AGENT',
-        password: '',
-        adapterType: 'mock',
-        grpcEndpoint: '',
-        httpEndpoint: '',
-        companyCode: '',
-        status: 'ACTIVE',
-      })
+      // Reset form when modal closes
+      setFormData(getInitialFormData())
     }
   }, [company, isOpen])
 
@@ -370,15 +370,40 @@ const CompanyDetailModal: React.FC<CompanyDetailModalProps> = ({ company, isOpen
 }
 
 export default function Companies() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [companyToEdit, setCompanyToEdit] = useState<Company | null>(null)
   const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null)
+  const [highlightCompanyId, setHighlightCompanyId] = useState<string | null>(null)
   const [filterType, setFilterType] = useState<'ALL' | 'SOURCE' | 'AGENT'>('ALL')
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED'>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+
+  // Read initial filter values from URL query parameters
+  useEffect(() => {
+    const statusParam = searchParams.get('status')
+    const highlightParam = searchParams.get('highlight')
+    
+    if (statusParam && ['ACTIVE', 'PENDING_VERIFICATION', 'SUSPENDED'].includes(statusParam)) {
+      setFilterStatus(statusParam as 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED')
+    }
+    
+    if (highlightParam) {
+      setHighlightCompanyId(highlightParam)
+      // Clear highlight after 3 seconds
+      setTimeout(() => {
+        setHighlightCompanyId(null)
+        // Remove highlight from URL
+        const newParams = new URLSearchParams(searchParams)
+        newParams.delete('highlight')
+        setSearchParams(newParams, { replace: true })
+      }, 3000)
+    }
+  }, [searchParams, setSearchParams])
 
   const queryClient = useQueryClient()
 
@@ -415,10 +440,11 @@ export default function Companies() {
     mutationFn: (id: string) => companiesApi.approveCompany(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['companies'] })
-      toast.success('Company approved successfully')
+      toast.success('Company approved and email verified successfully')
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to approve company')
+      const errorMessage = error.response?.data?.message || 'Failed to approve company'
+      toast.error(errorMessage)
     },
   })
 
@@ -759,7 +785,7 @@ export default function Companies() {
                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Created
                     </th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -768,7 +794,9 @@ export default function Companies() {
                   {filteredCompanies.map((company) => (
                     <tr 
                       key={company.id} 
-                      className="hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
+                      className={`hover:bg-gray-50 transition-colors duration-150 cursor-pointer ${
+                        highlightCompanyId === company.id ? 'bg-yellow-100 ring-2 ring-yellow-400' : ''
+                      }`}
                       onClick={() => handleCompanyClick(company)}
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -829,113 +857,134 @@ export default function Companies() {
                         <div className="text-sm text-gray-600 font-medium">{formatDate(company.createdAt)}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
-                          <Button 
-                            size="sm" 
-                            variant="secondary" 
-                            onClick={() => handleCompanyClick(company)}
-                            className="shadow-sm hover:shadow-md"
+                        <div className="relative flex justify-end" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => setOpenMenuId(openMenuId === company.id ? null : company.id)}
+                            className="p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            aria-label="Actions menu"
                           >
-                            View
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="primary" 
-                            onClick={() => handleEditClick(company)}
-                            className="shadow-sm hover:shadow-md"
-                          >
-                            Edit
-                          </Button>
-                          {company.type === 'SOURCE' && company.approvalStatus !== 'APPROVED' && (
+                            <MoreVertical className="h-5 w-5 text-gray-600" />
+                          </button>
+                          
+                          {openMenuId === company.id && (
                             <>
-                              <Button
-                                size="sm"
-                                variant="primary"
-                                onClick={() => {
-                                  if (!company.emailVerified) {
-                                    toast.error('Company email must be verified before approval. Please verify the email first.')
-                                    return
-                                  }
-                                  approveMutation.mutate(company.id)
-                                }}
-                                loading={approveMutation.isPending}
-                                disabled={!company.emailVerified}
-                                title={
-                                  !company.emailVerified 
-                                    ? 'Email must be verified before approval. Click Edit to verify email.' 
-                                    : 'Approve this source company'
-                                }
-                                className="shadow-sm hover:shadow-md"
-                              >
-                                Approve
-                              </Button>
-                              {company.approvalStatus !== 'REJECTED' && (
-                                <Button
-                                  size="sm"
-                                  variant="danger"
+                              <div 
+                                className="fixed inset-0 z-10" 
+                                onClick={() => setOpenMenuId(null)}
+                              />
+                              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-20 py-1">
+                                <button
                                   onClick={() => {
-                                    const reason = prompt('Enter rejection reason (optional):')
-                                    rejectMutation.mutate({ id: company.id, reason: reason || undefined })
+                                    handleCompanyClick(company)
+                                    setOpenMenuId(null)
                                   }}
-                                  loading={rejectMutation.isPending}
-                                  title="Reject this source company"
-                                  className="shadow-sm hover:shadow-md"
+                                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                                 >
-                                  Reject
-                                </Button>
-                              )}
+                                  <Eye className="h-4 w-4" />
+                                  View Details
+                                </button>
+                                
+                                <button
+                                  onClick={() => {
+                                    handleEditClick(company)
+                                    setOpenMenuId(null)
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                  Edit
+                                </button>
+                                
+                                {company.type === 'SOURCE' && company.approvalStatus !== 'APPROVED' && (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        // Backend will automatically verify email when approving
+                                        approveMutation.mutate(company.id)
+                                        setOpenMenuId(null)
+                                      }}
+                                      disabled={approveMutation.isPending}
+                                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                      <Check className="h-4 w-4" />
+                                      {approveMutation.isPending ? 'Approving...' : 'Approve'}
+                                    </button>
+                                    
+                                    {company.approvalStatus !== 'REJECTED' && (
+                                      <button
+                                        onClick={() => {
+                                          const reason = prompt('Enter rejection reason (optional):')
+                                          rejectMutation.mutate({ id: company.id, reason: reason || undefined })
+                                          setOpenMenuId(null)
+                                        }}
+                                        disabled={rejectMutation.isPending}
+                                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                      >
+                                        <X className="h-4 w-4" />
+                                        {rejectMutation.isPending ? 'Rejecting...' : 'Reject'}
+                                      </button>
+                                    )}
+                                  </>
+                                )}
+                                
+                                {company.type === 'SOURCE' && (
+                                  <button
+                                    onClick={() => {
+                                      if (company.status !== 'ACTIVE') {
+                                        toast.error('Source must be ACTIVE to import branches')
+                                        setOpenMenuId(null)
+                                        return
+                                      }
+                                      if (company.approvalStatus !== 'APPROVED') {
+                                        toast.error('Source must be APPROVED to import branches')
+                                        setOpenMenuId(null)
+                                        return
+                                      }
+                                      importBranchesMutation.mutate(company.id)
+                                      setOpenMenuId(null)
+                                    }}
+                                    disabled={importBranchesMutation.isPending || company.status !== 'ACTIVE' || company.approvalStatus !== 'APPROVED'}
+                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    <Download className="h-4 w-4" />
+                                    {importBranchesMutation.isPending ? 'Importing...' : 'Import Branches'}
+                                  </button>
+                                )}
+                                
+                                <div className="border-t border-gray-200 my-1" />
+                                
+                                <div className="px-4 py-2">
+                                  <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Status</label>
+                                  <select
+                                    value={company.status}
+                                    onChange={(e) => {
+                                      handleStatusChange(company.id, e.target.value as any)
+                                      setOpenMenuId(null)
+                                    }}
+                                    disabled={updateStatusMutation.isPending}
+                                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    <option value="ACTIVE">Active</option>
+                                    <option value="PENDING_VERIFICATION">Pending Verification</option>
+                                    <option value="SUSPENDED">Suspended</option>
+                                  </select>
+                                </div>
+                                
+                                <div className="border-t border-gray-200 my-1" />
+                                
+                                <button
+                                  onClick={() => {
+                                    handleDeleteClick(company)
+                                    setOpenMenuId(null)
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  Delete
+                                </button>
+                              </div>
                             </>
                           )}
-                          {company.type === 'SOURCE' && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => {
-                                // Check prerequisites before importing
-                                if (company.status !== 'ACTIVE') {
-                                  toast.error('Source must be ACTIVE to import branches')
-                                  return
-                                }
-                                if (company.approvalStatus !== 'APPROVED') {
-                                  toast.error('Source must be APPROVED to import branches')
-                                  return
-                                }
-                                // Note: Backend will check approvalStatus, emailVerified, httpEndpoint, companyCode
-                                importBranchesMutation.mutate(company.id)
-                              }}
-                              loading={importBranchesMutation.isPending}
-                              title={
-                                company.status !== 'ACTIVE'
-                                  ? 'Source must be ACTIVE to import branches'
-                                  : company.approvalStatus !== 'APPROVED'
-                                  ? 'Source must be APPROVED to import branches'
-                                  : 'Import branches from supplier endpoint. Requires: APPROVED status, verified email, configured HTTP endpoint, and company code.'
-                              }
-                              disabled={company.status !== 'ACTIVE' || company.approvalStatus !== 'APPROVED'}
-                              className="shadow-sm hover:shadow-md"
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                          )}
-                          <select
-                            value={company.status}
-                            onChange={(e) => handleStatusChange(company.id, e.target.value as any)}
-                            disabled={updateStatusMutation.isPending}
-                            className="px-3 py-1.5 text-sm border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md transition-all"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <option value="ACTIVE">Active</option>
-                            <option value="PENDING_VERIFICATION">Pending Verification</option>
-                            <option value="SUSPENDED">Suspended</option>
-                          </select>
-                          <Button 
-                            size="sm" 
-                            variant="danger" 
-                            onClick={() => handleDeleteClick(company)}
-                            className="shadow-sm hover:shadow-md"
-                          >
-                            Delete
-                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -979,6 +1028,7 @@ export default function Companies() {
       />
 
       <CompanyFormModal
+        key="create-company-modal"
         company={null}
         isOpen={isCreateModalOpen}
         onClose={() => {
@@ -988,6 +1038,7 @@ export default function Companies() {
       />
 
       <CompanyFormModal
+        key={`edit-company-modal-${companyToEdit?.id || 'new'}`}
         company={companyToEdit}
         isOpen={isEditModalOpen}
         onClose={() => {

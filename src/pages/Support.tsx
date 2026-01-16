@@ -20,6 +20,7 @@ export default function Support() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const queryClient = useQueryClient()
 
   const { data: ticketsData, isLoading: ticketsLoading } = useQuery({
@@ -87,17 +88,44 @@ export default function Support() {
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image size must be less than 5MB')
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Invalid file type. Please select an image (JPG, PNG, GIF, or WEBP)')
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
         return
       }
+      
+      // Validate file size
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size must be less than 5MB')
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+        return
+      }
+      
       setSelectedImage(file)
       const reader = new FileReader()
       reader.onloadend = () => {
         setImagePreview(reader.result as string)
       }
+      reader.onerror = () => {
+        toast.error('Failed to read image file')
+        setSelectedImage(null)
+        setImagePreview(null)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
+      }
       reader.readAsDataURL(file)
     }
+  }
+
+  const handleImageButtonClick = () => {
+    fileInputRef.current?.click()
   }
 
   const handleSendMessage = () => {
@@ -107,9 +135,14 @@ export default function Support() {
       return
     }
 
+    // Ensure we send content as empty string if no text, but only if we have an image
+    // If we have both, send both. If only image, send empty string for content.
+    // If only content, send content.
+    const contentToSend = messageContent.trim() || (selectedImage ? '' : undefined)
+    
     sendMessageMutation.mutate({
       ticketId: selectedTicketId,
-      content: messageContent.trim() || undefined,
+      content: contentToSend,
       image: selectedImage || undefined,
     })
   }
@@ -336,11 +369,36 @@ export default function Support() {
                           )}
                           {message.content && <p className="text-sm whitespace-pre-wrap">{message.content}</p>}
                           {message.imageUrl && (
-                            <img
-                              src={message.imageUrl}
-                              alt="Attachment"
-                              className="mt-2 rounded max-w-full h-auto max-h-64 object-contain"
-                            />
+                            <div className="mt-2">
+                              <img
+                                src={message.imageUrl}
+                                alt="Attachment"
+                                className="rounded-lg max-w-full h-auto max-h-64 object-contain cursor-pointer hover:opacity-90 transition-opacity border border-gray-200 shadow-sm"
+                                onClick={() => {
+                                  // Open image in new window for full view
+                                  const newWindow = window.open('', '_blank')
+                                  if (newWindow) {
+                                    newWindow.document.write(`
+                                      <html>
+                                        <head><title>Image</title></head>
+                                        <body style="margin:0;padding:20px;background:#1a1a1a;display:flex;justify-content:center;align-items:center;min-height:100vh;">
+                                          <img src="${message.imageUrl}" style="max-width:100%;max-height:100vh;object-fit:contain;border-radius:8px;" />
+                                        </body>
+                                      </html>
+                                    `)
+                                  }
+                                }}
+                                onError={(e) => {
+                                  // Fallback if image fails to load
+                                  const target = e.target as HTMLImageElement
+                                  target.style.display = 'none'
+                                  const errorDiv = document.createElement('div')
+                                  errorDiv.className = 'text-xs text-red-300 bg-red-900/20 p-2 rounded'
+                                  errorDiv.textContent = 'Failed to load image'
+                                  target.parentElement?.appendChild(errorDiv)
+                                }}
+                              />
+                            </div>
                           )}
                           <div
                             className={`text-xs mt-2 ${
@@ -359,17 +417,28 @@ export default function Support() {
                 {/* Message Input */}
                 <div className="border-t p-4 space-y-3">
                   {imagePreview && (
-                    <div className="relative inline-block">
-                      <img src={imagePreview} alt="Preview" className="h-32 rounded border" />
+                    <div className="relative inline-block group">
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        className="h-32 rounded-lg border-2 border-blue-300 shadow-sm object-cover" 
+                      />
                       <button
                         onClick={() => {
                           setSelectedImage(null)
                           setImagePreview(null)
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = ''
+                          }
                         }}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors shadow-lg"
+                        title="Remove image"
                       >
                         <X className="h-4 w-4" />
                       </button>
+                      <div className="absolute bottom-1 left-1 bg-black/50 text-white text-xs px-2 py-1 rounded">
+                        {selectedImage?.name || 'Image'}
+                      </div>
                     </div>
                   )}
                   <div className="flex gap-2">
@@ -385,20 +454,26 @@ export default function Support() {
                       }}
                       className="flex-1"
                     />
-                    <label className="cursor-pointer">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageSelect}
-                        className="hidden"
-                      />
-                      <Button type="button" variant="outline" className="px-3">
-                        <ImageIcon className="h-5 w-5" />
-                      </Button>
-                    </label>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="px-3 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-colors"
+                      onClick={handleImageButtonClick}
+                      title="Attach image"
+                    >
+                      <ImageIcon className="h-5 w-5" />
+                    </Button>
                     <Button
                       onClick={handleSendMessage}
                       disabled={sendMessageMutation.isPending || (!messageContent.trim() && !selectedImage)}
+                      loading={sendMessageMutation.isPending}
                       className="px-4"
                     >
                       <Send className="h-5 w-5" />

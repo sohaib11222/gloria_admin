@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
@@ -15,6 +15,9 @@ export default function Logs() {
   const [companyId, setCompanyId] = useState('')
   const [endpoint, setEndpoint] = useState('')
   const [selected, setSelected] = useState<any | null>(null)
+  const [cursor, setCursor] = useState<string | undefined>(undefined)
+  const [cursorHistory, setCursorHistory] = useState<string[]>([]) // Stack for going back
+  const [limit, setLimit] = useState(50)
 
   const endpoints = useMemo(() => ([
     { value: '', label: 'All endpoints' },
@@ -25,14 +28,43 @@ export default function Logs() {
   ]), [])
 
   const { data: logs, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: ['logs', requestId, companyId, endpoint],
+    queryKey: ['logs', requestId, companyId, endpoint, cursor, limit],
     queryFn: () => logsApi.listLogs({
-      limit: 100,
-      request_id: requestId || undefined as any,
+      limit,
+      cursor: cursor || undefined,
+      q: requestId || undefined, // Using 'q' for request ID search as per backend
       companyId: companyId || undefined,
       endpoint: endpoint || undefined,
     } as any),
   })
+
+  // Reset cursor when filters change
+  useEffect(() => {
+    setCursor(undefined)
+    setCursorHistory([])
+  }, [requestId, companyId, endpoint])
+
+  const handleNext = () => {
+    if (logs?.nextCursor) {
+      setCursorHistory([...cursorHistory, cursor || ''])
+      setCursor(logs.nextCursor)
+    }
+  }
+
+  const handlePrevious = () => {
+    if (cursorHistory.length > 0) {
+      const newHistory = [...cursorHistory]
+      const prevCursor = newHistory.pop()
+      setCursorHistory(newHistory)
+      setCursor(prevCursor)
+    } else {
+      setCursor(undefined)
+      setCursorHistory([])
+    }
+  }
+
+  const canGoNext = logs?.nextCursor && logs.nextCursor !== ''
+  const canGoPrevious = cursorHistory.length > 0 || cursor !== undefined
 
   if (isLoading) {
     return <Loader className="min-h-96" />
@@ -108,8 +140,28 @@ export default function Logs() {
                 options={endpoints}
               />
             </div>
-            <div className="flex items-end">
-              <Button onClick={() => refetch()} loading={isFetching} className="w-full">Apply Filters</Button>
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
+                <Select
+                  label="Items per page"
+                  value={limit.toString()}
+                  onChange={(e) => {
+                    setLimit(Number(e.target.value))
+                    setCursor(undefined)
+                    setCursorHistory([])
+                  }}
+                  options={[
+                    { value: '25', label: '25 per page' },
+                    { value: '50', label: '50 per page' },
+                    { value: '100', label: '100 per page' },
+                  ]}
+                />
+              </div>
+              <Button onClick={() => {
+                setCursor(undefined)
+                setCursorHistory([])
+                refetch()
+              }} loading={isFetching} className="flex-1">Apply Filters</Button>
             </div>
           </div>
           {(requestId || companyId || endpoint) && (
@@ -122,7 +174,33 @@ export default function Logs() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Results ({logs?.total || 0})</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>
+              Results {logs?.data && logs.data.length > 0 && (
+                <span className="text-sm font-normal text-gray-500 ml-2">
+                  ({logs.data.length} {logs.hasMore ? 'entries (more available)' : 'entries'})
+                </span>
+              )}
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handlePrevious}
+                disabled={!canGoPrevious || isLoading || isFetching}
+              >
+                ← Previous
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleNext}
+                disabled={!canGoNext || isLoading || isFetching}
+              >
+                Next →
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {logs?.data && logs.data.length > 0 ? (

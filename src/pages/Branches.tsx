@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Search, MapPin, Edit, Trash2, Filter, X, RefreshCw, Building2, TrendingUp, AlertCircle, Database, Eye, Download } from 'lucide-react'
+import { Search, MapPin, Edit, Trash2, Filter, X, RefreshCw, Building2, TrendingUp, AlertCircle, Database, Eye, Download, Plus } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -10,11 +10,340 @@ import { Badge } from '../components/ui/Badge'
 import { Loader } from '../components/ui/Loader'
 import { ErrorDisplay } from '../components/ui/ErrorDisplay'
 import { BranchEditModal } from '../components/BranchEditModal'
-import { branchesApi, Branch, BranchStats } from '../api/branches'
+import { branchesApi, Branch, BranchStats, CreateBranchRequest } from '../api/branches'
 import { companiesApi } from '../api/companies'
 import { branchImportApi } from '../api/whitelist'
 import toast from 'react-hot-toast'
 import { formatDate } from '../lib/utils'
+
+interface AddBranchModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onSuccess: () => void
+  sources: Array<{ id: string; companyName: string }>
+}
+
+const AddBranchModal: React.FC<AddBranchModalProps> = ({ isOpen, onClose, onSuccess, sources }) => {
+  const [formData, setFormData] = useState<CreateBranchRequest>({
+    sourceId: '',
+    branchCode: '',
+    name: '',
+    status: null,
+    locationType: null,
+    collectionType: null,
+    email: null,
+    phone: null,
+    latitude: null,
+    longitude: null,
+    addressLine: null,
+    city: null,
+    postalCode: null,
+    country: null,
+    countryCode: null,
+    natoLocode: null,
+  })
+
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const createMutation = useMutation({
+    mutationFn: (data: CreateBranchRequest) => branchesApi.createBranch(data),
+    onSuccess: () => {
+      toast.success('Branch created successfully')
+      onSuccess()
+      onClose()
+      // Reset form
+      setFormData({
+        sourceId: '',
+        branchCode: '',
+        name: '',
+        status: null,
+        locationType: null,
+        collectionType: null,
+        email: null,
+        phone: null,
+        latitude: null,
+        longitude: null,
+        addressLine: null,
+        city: null,
+        postalCode: null,
+        country: null,
+        countryCode: null,
+        natoLocode: null,
+      })
+      setErrors({})
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || 'Failed to create branch'
+      const errorCode = error.response?.data?.error
+      const errorDetails = error.response?.data?.details
+
+      if (errorCode === 'VALIDATION_ERROR' && errorDetails) {
+        const newErrors: Record<string, string> = {}
+        errorDetails.forEach((err: any) => {
+          if (err.path && err.path.length > 0) {
+            newErrors[err.path[0]] = err.message
+          }
+        })
+        setErrors(newErrors)
+      } else if (errorCode === 'BRANCH_CODE_EXISTS') {
+        setErrors({ branchCode: errorMessage })
+      } else if (errorCode === 'INVALID_UNLOCODE') {
+        setErrors({ natoLocode: errorMessage })
+      } else {
+        toast.error(errorMessage)
+      }
+    },
+  })
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {}
+
+    if (!formData.sourceId) {
+      newErrors.sourceId = 'Source is required'
+    }
+    if (!formData.branchCode || formData.branchCode.trim().length === 0) {
+      newErrors.branchCode = 'Branch code is required'
+    }
+    if (!formData.name || formData.name.trim().length === 0) {
+      newErrors.name = 'Name is required'
+    }
+    if (formData.email && formData.email.trim().length > 0) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(formData.email)) {
+        newErrors.email = 'Invalid email format'
+      }
+    }
+    if (formData.latitude !== null && (formData.latitude < -90 || formData.latitude > 90)) {
+      newErrors.latitude = 'Latitude must be between -90 and 90'
+    }
+    if (formData.longitude !== null && (formData.longitude < -180 || formData.longitude > 180)) {
+      newErrors.longitude = 'Longitude must be between -180 and 180'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (validateForm()) {
+      createMutation.mutate(formData)
+    }
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Add New Branch" size="lg">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Source *
+            </label>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={formData.sourceId}
+              onChange={(e) => {
+                setFormData({ ...formData, sourceId: e.target.value })
+                if (errors.sourceId) setErrors({ ...errors, sourceId: '' })
+              }}
+              required
+            >
+              <option value="">Select a source</option>
+              {sources.map((source) => (
+                <option key={source.id} value={source.id}>
+                  {source.companyName}
+                </option>
+              ))}
+            </select>
+            {errors.sourceId && (
+              <p className="mt-1 text-sm text-red-600">{errors.sourceId}</p>
+            )}
+          </div>
+          <Input
+            label="Branch Code *"
+            placeholder="e.g., BR001"
+            value={formData.branchCode}
+            onChange={(e) => {
+              setFormData({ ...formData, branchCode: e.target.value })
+              if (errors.branchCode) setErrors({ ...errors, branchCode: '' })
+            }}
+            error={errors.branchCode}
+            required
+          />
+        </div>
+
+        <Input
+          label="Name *"
+          placeholder="Branch name"
+          value={formData.name}
+          onChange={(e) => {
+            setFormData({ ...formData, name: e.target.value })
+            if (errors.name) setErrors({ ...errors, name: '' })
+          }}
+          error={errors.name}
+          required
+        />
+
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Status
+            </label>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={formData.status || ''}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value || null })}
+            >
+              <option value="">None</option>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Location Type
+            </label>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={formData.locationType || ''}
+              onChange={(e) => setFormData({ ...formData, locationType: e.target.value || null })}
+            >
+              <option value="">None</option>
+              <option value="AIRPORT">Airport</option>
+              <option value="CITY">City</option>
+              <option value="RAILWAY">Railway</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Collection Type
+            </label>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={formData.collectionType || ''}
+              onChange={(e) => setFormData({ ...formData, collectionType: e.target.value || null })}
+            >
+              <option value="">None</option>
+              <option value="PICKUP">Pickup</option>
+              <option value="DELIVERY">Delivery</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Email"
+            type="email"
+            placeholder="branch@example.com"
+            value={formData.email || ''}
+            onChange={(e) => {
+              setFormData({ ...formData, email: e.target.value || null })
+              if (errors.email) setErrors({ ...errors, email: '' })
+            }}
+            error={errors.email}
+          />
+          <Input
+            label="Phone"
+            placeholder="+1234567890"
+            value={formData.phone || ''}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value || null })}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="City"
+            placeholder="City name"
+            value={formData.city || ''}
+            onChange={(e) => setFormData({ ...formData, city: e.target.value || null })}
+          />
+          <Input
+            label="Country"
+            placeholder="Country name"
+            value={formData.country || ''}
+            onChange={(e) => setFormData({ ...formData, country: e.target.value || null })}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Country Code"
+            placeholder="e.g., GB, US"
+            value={formData.countryCode || ''}
+            onChange={(e) => setFormData({ ...formData, countryCode: e.target.value || null })}
+            maxLength={2}
+          />
+          <Input
+            label="Postal Code"
+            placeholder="Postal/ZIP code"
+            value={formData.postalCode || ''}
+            onChange={(e) => setFormData({ ...formData, postalCode: e.target.value || null })}
+          />
+        </div>
+
+        <Input
+          label="Address Line"
+          placeholder="Street address"
+          value={formData.addressLine || ''}
+          onChange={(e) => setFormData({ ...formData, addressLine: e.target.value || null })}
+        />
+
+        <div className="grid grid-cols-3 gap-4">
+          <Input
+            label="Latitude"
+            type="number"
+            step="any"
+            placeholder="e.g., 53.3656"
+            value={formData.latitude !== null ? formData.latitude.toString() : ''}
+            onChange={(e) => {
+              const val = e.target.value
+              setFormData({ ...formData, latitude: val ? parseFloat(val) : null })
+              if (errors.latitude) setErrors({ ...errors, latitude: '' })
+            }}
+            error={errors.latitude}
+            helperText="Optional, -90 to 90"
+          />
+          <Input
+            label="Longitude"
+            type="number"
+            step="any"
+            placeholder="e.g., -2.2729"
+            value={formData.longitude !== null ? formData.longitude.toString() : ''}
+            onChange={(e) => {
+              const val = e.target.value
+              setFormData({ ...formData, longitude: val ? parseFloat(val) : null })
+              if (errors.longitude) setErrors({ ...errors, longitude: '' })
+            }}
+            error={errors.longitude}
+            helperText="Optional, -180 to 180"
+          />
+          <Input
+            label="UN/LOCODE"
+            placeholder="e.g., GBMAN"
+            value={formData.natoLocode || ''}
+            onChange={(e) => {
+              setFormData({ ...formData, natoLocode: e.target.value.toUpperCase() || null })
+              if (errors.natoLocode) setErrors({ ...errors, natoLocode: '' })
+            }}
+            error={errors.natoLocode}
+            helperText="Optional, will be validated"
+          />
+        </div>
+
+        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" loading={createMutation.isPending}>
+            Create Branch
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
 
 export default function Branches() {
   const [filters, setFilters] = useState({
@@ -30,6 +359,7 @@ export default function Branches() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isImportSourceModalOpen, setIsImportSourceModalOpen] = useState(false)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [showStats, setShowStats] = useState(true)
 
   const queryClient = useQueryClient()
@@ -353,6 +683,14 @@ export default function Branches() {
               </CardTitle>
             </div>
             <div className="flex items-center gap-2">
+              <Button 
+                variant="primary" 
+                onClick={() => setIsAddModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Branch
+              </Button>
               <Button 
                 variant="primary" 
                 onClick={handleImportBranches}
@@ -764,6 +1102,17 @@ export default function Branches() {
           </div>
         </div>
       </Modal>
+
+      {/* Add Branch Modal */}
+      <AddBranchModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['branches'] })
+          queryClient.invalidateQueries({ queryKey: ['branchStats'] })
+        }}
+        sources={sources}
+      />
     </div>
   )
 }

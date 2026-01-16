@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { X, Bell, Check } from 'lucide-react'
 import http from '../lib/http'
@@ -17,6 +18,7 @@ interface Notification {
 }
 
 export const NotificationsDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -172,7 +174,7 @@ export const NotificationsDrawer: React.FC<{ isOpen: boolean; onClose: () => voi
                       const path = notification.actionUrl.startsWith('/') 
                         ? notification.actionUrl 
                         : `/${notification.actionUrl}`
-                      window.location.href = path
+                      navigate(path)
                       onClose()
                     }
                   }}

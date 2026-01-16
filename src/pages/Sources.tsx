@@ -107,6 +107,211 @@ const EditSourceModal: React.FC<EditSourceModalProps> = ({ source, isOpen, onClo
   )
 }
 
+interface AddSourceModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onSuccess: () => void
+}
+
+const AddSourceModal: React.FC<AddSourceModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const [formData, setFormData] = useState({
+    companyName: '',
+    email: '',
+    password: '',
+    adapterType: 'mock' as 'mock' | 'grpc' | 'http',
+    grpcEndpoint: '',
+    httpEndpoint: '',
+    companyCode: '',
+  })
+
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const createdCompany = await companiesApi.createCompany({
+        ...data,
+        type: 'SOURCE',
+      })
+      
+      // After successful creation, update companyCode and httpEndpoint if provided
+      if (formData.companyCode || formData.httpEndpoint) {
+        try {
+          const updateData: any = {}
+          if (formData.companyCode) {
+            updateData.companyCode = formData.companyCode
+          }
+          if (formData.httpEndpoint) {
+            updateData.httpEndpoint = formData.httpEndpoint
+          }
+          if (Object.keys(updateData).length > 0) {
+            await companiesApi.updateCompanyDetails(createdCompany.id, updateData)
+          }
+        } catch (error) {
+          // Log error but don't fail the creation
+          console.error('Failed to update company details:', error)
+          toast.error('Source created but failed to update additional details')
+        }
+      }
+      
+      return createdCompany
+    },
+    onSuccess: () => {
+      toast.success('Source created successfully')
+      onSuccess()
+      onClose()
+      // Reset form
+      setFormData({
+        companyName: '',
+        email: '',
+        password: '',
+        adapterType: 'mock',
+        grpcEndpoint: '',
+        httpEndpoint: '',
+        companyCode: '',
+      })
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to create source'
+      toast.error(errorMessage)
+    },
+  })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Validate required fields
+    if (!formData.companyName || !formData.email || !formData.password) {
+      toast.error('Please fill in all required fields (Company Name, Email, Password)')
+      return
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      toast.error('Please enter a valid email address')
+      return
+    }
+
+    // Validate password length
+    if (formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters long')
+      return
+    }
+
+    // Validate adapter type specific fields
+    if (formData.adapterType === 'grpc' && !formData.grpcEndpoint) {
+      toast.error('gRPC endpoint is required when adapter type is gRPC')
+      return
+    }
+
+    const dataToSend: any = {
+      companyName: formData.companyName,
+      email: formData.email,
+      password: formData.password,
+      type: 'SOURCE',
+      adapterType: formData.adapterType,
+    }
+
+    // Only send grpcEndpoint if adapter type is grpc
+    if (formData.adapterType === 'grpc' && formData.grpcEndpoint) {
+      dataToSend.grpcEndpoint = formData.grpcEndpoint
+    }
+
+    createMutation.mutate(dataToSend)
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Add New Source" size="lg">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Company Name"
+            placeholder="Enter company name"
+            value={formData.companyName}
+            onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+            required
+          />
+          <Input
+            label="Email"
+            type="email"
+            placeholder="company@example.com"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            required
+          />
+        </div>
+
+        <Input
+          label="Password"
+          type="password"
+          placeholder="Minimum 6 characters"
+          value={formData.password}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          required
+          helperText="Password must be at least 6 characters long"
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Adapter Type
+            </label>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={formData.adapterType}
+              onChange={(e) => setFormData({ ...formData, adapterType: e.target.value as any })}
+            >
+              <option value="mock">Mock</option>
+              <option value="grpc">gRPC</option>
+              <option value="http">HTTP</option>
+            </select>
+            <p className="mt-1 text-xs text-gray-500">
+              Select the adapter type for this source
+            </p>
+          </div>
+          <Input
+            label="Company Code"
+            placeholder="CMP00023"
+            value={formData.companyCode}
+            onChange={(e) => setFormData({ ...formData, companyCode: e.target.value })}
+            helperText="Required for branch import (e.g., CMP00023)"
+          />
+        </div>
+
+        {formData.adapterType === 'grpc' && (
+          <Input
+            label="gRPC Endpoint"
+            placeholder="localhost:9090"
+            value={formData.grpcEndpoint}
+            onChange={(e) => setFormData({ ...formData, grpcEndpoint: e.target.value })}
+            required={formData.adapterType === 'grpc'}
+            helperText="gRPC server address (e.g., localhost:9090)"
+          />
+        )}
+
+        {formData.adapterType === 'http' && (
+          <Input
+            label="HTTP Endpoint"
+            placeholder="https://api.example.com"
+            value={formData.httpEndpoint}
+            onChange={(e) => setFormData({ ...formData, httpEndpoint: e.target.value })}
+            helperText="HTTP API base URL (e.g., https://api.example.com)"
+          />
+        )}
+
+        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" loading={createMutation.isPending}>
+            Create Source
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
+
 interface WhitelistModalProps {
   companyId: string
   companyType?: 'source' | 'agent' | 'admin'
@@ -311,6 +516,7 @@ const WhitelistModal: React.FC<WhitelistModalProps> = ({ companyId, companyType 
 
 export default function Sources() {
   const [editingSource, setEditingSource] = useState<any>(null)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED'>('ALL')
   const [approvalFilter, setApprovalFilter] = useState<'ALL' | 'APPROVED' | 'PENDING' | 'REJECTED'>('ALL')
@@ -364,17 +570,23 @@ export default function Sources() {
 
   const importBranchesMutation = useMutation({
     mutationFn: (sourceId: string) => branchImportApi.importBranches(sourceId),
-    onSuccess: (data) => {
+    onSuccess: (data, sourceId) => {
       queryClient.invalidateQueries({ queryKey: ['sources'] })
       toast.success(
         `Branches imported successfully: ${data.imported} new, ${data.updated} updated, ${data.total} total`,
-        { duration: 5000 }
+        { 
+          duration: 5000,
+          id: `import-branches-success-${sourceId}`, // Use ID to prevent duplicate toasts
+        }
       )
     },
-    onError: (error: any) => {
+    onError: (error: any, sourceId: string) => {
       const errorData = error.response?.data
       const errorCode = errorData?.error
       const errorMessage = errorData?.message || 'Failed to import branches'
+      
+      // Get source details for better error messages
+      const source = sources?.data?.find((s: any) => s.id === sourceId)
       
       // Handle specific error codes with helpful messages
       let userMessage = errorMessage
@@ -402,18 +614,22 @@ export default function Sources() {
       } else if (errorCode === 'TIMEOUT') {
         userMessage = 'Supplier endpoint timeout after 30s. Check network connectivity and endpoint availability.'
       } else if (errorCode === 'SUPPLIER_ERROR') {
-        userMessage = `Supplier endpoint error: ${errorMessage}`
+        // Provide more helpful message for 404 errors
+        if (errorMessage.includes('404')) {
+          userMessage = `Supplier endpoint not found (404). Please verify the HTTP endpoint is correct and the supplier service is running.${source?.httpEndpoint ? ` Endpoint: ${source.httpEndpoint}` : ' Endpoint not configured.'}`
+        } else {
+          userMessage = `Supplier endpoint error: ${errorMessage}. Please check the HTTP endpoint configuration and ensure the supplier service is accessible.${source?.httpEndpoint ? ` Endpoint: ${source.httpEndpoint}` : ''}`
+        }
       }
       
-      toast.error(userMessage, { duration: 6000 })
+      toast.error(userMessage, { 
+        duration: 8000,
+        id: `import-branches-${sourceId}`, // Use ID to prevent duplicate toasts
+      })
     },
   })
 
-  if (isLoading) {
-    return <Loader className="min-h-96" />
-  }
-
-  // Calculate stats
+  // Calculate stats - MUST be before any early returns to maintain hook order
   const stats = React.useMemo(() => {
     if (!sources?.data) return { total: 0, active: 0, ready: 0, pending: 0 }
     const total = sources.data.length
@@ -430,6 +646,10 @@ export default function Sources() {
     return { total, active, ready, pending }
   }, [sources?.data])
 
+  if (isLoading) {
+    return <Loader className="min-h-96" />
+  }
+
   const hasActiveFilters = searchQuery || statusFilter !== 'ALL' || approvalFilter !== 'ALL'
 
   return (
@@ -441,7 +661,7 @@ export default function Sources() {
             Manage car rental source companies and their configurations
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setIsAddModalOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Source
         </Button>
@@ -587,23 +807,23 @@ export default function Sources() {
               )}
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto rounded-lg border border-gray-200">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+              <thead className="bg-gray-50 border-b-2 border-gray-300">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Name
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Branch Import Ready
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                     API Endpoint
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -627,43 +847,42 @@ export default function Sources() {
                   if (!hasCompanyCode) missingRequirements.push('Company code')
                   
                   return (
-                    <tr key={source.id} className="hover:bg-blue-50/50 transition-colors duration-150">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="space-y-1">
+                    <tr key={source.id} className="hover:bg-gray-50 transition-colors duration-150">
+                      <td className="px-6 py-5">
+                        <div className="space-y-2">
                           <div className="text-sm font-semibold text-gray-900">{source.companyName}</div>
-                          <div className="text-sm text-gray-600 flex items-center gap-1">
-                            <span>{source.email}</span>
-                          </div>
+                          <div className="text-sm text-gray-600">{source.email}</div>
                           {source.companyCode && (
-                            <div className="text-xs text-gray-500 font-mono bg-gray-50 px-2 py-0.5 rounded inline-block">
+                            <div className="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded border border-gray-200 inline-block">
                               {source.companyCode}
                             </div>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-col gap-2">
-                          <Badge variant={source.status === 'ACTIVE' ? 'success' : 'warning'}>
+                      <td className="px-6 py-5">
+                        <div className="flex flex-col gap-2 min-w-[140px]">
+                          <Badge variant={source.status === 'ACTIVE' ? 'success' : 'warning'} className="w-fit">
                             {source.status}
                           </Badge>
                           {source.approvalStatus && (
                             <Badge 
                               variant={source.approvalStatus === 'APPROVED' ? 'success' : source.approvalStatus === 'REJECTED' ? 'danger' : 'warning'}
                               size="sm"
+                              className="w-fit"
                             >
                               {source.approvalStatus}
                             </Badge>
                           )}
                           {source.emailVerified !== undefined && (
-                            <Badge variant={source.emailVerified ? 'success' : 'warning'} size="sm">
+                            <Badge variant={source.emailVerified ? 'success' : 'warning'} size="sm" className="w-fit">
                               {source.emailVerified ? (
-                                <span className="flex items-center gap-1">
-                                  <CheckCircle className="h-3 w-3" />
+                                <span className="flex items-center gap-1.5">
+                                  <CheckCircle className="h-3.5 w-3.5" />
                                   Email Verified
                                 </span>
                               ) : (
-                                <span className="flex items-center gap-1">
-                                  <AlertCircle className="h-3 w-3" />
+                                <span className="flex items-center gap-1.5">
+                                  <AlertCircle className="h-3.5 w-3.5" />
                                   Email Not Verified
                                 </span>
                               )}
@@ -671,60 +890,60 @@ export default function Sources() {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-5">
                         {canImportBranches ? (
-                          <div className="flex items-center gap-2">
-                            <Badge variant="success" size="sm" className="flex items-center gap-1">
-                              <CheckCircle className="h-3 w-3" />
+                          <div className="flex flex-col gap-2">
+                            <Badge variant="success" size="sm" className="w-fit flex items-center gap-1.5">
+                              <CheckCircle className="h-3.5 w-3.5" />
                               Ready
                             </Badge>
                             <span className="text-xs text-gray-500">All prerequisites met</span>
                           </div>
                         ) : (
-                          <div className="space-y-1">
-                            <Badge variant="warning" size="sm" className="flex items-center gap-1">
-                              <AlertCircle className="h-3 w-3" />
+                          <div className="flex flex-col gap-2 max-w-xs">
+                            <Badge variant="warning" size="sm" className="w-fit flex items-center gap-1.5">
+                              <AlertCircle className="h-3.5 w-3.5" />
                               Not Ready
                             </Badge>
-                            <div className="text-xs text-gray-500 max-w-xs mt-1">
+                            <div className="text-xs text-gray-600 leading-relaxed">
                               Missing: {missingRequirements.join(', ')}
                             </div>
                           </div>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div className="space-y-2">
+                      <td className="px-6 py-5">
+                        <div className="space-y-2 min-w-[200px]">
                           {source.httpEndpoint ? (
-                            <div className="flex items-center gap-2">
-                              <Badge variant="info" size="sm">HTTP</Badge>
-                              <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge variant="info" size="sm" className="flex-shrink-0">HTTP</Badge>
+                              <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono border border-gray-200 break-all">
                                 {source.httpEndpoint}
                               </code>
                             </div>
                           ) : (
                             <div className="flex items-center gap-2">
-                              <Badge variant="warning" size="sm">HTTP</Badge>
+                              <Badge variant="warning" size="sm" className="flex-shrink-0">HTTP</Badge>
                               <span className="text-gray-400 text-xs">Not configured</span>
                             </div>
                           )}
                           {source.grpcEndpoint && (
-                            <div className="flex items-center gap-2">
-                              <Badge variant="info" size="sm">gRPC</Badge>
-                              <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge variant="info" size="sm" className="flex-shrink-0">gRPC</Badge>
+                              <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono border border-gray-200 break-all">
                                 {source.grpcEndpoint}
                               </code>
                             </div>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex items-center gap-1 flex-wrap">
+                      <td className="px-6 py-5">
+                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => setEditingSource(source)}
                             title="Edit Source"
-                            className="hover:bg-blue-50 hover:text-blue-600"
+                            className="p-2 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -734,7 +953,7 @@ export default function Sources() {
                             onClick={() => healthCheckMutation.mutate(source.id)}
                             loading={healthCheckMutation.isPending}
                             title="Run Health Check"
-                            className="hover:bg-green-50 hover:text-green-600"
+                            className="p-2 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors"
                           >
                             <Play className="h-4 w-4" />
                           </Button>
@@ -744,7 +963,7 @@ export default function Sources() {
                             onClick={() => resetHealthMutation.mutate(source.id)}
                             loading={resetHealthMutation.isPending}
                             title="Reset Health"
-                            className="hover:bg-orange-50 hover:text-orange-600"
+                            className="p-2 hover:bg-orange-50 hover:text-orange-600 rounded-lg transition-colors"
                           >
                             <RefreshCw className="h-4 w-4" />
                           </Button>
@@ -754,7 +973,7 @@ export default function Sources() {
                             onClick={() => syncLocationsMutation.mutate(source.id)}
                             loading={syncLocationsMutation.isPending}
                             title="Sync Locations"
-                            className="hover:bg-purple-50 hover:text-purple-600"
+                            className="p-2 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition-colors"
                           >
                             <MapPin className="h-4 w-4" />
                           </Button>
@@ -775,7 +994,7 @@ export default function Sources() {
                                 : `Cannot import branches. Missing: ${missingRequirements.join(', ')}`
                             }
                             disabled={!canImportBranches}
-                            className={`hover:bg-indigo-50 hover:text-indigo-600 ${!canImportBranches ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`p-2 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-colors ${!canImportBranches ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             <Download className="h-4 w-4" />
                           </Button>
@@ -795,6 +1014,14 @@ export default function Sources() {
         source={editingSource}
         isOpen={!!editingSource}
         onClose={() => setEditingSource(null)}
+      />
+
+      <AddSourceModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['sources'] })
+        }}
       />
     </div>
   )

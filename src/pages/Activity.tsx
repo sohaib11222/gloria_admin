@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Button } from '../components/ui/Button'
@@ -9,7 +9,7 @@ import { Select } from '../components/ui/Select'
 import { logsApi } from '../api/logs'
 import http from '../lib/http'
 import { formatDate } from '../lib/utils'
-import { Filter, RefreshCw, Search, X, Clock, CheckCircle, XCircle, AlertTriangle, Activity as ActivityIcon, Users, Server, Shield, Zap } from 'lucide-react'
+import { Filter, RefreshCw, Search, X, Clock, CheckCircle, XCircle, AlertTriangle, Activity as ActivityIcon, Users, Server, Shield, Zap, ChevronLeft, ChevronRight } from 'lucide-react'
 
 type ActivityType = 'all' | 'booking' | 'availability' | 'health' | 'admin'
 type ActivityActor = 'agent' | 'source' | 'admin' | 'system'
@@ -29,6 +29,8 @@ export default function Activity() {
   const [selectedType, setSelectedType] = useState<ActivityType>('all')
   const [selectedActor, setSelectedActor] = useState<ActivityActor | 'all'>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(25)
 
   // Fetch from admin logs endpoint
   const { data: logsData, isLoading: logsLoading } = useQuery({
@@ -210,6 +212,17 @@ export default function Activity() {
       return matchesType && matchesActor && matchesSearch
     })
   }, [finalActivities, selectedType, selectedActor, searchQuery])
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredActivities.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedActivities = filteredActivities.slice(startIndex, endIndex)
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedType, selectedActor, searchQuery])
 
   const getActorBadge = (actor: ActivityActor) => {
     const badges = {
@@ -414,7 +427,9 @@ export default function Activity() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Recent Activity</CardTitle>
-              <p className="text-sm text-gray-500 mt-1">{filteredActivities.length} entries</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredActivities.length)} of {filteredActivities.length} entries
+              </p>
             </div>
             <Button variant="secondary" onClick={() => queryClient.invalidateQueries({ queryKey: ['activity-logs'] })}>
               <RefreshCw className="h-4 w-4 mr-2" />
@@ -460,7 +475,7 @@ export default function Activity() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredActivities.map((activity) => {
+                  {paginatedActivities.map((activity) => {
                     const actorBadge = getActorBadge(activity.actor)
                     const resultBadge = getResultBadge(activity.result)
                     const ResultIcon = resultBadge.icon
@@ -504,6 +519,84 @@ export default function Activity() {
                   })}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {filteredActivities.length > 0 && (
+            <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-700 font-medium">Items per page:</label>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value))
+                      setCurrentPage(1)
+                    }}
+                    className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+                <div className="text-sm text-gray-600">
+                  Page {currentPage} of {totalPages}
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+                    let pageNum: number
+                    if (totalPages <= 7) {
+                      pageNum = i + 1
+                    } else if (currentPage <= 4) {
+                      pageNum = i + 1
+                    } else if (currentPage >= totalPages - 3) {
+                      pageNum = totalPages - 6 + i
+                    } else {
+                      pageNum = currentPage - 3 + i
+                    }
+                    
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? 'primary' : 'ghost'}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className="min-w-[40px]"
+                      >
+                        {pageNum}
+                      </Button>
+                    )
+                  })}
+                </div>
+                
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-1"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
