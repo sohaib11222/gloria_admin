@@ -266,20 +266,18 @@ const CompanyDetailModal: React.FC<CompanyDetailModalProps> = ({ company, isOpen
               {company.status}
             </Badge>
           </div>
-          {company.type === 'SOURCE' && (
-            <div>
-              <label className="text-sm font-medium text-gray-700">Approval Status</label>
-              <Badge 
-                variant={
-                  company.approvalStatus === 'APPROVED' ? 'success' : 
-                  company.approvalStatus === 'REJECTED' ? 'danger' : 
-                  'warning'
-                }
-              >
-                {company.approvalStatus || 'PENDING'}
-              </Badge>
-            </div>
-          )}
+          <div>
+            <label className="text-sm font-medium text-gray-700">Approval Status</label>
+            <Badge 
+              variant={
+                company.approvalStatus === 'APPROVED' ? 'success' : 
+                company.approvalStatus === 'REJECTED' ? 'danger' : 
+                'warning'
+              }
+            >
+              {company.approvalStatus || 'PENDING'}
+            </Badge>
+          </div>
           <div>
             <label className="text-sm font-medium text-gray-700">Email Verified</label>
             <Badge variant={company.emailVerified ? 'success' : 'warning'}>
@@ -562,6 +560,9 @@ export default function Companies() {
     active: allCompanies.filter(c => c.status === 'ACTIVE').length,
     pending: allCompanies.filter(c => c.status === 'PENDING_VERIFICATION').length,
     suspended: allCompanies.filter(c => c.status === 'SUSPENDED').length,
+    pendingApproval: allCompanies.filter(c => c.approvalStatus === 'PENDING' || !c.approvalStatus).length,
+    approved: allCompanies.filter(c => c.approvalStatus === 'APPROVED').length,
+    rejected: allCompanies.filter(c => c.approvalStatus === 'REJECTED').length,
   }
 
   return (
@@ -676,6 +677,22 @@ export default function Companies() {
               </div>
               <div className="p-3 bg-gray-100 rounded">
                 <XCircle className="w-5 h-5 text-gray-700" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Pending Approval</p>
+                <p className="text-2xl font-semibold text-yellow-600">
+                  {stats.pendingApproval}
+                </p>
+              </div>
+              <div className="p-3 bg-yellow-100 rounded">
+                <Clock className="w-5 h-5 text-yellow-700" />
               </div>
             </div>
           </CardContent>
@@ -826,31 +843,16 @@ export default function Companies() {
                         </Badge>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {company.type === 'SOURCE' ? (
-                          <Badge 
-                            variant={
-                              company.approvalStatus === 'APPROVED' ? 'success' : 
-                              company.approvalStatus === 'REJECTED' ? 'danger' : 
-                              'warning'
-                            }
-                            className="font-semibold"
-                          >
-                            {company.approvalStatus || 'PENDING'}
-                          </Badge>
-                        ) : (
-                          company.approvalStatus && (
-                            <Badge 
-                              variant={
-                                company.approvalStatus === 'APPROVED' ? 'success' : 
-                                company.approvalStatus === 'REJECTED' ? 'danger' : 
-                                'warning'
-                              }
-                              className="font-semibold"
-                            >
-                              {company.approvalStatus}
-                            </Badge>
-                          )
-                        )}
+                        <Badge 
+                          variant={
+                            company.approvalStatus === 'APPROVED' ? 'success' : 
+                            company.approvalStatus === 'REJECTED' ? 'danger' : 
+                            'warning'
+                          }
+                          className="font-semibold"
+                        >
+                          {company.approvalStatus || 'PENDING'}
+                        </Badge>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-600 font-medium">{formatDate(company.createdAt)}</div>
@@ -894,7 +896,7 @@ export default function Companies() {
                                   Edit
                                 </button>
                                 
-                                {company.type === 'SOURCE' && company.approvalStatus !== 'APPROVED' && (
+                                {company.approvalStatus !== 'APPROVED' && (
                                   <>
                                     <button
                                       onClick={() => {
@@ -903,7 +905,7 @@ export default function Companies() {
                                         setOpenMenuId(null)
                                       }}
                                       disabled={approveMutation.isPending}
-                                      className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                      className="w-full px-4 py-2 text-left text-sm text-green-700 hover:bg-green-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                       <Check className="h-4 w-4" />
                                       {approveMutation.isPending ? 'Approving...' : 'Approve'}

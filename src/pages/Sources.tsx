@@ -872,15 +872,13 @@ export default function Sources() {
                               </span>
                             </Badge>
                           )}
-                          {source.approvalStatus && (
-                            <Badge 
-                              variant={source.approvalStatus === 'APPROVED' ? 'success' : source.approvalStatus === 'REJECTED' ? 'danger' : 'warning'}
-                              size="sm"
-                              className="w-fit"
-                            >
-                              {source.approvalStatus}
-                            </Badge>
-                          )}
+                          <Badge 
+                            variant={source.approvalStatus === 'APPROVED' ? 'success' : source.approvalStatus === 'REJECTED' ? 'danger' : 'warning'}
+                            size="sm"
+                            className="w-fit"
+                          >
+                            {source.approvalStatus || 'PENDING'}
+                          </Badge>
                           {source.emailVerified !== undefined && (
                             <Badge variant={source.emailVerified ? 'success' : 'warning'} size="sm" className="w-fit">
                               {source.emailVerified ? (
