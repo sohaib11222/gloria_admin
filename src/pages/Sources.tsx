@@ -12,6 +12,7 @@ import {
   X,
   CheckCircle,
   AlertCircle,
+  AlertTriangle,
   Server,
   Activity
 } from 'lucide-react'
@@ -118,7 +119,7 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ isOpen, onClose, onSucc
     companyName: '',
     email: '',
     password: '',
-    adapterType: 'mock' as 'mock' | 'grpc' | 'http',
+    adapterType: '' as '' | 'grpc' | 'http',
     grpcEndpoint: '',
     httpEndpoint: '',
     companyCode: '',
@@ -162,7 +163,7 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ isOpen, onClose, onSucc
         companyName: '',
         email: '',
         password: '',
-        adapterType: 'mock',
+        adapterType: '',
         grpcEndpoint: '',
         httpEndpoint: '',
         companyCode: '',
@@ -261,7 +262,6 @@ const AddSourceModal: React.FC<AddSourceModalProps> = ({ isOpen, onClose, onSucc
               value={formData.adapterType}
               onChange={(e) => setFormData({ ...formData, adapterType: e.target.value as any })}
             >
-              <option value="mock">Mock</option>
               <option value="grpc">gRPC</option>
               <option value="http">HTTP</option>
             </select>
@@ -864,6 +864,14 @@ export default function Sources() {
                           <Badge variant={source.status === 'ACTIVE' ? 'success' : 'warning'} className="w-fit">
                             {source.status}
                           </Badge>
+                          {source.adapterType === 'mock' && (
+                            <Badge variant="danger" size="sm" className="w-fit" title="This source is using a MOCK adapter - returns fake data for testing only">
+                              <span className="flex items-center gap-1.5">
+                                <AlertTriangle className="h-3 w-3" />
+                                MOCK ADAPTER
+                              </span>
+                            </Badge>
+                          )}
                           {source.approvalStatus && (
                             <Badge 
                               variant={source.approvalStatus === 'APPROVED' ? 'success' : source.approvalStatus === 'REJECTED' ? 'danger' : 'warning'}

@@ -32,7 +32,7 @@ const getInitialFormData = () => ({
   email: '',
   type: 'AGENT' as 'AGENT' | 'SOURCE',
   password: '',
-  adapterType: 'mock',
+  adapterType: '' as '' | 'grpc' | 'http',
   grpcEndpoint: '',
   httpEndpoint: '',
   companyCode: '',
@@ -51,7 +51,7 @@ const CompanyFormModal: React.FC<CompanyFormModalProps> = ({ company, isOpen, on
           email: company.email || '',
           type: company.type || 'AGENT',
           password: '',
-          adapterType: company.adapterType || 'mock',
+          adapterType: company.adapterType || '',
           grpcEndpoint: company.grpcEndpoint || '',
           httpEndpoint: company.httpEndpoint || '',
           companyCode: company.companyCode || '',
@@ -183,7 +183,6 @@ const CompanyFormModal: React.FC<CompanyFormModalProps> = ({ company, isOpen, on
                   value={formData.adapterType}
                   onChange={(e) => setFormData({ ...formData, adapterType: e.target.value as any })}
                 >
-                  <option value="mock">Mock</option>
                   <option value="grpc">gRPC</option>
                   <option value="http">HTTP</option>
                 </select>

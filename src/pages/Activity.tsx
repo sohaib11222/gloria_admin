@@ -33,28 +33,24 @@ export default function Activity() {
   const [itemsPerPage, setItemsPerPage] = useState(25)
 
   // Fetch from admin logs endpoint
-  const { data: logsData, isLoading: logsLoading } = useQuery({
+  const { data: logsData, isLoading: logsLoading, error: logsError } = useQuery({
     queryKey: ['activity-logs', selectedType, selectedActor, searchQuery],
     queryFn: async () => {
-      try {
-        const { data } = await http.get('/admin/logs', {
-          params: {
-            limit: 200,
-            // Map activity type to endpoint filter
-            ...(selectedType === 'booking' && { endpoint: 'booking' }),
-            ...(selectedType === 'availability' && { endpoint: 'availability' }),
-            ...(selectedType === 'health' && { endpoint: 'health' }),
-            ...(selectedType === 'admin' && { endpoint: 'admin' }),
-            ...(searchQuery && { q: searchQuery }),
-          },
-        })
-        return data
-      } catch (error) {
-        console.error('Failed to fetch activity logs:', error)
-        return null
-      }
+      const { data } = await http.get('/admin/logs', {
+        params: {
+          limit: 200,
+          // Map activity type to endpoint filter
+          ...(selectedType === 'booking' && { endpoint: 'booking' }),
+          ...(selectedType === 'availability' && { endpoint: 'availability' }),
+          ...(selectedType === 'health' && { endpoint: 'health' }),
+          ...(selectedType === 'admin' && { endpoint: 'admin' }),
+          ...(searchQuery && { q: searchQuery }),
+        },
+      })
+      return data
     },
     refetchInterval: 30000, // Refetch every 30 seconds
+    retry: 1,
   })
 
   // Transform backend data to ActivityEntry format
@@ -131,69 +127,8 @@ export default function Activity() {
     })
   }, [logsData])
 
-  // Mock data for when backend doesn't have this (fallback)
-  const mockActivities: ActivityEntry[] = useMemo(() => [
-    {
-      id: '1',
-      timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-      actor: 'agent',
-      action: 'Submitted availability request',
-      resource: 'Request ABC123',
-      result: 'success',
-    },
-    {
-      id: '2',
-      timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-      actor: 'source',
-      action: 'Created booking',
-      resource: 'Booking REF456',
-      result: 'success',
-    },
-    {
-      id: '3',
-      timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-      actor: 'source',
-      action: 'Health check failed',
-      resource: 'Source SlowRate',
-      result: 'error',
-      details: 'Response time 4.2s (threshold: 3s)',
-    },
-    {
-      id: '4',
-      timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-      actor: 'admin',
-      action: 'Reset source health',
-      resource: 'Source CarCo',
-      result: 'success',
-    },
-    {
-      id: '5',
-      timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-      actor: 'agent',
-      action: 'Accepted agreement',
-      resource: 'Agreement AG-2025-123',
-      result: 'success',
-    },
-    {
-      id: '6',
-      timestamp: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-      actor: 'source',
-      action: 'Offered agreement',
-      resource: 'Agent TravelMe',
-      result: 'success',
-    },
-    {
-      id: '7',
-      timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-      actor: 'system',
-      action: 'Scheduled location sync',
-      resource: 'Source AllLocations',
-      result: 'success',
-    },
-  ], [])
-
-  // Use real activities if available, otherwise fall back to mock
-  const finalActivities = activities.length > 0 ? activities : mockActivities
+  // Use real activities only - no mock fallback
+  const finalActivities = activities
 
   const filteredActivities = useMemo(() => {
     return finalActivities.filter((activity) => {
@@ -602,12 +537,32 @@ export default function Activity() {
         </CardContent>
       </Card>
 
-      {/* Info box */}
-      {!logsData && activities.length === 0 && (
-        <Card className="bg-blue-50 border-blue-200">
+      {/* Error state */}
+      {logsError && activities.length === 0 && (
+        <Card className="bg-red-50 border-red-200">
           <CardContent className="p-4">
-            <p className="text-sm text-blue-800">
-              <strong>Note:</strong> Showing mock activity data. Backend endpoint <code className="bg-blue-100 px-1 rounded">/admin/logs</code> is not available or returned no data.
+            <div className="flex items-start gap-3">
+              <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-red-800 mb-1">Unable to load activity data</p>
+                <p className="text-sm text-red-700">
+                  The backend endpoint <code className="bg-red-100 px-1 rounded">/admin/logs</code> is not available or returned an error.
+                </p>
+                <p className="text-xs text-red-600 mt-2">
+                  Please check your connection and try refreshing the page.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* No data state (not an error, just no data) */}
+      {!logsError && !logsLoading && !logsData && activities.length === 0 && (
+        <Card className="bg-gray-50 border-gray-200">
+          <CardContent className="p-4">
+            <p className="text-sm text-gray-700">
+              No activity data available. Activity logs will appear here once system activity occurs.
             </p>
           </CardContent>
         </Card>

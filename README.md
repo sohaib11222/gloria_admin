@@ -49,9 +49,17 @@ A comprehensive admin panel for the Gloria Connect platform backend, built with 
    
    Edit `.env` and set your API base URL and app name:
    ```
-   VITE_MIDDLEWARE_URL=http://localhost:8080
+   # API Base URL (optional - defaults to http://localhost:8080 in dev, relative paths in production)
+   VITE_API_BASE_URL=http://localhost:8080
+   
+   # App name (optional)
    VITE_APP_NAME=Gloria Connect Admin
    ```
+   
+   **Environment Variable Priority**:
+   - If `VITE_API_BASE_URL` is set, it will be used
+   - In production builds, uses relative paths (empty string) for reverse proxy compatibility
+   - In development, defaults to `http://localhost:8080` if not set
 
 3. **Start development server**:
    ```bash
@@ -246,12 +254,41 @@ The app uses Jotai for state management:
 2. **Deploy the `dist` folder** to your web server
 
 3. **Configure environment variables**:
-   - Set `VITE_MIDDLEWARE_URL` to your production API URL
-   - Set `VITE_APP_NAME` to the displayed app name
+   - **VITE_API_BASE_URL** (optional): Set to your production API URL if not using reverse proxy
+     - If deploying behind reverse proxy (nginx), leave unset to use relative paths
+     - Example: `VITE_API_BASE_URL=https://api.example.com`
+   - **VITE_APP_NAME** (optional): Set to the displayed app name
+   - **NODE_ENV**: Set to `production` to enable production optimizations
 
 4. **Configure your web server** to serve the SPA:
    - All routes should serve `index.html`
    - Configure proper caching headers for static assets
+   - If using reverse proxy, route `/api/*` or `/*` to backend server
+
+## Endpoint Configuration
+
+### Source Company Endpoints
+
+When creating or editing source companies, you can configure:
+
+- **Adapter Type**: Choose between `grpc` or `http` (mock adapter is not allowed in production)
+- **gRPC Endpoint**: Format `host:port` (e.g., `localhost:51061`)
+- **HTTP Endpoint**: Full URL (e.g., `https://api.example.com`)
+- **Company Code**: Required for branch import (e.g., `CMP00023`)
+
+**Important Notes**:
+- Mock adapter type is only available in development mode
+- In production, only `grpc` and `http` adapter types are allowed
+- HTTP endpoint is required for branch import functionality
+- Company code must match the supplier's CompanyCode in branch data
+
+### Environment Variables Reference
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `VITE_API_BASE_URL` | No | `http://localhost:8080` (dev) / `''` (prod) | Backend API base URL |
+| `VITE_APP_NAME` | No | `Gloria Connect Admin` | Application display name |
+| `NODE_ENV` | Yes (prod) | `development` | Environment mode |
 
 ## Troubleshooting
 
@@ -261,6 +298,14 @@ The app uses Jotai for state management:
 2. **Authentication issues**: Check that JWT tokens are properly configured
 3. **API errors**: Verify backend endpoints are available and returning expected data
 4. **Build errors**: Ensure all dependencies are installed and Node.js version is compatible
+5. **Endpoint display issues**: 
+   - Verify source companies have `httpEndpoint` configured in database
+   - Check that `/admin/endpoints` API returns real endpoint values (not hardcoded localhost)
+   - Ensure backend is using latest code that reads `httpEndpoint` from database
+6. **Mock adapter errors**: 
+   - Mock adapter type is not allowed in production
+   - Use `grpc` or `http` adapter types instead
+   - Check `NODE_ENV` is set to `production` in production environment
 
 ### Debug Mode
 
