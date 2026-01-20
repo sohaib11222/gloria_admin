@@ -5,6 +5,7 @@ import { userAtom } from '../store/auth'
 import { useAppStore } from '../state/useAppStore'
 import { Button } from './ui/Button'
 import { Badge } from './ui/Badge'
+import logoImage from '../assets/logo.jpg'
 
 export const NavShell: React.FC = () => {
   const navigate = useNavigate()
@@ -43,7 +44,12 @@ export const NavShell: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
+              <div className="flex-shrink-0 flex items-center gap-3">
+                <img 
+                  src={logoImage} 
+                  alt="Gloria Connect" 
+                  className="h-10 w-auto object-contain"
+                />
                 <h1 className="text-xl font-bold text-gray-900">{import.meta.env.VITE_APP_NAME || 'Admin UI'}</h1>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">

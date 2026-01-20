@@ -4,6 +4,7 @@ import { cn } from '../../lib/utils'
 import { NAVIGATION_ITEMS } from '../../lib/constants'
 import * as Icons from 'lucide-react'
 import { Menu, X } from 'lucide-react'
+import logoImage from '../../assets/logo.jpg'
 
 interface SidebarProps {
   mobileOpen?: boolean
@@ -36,11 +37,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileTo
       >
         <div className="flex items-center px-6 py-4 border-b border-gray-200 bg-gray-900">
           <div className="flex items-center space-x-3">
-            <div className="h-8 w-8 rounded bg-blue-600 flex items-center justify-center">
-              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>
-            </div>
+            <img 
+              src={logoImage} 
+              alt="Gloria Connect" 
+              className="h-10 w-auto object-contain"
+            />
             <div>
               <h1 className="text-lg font-semibold text-white tracking-tight">Gloria Connect</h1>
               <p className="text-xs text-gray-400 font-medium">Platform</p>
