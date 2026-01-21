@@ -5,7 +5,21 @@
     <link rel="icon" type="image/jpeg" href="/logo.jpg" />
     <link rel="apple-touch-icon" href="/logo.jpg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="unsafe-url" />
     <title>Gloria Connect Admin</title>
+    <script>
+      // Set referrerPolicy globally for all requests
+      if (window.fetch) {
+        const originalFetch = window.fetch;
+        window.fetch = function(...args) {
+          const [url, options = {}] = args;
+          return originalFetch(url, {
+            ...options,
+            referrerPolicy: 'unsafe-url'
+          });
+        };
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

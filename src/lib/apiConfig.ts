@@ -18,15 +18,9 @@ export function getApiBaseUrl(): string {
     return import.meta.env.VITE_API_BASE_URL
   }
 
-  // In production, use relative path (works with reverse proxy like nginx)
-  // The backend should be accessible at the same origin
-  if (import.meta.env.PROD) {
-    // Return empty string for relative paths, or '/api' if your backend is at /api
-    return ''
-  }
-
-  // Development: use localhost
-  return 'http://localhost:8080'
+  // Use the production API URL by default
+  // This works for both development and production
+  return 'http://api.gloriaconnect.com/api'
 }
 
 export const API_BASE_URL = getApiBaseUrl()
