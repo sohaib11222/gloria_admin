@@ -135,6 +135,21 @@ http.interceptors.response.use(
     }
     
     // For non-2xx status codes, treat as error
+    // CRITICAL: With validateStatus: () => true, 401 is handled here (not in error callback) - redirect to login
+    if (response.status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      localStorage.removeItem('refreshToken')
+      if (typeof window !== 'undefined') {
+        const basePath = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || ''
+        const loginPath = basePath ? `${basePath}/login` : '/login'
+        const currentPath = window.location.pathname
+        if (!currentPath.endsWith('/login') && !currentPath.endsWith('/login/')) {
+          window.location.href = loginPath
+        }
+      }
+    }
+
     const error = new Error(`HTTP ${response.status}: ${response.statusText}`) as any
     error.response = response
     error.status = response.status
@@ -174,6 +189,21 @@ http.interceptors.response.use(
           message: errorData.message || error.message
         })
       }
+
+      // 401 in error path (e.g. when validateStatus would have failed) - redirect to login
+      if (status === 401) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        localStorage.removeItem('refreshToken')
+        if (typeof window !== 'undefined') {
+          const basePath = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || ''
+          const loginPath = basePath ? `${basePath}/login` : '/login'
+          const currentPath = window.location.pathname
+          if (!currentPath.endsWith('/login') && !currentPath.endsWith('/login/')) {
+            window.location.href = loginPath
+          }
+        }
+      }
       
       return Promise.reject(error)
     }
@@ -192,22 +222,6 @@ http.interceptors.response.use(
       networkError.code = error.code || 'ERR_NETWORK'
       networkError.status = 0
       return Promise.reject(networkError)
-    }
-    
-    if (error?.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      if (typeof window !== 'undefined') {
-        // Get base path (matches vite.config.js and main.jsx)
-        const basePath = import.meta.env.PROD ? '/admin' : ''
-        const loginPath = `${basePath}/login`
-        const currentPath = window.location.pathname
-        
-        // Only redirect if not already on login page
-        if (!currentPath.endsWith('/login') && !currentPath.endsWith('/login/')) {
-          window.location.href = loginPath
-        }
-      }
     }
     
     // Log errors for debugging (but don't show technical details to users)

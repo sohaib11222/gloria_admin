@@ -37,6 +37,8 @@ import RegistrationPage from '../pages/RegistrationPage'
 import ConnectivityPage from '../pages/ConnectivityPage'
 import AgentPage from '../pages/AgentPage'
 import NotFound from '../pages/NotFound'
+import BillingPage from '../pages/BillingPage'
+import TransactionsPage from '../pages/TransactionsPage'
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -154,6 +156,22 @@ export const AppRoutes: React.FC = () => {
           element={
             <RequireAgreement>
               <Support />
+            </RequireAgreement>
+          }
+        />
+        <Route
+          path="billing"
+          element={
+            <RequireAgreement>
+              <BillingPage />
+            </RequireAgreement>
+          }
+        />
+        <Route
+          path="transactions"
+          element={
+            <RequireAgreement>
+              <TransactionsPage />
             </RequireAgreement>
           }
         />

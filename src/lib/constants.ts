@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building, FileText, MapPin, HeartPulse, Puzzle, Settings, BookOpen, Users, Server, Search, ClipboardList, BarChart3, CheckCircle, Activity as ActivityIcon, History, HelpCircle, Shield, FileCheck, Store, Globe, MessageCircle } from 'lucide-react'
+import { LayoutDashboard, Building, FileText, MapPin, HeartPulse, Puzzle, Settings, BookOpen, Users, Server, Search, ClipboardList, BarChart3, CheckCircle, Activity as ActivityIcon, History, HelpCircle, Shield, FileCheck, Store, Globe, MessageCircle, CreditCard, Receipt } from 'lucide-react'
 
 export const ROUTES = {
   LOGIN: '/login',
@@ -16,6 +16,8 @@ export const ROUTES = {
   METRICS: '/metrics',
   LOGS: '/logs',
   SETTINGS: '/settings',
+  BILLING: '/billing',
+  TRANSACTIONS: '/transactions',
 } as const
 
 export const USER_ROLES = {
@@ -71,6 +73,8 @@ export const NAVIGATION_ITEMS = [
   { path: '/verification', label: 'Verification', icon: 'CheckCircle' },
   { path: '/booking-logs', label: 'Bookings', icon: 'ClipboardList' },
   { path: '/health', label: 'Health', icon: 'HeartPulse' },
+  { path: '/billing', label: 'Billing', icon: 'CreditCard' },
+  { path: '/transactions', label: 'Transactions', icon: 'Receipt' },
   { path: '/support', label: 'Support', icon: 'MessageCircle' },
   { path: '/activity', label: 'Activity', icon: 'ActivityIcon' },
   { path: '/integrations', label: 'Integrations', icon: 'Puzzle' },
@@ -104,6 +108,8 @@ export const Icons = {
   Store,
   Globe,
   MessageCircle,
+  CreditCard,
+  Receipt,
 }
 
 export const POLL_INTERVALS = {

@@ -27,11 +27,18 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle 401 Unauthorized - redirect to login
+    // Handle 401 Unauthorized - clear auth and redirect to login
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      window.location.href = '/login'
+      localStorage.removeItem('refreshToken')
+      // Use app base path so we go to /admin/login when served at /admin/
+      const basePath = (import.meta.env.BASE_URL || '/').replace(/\/$/, '') || ''
+      const loginPath = basePath ? `${basePath}/login` : '/login'
+      const currentPath = window.location.pathname
+      if (!currentPath.endsWith('/login') && !currentPath.endsWith('/login/')) {
+        window.location.href = loginPath
+      }
       return Promise.reject(error)
     }
     
