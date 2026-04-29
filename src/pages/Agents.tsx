@@ -11,6 +11,7 @@ import { Select } from '../components/ui/Select'
 import { ErrorDisplay } from '../components/ui/ErrorDisplay'
 import { companiesApi, Company } from '../api/companies'
 import { agreementsApi } from '../api/agreements'
+import { agentBillingApi } from '../api/billing'
 import { formatDate } from '../lib/utils'
 import toast from 'react-hot-toast'
 
@@ -26,6 +27,7 @@ const getInitialFormData = () => ({
   email: '',
   password: '',
   grpcEndpoint: '',
+  billingCountryCode: '',
   status: 'ACTIVE' as 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED',
 })
 
@@ -99,6 +101,10 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({ agent, isOpen, onClose,
       dataToSend.grpcEndpoint = formData.grpcEndpoint
     }
 
+    if (formData.billingCountryCode !== undefined) {
+      dataToSend.billingCountryCode = formData.billingCountryCode.trim() || null
+    }
+
     if (agent) {
       updateMutation.mutate({ id: agent.id, data: dataToSend })
     } else {
@@ -158,6 +164,14 @@ const AgentFormModal: React.FC<AgentFormModalProps> = ({ agent, isOpen, onClose,
           helperText="Format: host:port"
         />
 
+        <Input
+          label="Billing country (ISO 3166-1 alpha-2)"
+          placeholder="e.g. US, IN"
+          value={formData.billingCountryCode}
+          onChange={(e) => setFormData({ ...formData, billingCountryCode: e.target.value.toUpperCase().slice(0, 2) })}
+          helperText="Used for agent plan pricing (e.g. IN 200, US 1000). Leave blank for default."
+        />
+
         <div className="flex justify-end gap-2">
           <Button variant="secondary" onClick={onClose} type="button">
             Cancel
@@ -191,6 +205,7 @@ export default function Agents() {
     validTo: '',
   })
   const [isCreating, setIsCreating] = useState(false)
+  const [planByAgentId, setPlanByAgentId] = useState<Record<string, string | null>>({})
 
   const queryClient = useQueryClient()
 
@@ -211,6 +226,28 @@ export default function Agents() {
       return matchesSearch && matchesStatus
     })
   }, [agents?.data, searchQuery, statusFilter])
+
+  useEffect(() => {
+    const list = filteredAgents.slice(0, 30)
+    if (list.length === 0) {
+      setPlanByAgentId({})
+      return
+    }
+    let cancelled = false
+    const next: Record<string, string | null> = {}
+    Promise.all(
+      list.map(async (a) => {
+        try {
+          const data = await agentBillingApi.getAgentSubscription(a.id) as any
+          if (cancelled) return
+          next[a.id] = data?.subscription === null ? null : (data?.agentPlan?.name ?? null)
+        } catch {
+          if (!cancelled) next[a.id] = null
+        }
+      })
+    ).then(() => { if (!cancelled) setPlanByAgentId(next) })
+    return () => { cancelled = true }
+  }, [filteredAgents.length, filteredAgents.map((a) => a.id).join(',')])
 
   const { data: sources } = useQuery({
     queryKey: ['sources'],
@@ -354,6 +391,7 @@ export default function Agents() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plan</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -367,6 +405,9 @@ export default function Agents() {
                           <div className="text-sm font-medium text-gray-900">{agent.companyName}</div>
                           <div className="text-sm text-gray-500">{agent.email}</div>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {planByAgentId[agent.id] ?? '—'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Badge variant={agent.status === 'ACTIVE' ? 'success' : 'warning'}>

@@ -7,6 +7,10 @@ type SdkType = 'nodejs' | 'python' | 'php' | 'java' | 'go' | 'perl';
 
 interface SdkDownloadButtonProps {
   sdkType: SdkType;
+  /** Overrides URL segment, e.g. php-agent vs php-source */
+  downloadSlug?: string;
+  /** Suggested local filename for the downloaded ZIP */
+  zipFilename?: string;
   label?: string;
   variant?: 'default' | 'small' | 'icon-only';
   className?: string;
@@ -24,6 +28,8 @@ const sdkTypeMap: Record<string, SdkType> = {
 
 export const SdkDownloadButton: React.FC<SdkDownloadButtonProps> = ({ 
   sdkType, 
+  downloadSlug,
+  zipFilename,
   label,
   variant = 'default',
   className = ''
@@ -34,10 +40,12 @@ export const SdkDownloadButton: React.FC<SdkDownloadButtonProps> = ({
     setDownloading(true);
     try {
       const token = localStorage.getItem('token');
-      const backendSdkType = sdkTypeMap[sdkType] || sdkType;
+      const slug = downloadSlug ?? sdkTypeMap[sdkType] ?? sdkType;
+      const downloadName =
+        zipFilename?.toLowerCase().endsWith('.zip') ? zipFilename : `${zipFilename ?? `${slug}-sdk`}.zip`;
       
       const response = await fetch(
-        `${API_BASE_URL}/docs/sdk/${backendSdkType}/download`,
+        `${API_BASE_URL}/docs/sdk/${slug}/download`,
         { 
           headers: token ? { Authorization: `Bearer ${token}` } : {} 
         }
@@ -51,13 +59,13 @@ export const SdkDownloadButton: React.FC<SdkDownloadButtonProps> = ({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${backendSdkType}-sdk.zip`;
+      a.download = downloadName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
 
-      toast.success(`${sdkType.toUpperCase()} SDK downloaded successfully!`);
+      toast.success(label ? `${label} — saved` : `Download saved (${downloadName})`);
     } catch (error: any) {
       console.error('Download error:', error);
       toast.error(error.message || 'Failed to download SDK');

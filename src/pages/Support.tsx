@@ -9,7 +9,7 @@ import { Loader } from '../components/ui/Loader'
 import { supportApi, SupportTicket, SupportMessage, SupportTicketStatus } from '../api/support'
 import { formatDistanceToNow } from 'date-fns'
 import toast from 'react-hot-toast'
-import { MessageCircle, Send, Image as ImageIcon, X, Clock, User, Filter, Search } from 'lucide-react'
+import { MessageCircle, Send, Image as ImageIcon, X, Clock, User, Search } from 'lucide-react'
 
 export default function Support() {
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null)
@@ -200,30 +200,32 @@ export default function Support() {
 
   return (
     <div className="space-y-6 pb-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Support Tickets</h1>
-          <p className="text-gray-500 mt-1">Manage and respond to support requests from agents and sources</p>
-        </div>
+      <div className="border-b border-gray-200 pb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Support Tickets</h1>
+        <p className="text-gray-600 mt-1 text-sm sm:text-base max-w-3xl">
+          Manage and respond to support requests from agents and sources
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-250px)]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:h-[calc(100vh-240px)] min-h-0">
         {/* Ticket List */}
-        <Card className="lg:col-span-1 flex flex-col">
+        <Card className="lg:col-span-1 flex flex-col min-h-0 overflow-hidden">
           <CardHeader>
             <CardTitle>Tickets</CardTitle>
-            <div className="space-y-2 mt-4">
+            <p className="text-xs font-medium text-gray-700 mt-3 mb-2">Filters</p>
+            <div className="space-y-3 mt-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4 pointer-events-none" />
                 <Input
-                  placeholder="Search tickets..."
+                  placeholder="Search by title, company, or email..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 text-gray-900 placeholder:text-gray-500"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <Select
+                  label="Status"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as SupportTicketStatus | 'ALL')}
                   options={[
@@ -235,6 +237,7 @@ export default function Support() {
                   ]}
                 />
                 <Select
+                  label="Company type"
                   value={companyTypeFilter}
                   onChange={(e) => setCompanyTypeFilter(e.target.value as 'ALL' | 'AGENT' | 'SOURCE')}
                   options={[
@@ -246,15 +249,16 @@ export default function Support() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto">
+          <CardContent className="flex-1 overflow-y-auto min-h-0">
             {ticketsLoading ? (
               <div className="flex justify-center py-8">
                 <Loader />
               </div>
             ) : tickets.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <MessageCircle className="h-12 w-12 mx-auto mb-2 text-gray-300" />
-                <p>No tickets found</p>
+              <div className="text-center py-8 text-gray-600">
+                <MessageCircle className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+                <p className="font-medium text-gray-900">No tickets found</p>
+                <p className="text-sm text-gray-500 mt-1">Try changing filters or search terms.</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -264,7 +268,7 @@ export default function Support() {
                     onClick={() => setSelectedTicketId(ticket.id)}
                     className={`w-full text-left p-3 rounded-lg border transition-colors ${
                       selectedTicketId === ticket.id
-                        ? 'border-blue-500 bg-blue-50'
+                        ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-200'
                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                     }`}
                   >
@@ -274,12 +278,12 @@ export default function Support() {
                         <Badge className="bg-red-500 text-white text-xs ml-2">{ticket.unreadCount}</Badge>
                       )}
                     </div>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs text-gray-500">{ticket.createdBy.companyName}</span>
-                      <Badge className={`text-xs ${getStatusColor(ticket.status)}`}>{ticket.status}</Badge>
+                    <div className="flex items-center justify-between mt-2 gap-2">
+                      <span className="text-xs text-gray-700 font-medium truncate">{ticket.createdBy.companyName}</span>
+                      <Badge className={`text-xs shrink-0 ${getStatusColor(ticket.status)}`}>{ticket.status}</Badge>
                     </div>
                     {ticket.lastMessage && (
-                      <p className="text-xs text-gray-400 mt-1 truncate">
+                      <p className="text-xs text-gray-500 mt-1 truncate">
                         {formatDistanceToNow(new Date(ticket.lastMessage.createdAt), { addSuffix: true })}
                       </p>
                     )}
@@ -291,44 +295,48 @@ export default function Support() {
         </Card>
 
         {/* Ticket Detail */}
-        <Card className="lg:col-span-2 flex flex-col">
+        <Card className="lg:col-span-2 flex flex-col min-h-0 overflow-hidden">
           {!selectedTicketId ? (
-            <CardContent className="flex-1 flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <MessageCircle className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                <p>Select a ticket to view messages</p>
+            <CardContent className="flex-1 flex items-center justify-center min-h-[280px] lg:min-h-0">
+              <div className="text-center text-gray-600 px-4">
+                <MessageCircle className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                <p className="font-medium text-gray-900">Select a ticket to view messages</p>
+                <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">
+                  Pick a ticket from the list to read the thread and reply.
+                </p>
               </div>
             </CardContent>
           ) : ticketLoading || messagesLoading ? (
-            <CardContent className="flex-1 flex items-center justify-center">
+            <CardContent className="flex-1 flex items-center justify-center min-h-[200px]">
               <Loader />
             </CardContent>
           ) : !selectedTicket ? (
             <CardContent className="flex-1 flex items-center justify-center">
-              <div className="text-center text-gray-500">
-                <p>Ticket not found</p>
+              <div className="text-center text-gray-600">
+                <p className="font-medium text-gray-900">Ticket not found</p>
               </div>
             </CardContent>
           ) : (
             <>
-              <CardHeader className="border-b">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="mb-2">{selectedTicket.title}</CardTitle>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <User className="h-4 w-4" />
-                        <span>{selectedTicket.createdBy.companyName}</span>
-                        <Badge className="ml-2">{selectedTicket.createdBy.type}</Badge>
+              <CardHeader className="border-b border-gray-200">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="mb-2 break-words">{selectedTicket.title}</CardTitle>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-1 min-w-0">
+                        <User className="h-4 w-4 shrink-0 text-gray-500" />
+                        <span className="truncate font-medium text-gray-800">{selectedTicket.createdBy.companyName}</span>
+                        <Badge className="ml-1 shrink-0">{selectedTicket.createdBy.type}</Badge>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
+                      <div className="flex items-center gap-1 text-gray-500">
+                        <Clock className="h-4 w-4 shrink-0" />
                         <span>{formatDistanceToNow(new Date(selectedTicket.createdAt), { addSuffix: true })}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-stretch gap-2 w-full lg:w-48 shrink-0">
                     <Select
+                      label="Ticket status"
                       value={selectedTicket.status}
                       onChange={(e) => handleStatusChange(selectedTicket.id, e.target.value as SupportTicketStatus)}
                       className="text-sm"
@@ -342,12 +350,13 @@ export default function Support() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="flex-1 flex flex-col overflow-hidden">
+              <CardContent className="flex-1 flex flex-col overflow-hidden min-h-0">
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto space-y-4 p-4">
+                <div className="flex-1 overflow-y-auto space-y-4 p-4 min-h-0 bg-gray-50/80">
                   {messages.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <p>No messages yet</p>
+                    <div className="text-center py-8 text-gray-600">
+                      <p className="font-medium text-gray-900">No messages yet</p>
+                      <p className="text-sm text-gray-500 mt-1">The customer has not written anything yet, or the thread is empty.</p>
                     </div>
                   ) : (
                     messages.map((message) => (
@@ -356,18 +365,21 @@ export default function Support() {
                         className={`flex ${message.senderType === 'ADMIN' ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
-                          className={`max-w-[70%] rounded-lg p-3 ${
+                          className={`max-w-[85%] sm:max-w-[70%] rounded-lg px-3 py-2 shadow-sm border ${
                             message.senderType === 'ADMIN'
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 text-gray-900'
+                              ? 'bg-blue-600 text-white border-blue-700'
+                              : 'bg-white text-gray-900 border-gray-200'
                           }`}
                         >
                           {message.senderType !== 'ADMIN' && (
-                            <div className="text-xs font-medium mb-1 opacity-75">
+                            <div className="text-xs font-semibold mb-1 text-gray-600">
                               {selectedTicket.createdBy.companyName}
                             </div>
                           )}
-                          {message.content && <p className="text-sm whitespace-pre-wrap">{message.content}</p>}
+                          {message.senderType === 'ADMIN' && (
+                            <div className="text-xs font-semibold mb-1 text-blue-100">You (support)</div>
+                          )}
+                          {message.content && <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>}
                           {message.imageUrl && (
                             <div className="mt-2">
                               <img
@@ -415,7 +427,7 @@ export default function Support() {
                 </div>
 
                 {/* Message Input */}
-                <div className="border-t p-4 space-y-3">
+                <div className="border-t border-gray-200 bg-white p-4 space-y-3 shrink-0">
                   {imagePreview && (
                     <div className="relative inline-block group">
                       <img 
@@ -464,7 +476,7 @@ export default function Support() {
                     <Button 
                       type="button" 
                       variant="outline" 
-                      className="px-3 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600 transition-colors"
+                      className="px-3 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-colors shrink-0"
                       onClick={handleImageButtonClick}
                       title="Attach image"
                     >

@@ -44,6 +44,13 @@ export default function Logs() {
     setCursorHistory([])
   }, [requestId, companyId, endpoint])
 
+  const pageIndex = cursorHistory.length + 1
+
+  const handleFirstPage = () => {
+    setCursor(undefined)
+    setCursorHistory([])
+  }
+
   const handleNext = () => {
     if (logs?.nextCursor) {
       setCursorHistory([...cursorHistory, cursor || ''])
@@ -56,15 +63,20 @@ export default function Logs() {
       const newHistory = [...cursorHistory]
       const prevCursor = newHistory.pop()
       setCursorHistory(newHistory)
-      setCursor(prevCursor)
+      setCursor(prevCursor === '' ? undefined : prevCursor)
     } else {
       setCursor(undefined)
       setCursorHistory([])
     }
   }
 
-  const canGoNext = logs?.nextCursor && logs.nextCursor !== ''
-  const canGoPrevious = cursorHistory.length > 0 || cursor !== undefined
+  const canGoNext = Boolean(logs?.nextCursor && logs.nextCursor !== '')
+  const canGoPrevious = pageIndex > 1
+  const totalCount = typeof logs?.total === 'number' ? logs.total : 0
+  const rowCount = logs?.data?.length ?? 0
+  const rangeStart = rowCount === 0 ? 0 : (pageIndex - 1) * limit + 1
+  const rangeEnd = rowCount === 0 ? 0 : (pageIndex - 1) * limit + rowCount
+  const totalPages = totalCount > 0 ? Math.ceil(totalCount / limit) : 0
 
   if (isLoading) {
     return <Loader className="min-h-96" />
@@ -174,33 +186,7 @@ export default function Logs() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>
-              Results {logs?.data && logs.data.length > 0 && (
-                <span className="text-sm font-normal text-gray-500 ml-2">
-                  ({logs.data.length} {logs.hasMore ? 'entries (more available)' : 'entries'})
-                </span>
-              )}
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handlePrevious}
-                disabled={!canGoPrevious || isLoading || isFetching}
-              >
-                ← Previous
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleNext}
-                disabled={!canGoNext || isLoading || isFetching}
-              >
-                Next →
-              </Button>
-            </div>
-          </div>
+          <CardTitle>Results</CardTitle>
         </CardHeader>
         <CardContent>
           {logs?.data && logs.data.length > 0 ? (
@@ -279,6 +265,56 @@ export default function Logs() {
               No logs available
             </div>
           )}
+
+          <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-t border-gray-200 pt-4">
+            <p className="text-sm text-gray-600">
+              {rowCount > 0 ? (
+                <>
+                  Showing <span className="font-medium text-gray-900">{rangeStart}</span>
+                  –
+                  <span className="font-medium text-gray-900">{rangeEnd}</span>
+                  {totalCount > 0 ? (
+                    <>
+                      {' '}of <span className="font-medium text-gray-900">{totalCount.toLocaleString()}</span>
+                    </>
+                  ) : null}
+                  <span className="text-gray-400 mx-2">·</span>
+                  Page <span className="font-medium text-gray-900">{pageIndex}</span>
+                  {totalPages > 0 ? (
+                    <> of <span className="font-medium text-gray-900">{totalPages.toLocaleString()}</span></>
+                  ) : null}
+                </>
+              ) : (
+                'No rows on this page'
+              )}
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleFirstPage}
+                disabled={pageIndex <= 1 || isLoading || isFetching}
+              >
+                First
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handlePrevious}
+                disabled={!canGoPrevious || isLoading || isFetching}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleNext}
+                disabled={!canGoNext || isLoading || isFetching}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
 

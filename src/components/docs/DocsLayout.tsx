@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import http from '../../lib/http';
 import SdkGuide from './SdkGuide';
+import IntegrationStandardGuide from './IntegrationStandardGuide';
 import toast from 'react-hot-toast';
 import './docs.css';
 
@@ -43,6 +44,7 @@ const DocsLayout: React.FC = () => {
   const [selectedEndpoint, setSelectedEndpoint] = useState<DocEndpoint | null>(null);
   const [activeCode, setActiveCode] = useState<string>('curl');
   const [showSdkGuide, setShowSdkGuide] = useState<boolean>(false);
+  const [showIntegrationStandard, setShowIntegrationStandard] = useState<boolean>(false);
 
   useEffect(() => {
     // admin gets full docs
@@ -74,9 +76,22 @@ const DocsLayout: React.FC = () => {
       <aside className="docs-sidebar">
         <div className="docs-cat">
           <button
+            className={`docs-endpoint-btn ${showIntegrationStandard ? 'active' : ''}`}
+            onClick={() => {
+              setShowIntegrationStandard(true);
+              setShowSdkGuide(false);
+              setSelectedEndpoint(null);
+            }}
+            style={{ width: '100%', justifyContent: 'flex-start', padding: '0.5rem', marginBottom: '0.5rem' }}
+          >
+            <span style={{ fontSize: '1rem', marginRight: '0.5rem' }}>🧩</span>
+            <span style={{ fontWeight: 600 }}>Integration Standard</span>
+          </button>
+          <button
             className={`docs-endpoint-btn ${showSdkGuide ? 'active' : ''}`}
             onClick={() => {
               setShowSdkGuide(true);
+              setShowIntegrationStandard(false);
               setSelectedEndpoint(null);
             }}
             style={{ width: '100%', justifyContent: 'flex-start', padding: '0.5rem' }}
@@ -96,6 +111,7 @@ const DocsLayout: React.FC = () => {
                   setSelectedEndpoint(ep);
                   setActiveCode(ep.codeSamples?.[0]?.lang ?? 'curl');
                   setShowSdkGuide(false);
+                  setShowIntegrationStandard(false);
                 }}
               >
                 <span className="method" style={{ background: METHOD_COLORS[ep.method] || '#6b7280' }}>
@@ -108,7 +124,9 @@ const DocsLayout: React.FC = () => {
         ))}
       </aside>
       <main className="docs-main">
-        {showSdkGuide ? (
+        {showIntegrationStandard ? (
+          <IntegrationStandardGuide />
+        ) : showSdkGuide ? (
           <SdkGuide role="admin" />
         ) : selectedEndpoint && (
           <>

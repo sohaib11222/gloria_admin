@@ -111,3 +111,111 @@ export const transactionsApi = {
     return data
   },
 }
+
+// --- Agent billing ---
+export interface AgentPlanCountryPrice {
+  id: string
+  agentPlanId: string
+  countryCode: string
+  pricePerBranchCents: number
+  stripePriceId: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AgentPlan {
+  id: string
+  name: string
+  interval: PlanInterval
+  branchLimit: number
+  defaultPriceCents: number
+  active: boolean
+  createdAt: string
+  updatedAt: string
+  countryPrices?: AgentPlanCountryPrice[]
+}
+
+export interface AgentSubscription {
+  id: string
+  agentId: string
+  agentPlanId: string
+  stripeCustomerId: string | null
+  stripeSubscriptionId: string | null
+  subscribedBranchCount: number
+  status: SubscriptionStatus
+  currentPeriodStart: string | null
+  currentPeriodEnd: string | null
+  createdAt: string
+  updatedAt: string
+  agentPlan?: AgentPlan
+  agent?: { id: string; companyName: string; email: string; billingCountryCode?: string | null }
+  effectiveBranchCount?: number
+}
+
+export interface CreateAgentPlanBody {
+  name: string
+  interval: PlanInterval
+  branchLimit: number
+  defaultPriceCents: number
+  active?: boolean
+}
+
+export interface UpdateAgentPlanBody {
+  name?: string
+  interval?: PlanInterval
+  branchLimit?: number
+  defaultPriceCents?: number
+  active?: boolean
+}
+
+export interface SetAgentPlanCountryPricesBody {
+  prices: Array<{
+    countryCode: string
+    pricePerBranchCents: number
+    stripePriceId?: string | null
+  }>
+}
+
+export interface SetAgentSubscriptionBody {
+  planId: string
+  currentPeriodEnd?: string
+  subscribedBranchCount?: number
+  status?: SubscriptionStatus
+}
+
+export const agentBillingApi = {
+  listAgentPlans: async (): Promise<{ items: AgentPlan[] }> => {
+    const { data } = await http.get('/admin/agent-plans')
+    return data
+  },
+
+  createAgentPlan: async (body: CreateAgentPlanBody): Promise<AgentPlan> => {
+    const { data } = await http.post('/admin/agent-plans', body)
+    return data
+  },
+
+  updateAgentPlan: async (id: string, body: UpdateAgentPlanBody): Promise<AgentPlan> => {
+    const { data } = await http.patch(`/admin/agent-plans/${id}`, body)
+    return data
+  },
+
+  getAgentPlanCountryPrices: async (planId: string): Promise<{ items: AgentPlanCountryPrice[] }> => {
+    const { data } = await http.get(`/admin/agent-plans/${planId}/country-prices`)
+    return data
+  },
+
+  setAgentPlanCountryPrices: async (planId: string, body: SetAgentPlanCountryPricesBody): Promise<{ items: AgentPlanCountryPrice[] }> => {
+    const { data } = await http.put(`/admin/agent-plans/${planId}/country-prices`, body)
+    return data
+  },
+
+  getAgentSubscription: async (agentId: string): Promise<AgentSubscription & { subscription?: null; agent?: { id: string; companyName: string; email: string; billingCountryCode?: string | null }; effectiveBranchCount?: number }> => {
+    const { data } = await http.get(`/admin/agents/${agentId}/subscription`)
+    return data
+  },
+
+  setAgentSubscription: async (agentId: string, body: SetAgentSubscriptionBody): Promise<AgentSubscription> => {
+    const { data } = await http.patch(`/admin/agents/${agentId}/subscription`, body)
+    return data
+  },
+}

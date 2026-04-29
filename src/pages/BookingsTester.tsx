@@ -1,129 +1,119 @@
-import React from 'react'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
-import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
-import { Plus, Edit, XCircle, Search, Clock } from 'lucide-react'
+import { Select } from '../components/ui/Select'
+import { Button } from '../components/ui/Button'
+import { Loader } from '../components/ui/Loader'
+import http from '../lib/http'
 
 export default function BookingsTester() {
+  const [agentId, setAgentId] = useState('')
+  const [limit, setLimit] = useState(100)
+
+  const { data: agentsRes, isLoading: loadingAgents } = useQuery({
+    queryKey: ['admin', 'companies', 'AGENT'],
+    queryFn: async () => {
+      const { data } = await http.get('/admin/companies', { params: { type: 'AGENT', limit: 500 } })
+      return data
+    },
+  })
+  const agents = Array.isArray(agentsRes?.items) ? agentsRes.items : Array.isArray(agentsRes) ? agentsRes : []
+
+  const { data: bookingsRes, isLoading: loadingBookings, refetch } = useQuery({
+    queryKey: ['admin', 'bookings', agentId, limit],
+    queryFn: async () => {
+      const params: any = { limit }
+      if (agentId) params.company_id = agentId
+      const { data } = await http.get('/bookings', { params })
+      return data
+    },
+  })
+  const items = Array.isArray(bookingsRes?.items) ? bookingsRes.items : []
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Bookings Tester</h1>
-        <p className="mt-2 text-gray-600">
-          Test booking operations (Create, Modify, Cancel, Check)
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="card-hover">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Plus className="h-6 w-6 text-blue-600" />
-              </div>
-              <Badge variant="info">Coming Soon</Badge>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Create Booking</h3>
-            <p className="text-sm text-gray-600">
-              Create a new booking with availability offer reference
-            </p>
-            <Button variant="secondary" className="w-full mt-4" disabled>
-              Create Booking
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="card-hover">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-orange-100 rounded-lg">
-                <Edit className="h-6 w-6 text-orange-600" />
-              </div>
-              <Badge variant="info">Coming Soon</Badge>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Modify Booking</h3>
-            <p className="text-sm text-gray-600">
-              Modify an existing booking (dates, vehicle, etc.)
-            </p>
-            <Button variant="secondary" className="w-full mt-4" disabled>
-              Modify Booking
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="card-hover">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-red-100 rounded-lg">
-                <XCircle className="h-6 w-6 text-red-600" />
-              </div>
-              <Badge variant="info">Coming Soon</Badge>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Cancel Booking</h3>
-            <p className="text-sm text-gray-600">
-              Cancel an existing booking by reference
-            </p>
-            <Button variant="secondary" className="w-full mt-4" disabled>
-              Cancel Booking
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="card-hover">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <Search className="h-6 w-6 text-green-600" />
-              </div>
-              <Badge variant="info">Coming Soon</Badge>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Check Booking</h3>
-            <p className="text-sm text-gray-600">
-              Check booking status and details by reference
-            </p>
-            <Button variant="secondary" className="w-full mt-4" disabled>
-              Check Booking
-            </Button>
-          </CardContent>
-        </Card>
+        <h1 className="text-3xl font-bold text-gray-900">Bookings</h1>
+        <p className="mt-2 text-gray-600">View bookings by agent and inspect booking status quickly.</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>About Booking Operations</CardTitle>
+          <CardTitle>Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4 text-sm text-gray-600">
-            <p>
-              The booking tester allows you to test all booking operations against your configured sources.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-2">Create Booking</h4>
-                <p className="text-xs text-gray-600">
-                  Create a new booking using an availability offer reference. Requires valid agreement and availability offer.
-                </p>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-2">Modify Booking</h4>
-                <p className="text-xs text-gray-600">
-                  Modify an existing booking (change dates, vehicle class, etc.). Not all sources support modifications.
-                </p>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-2">Cancel Booking</h4>
-                <p className="text-xs text-gray-600">
-                  Cancel a booking by reference. Cancellation policies vary by source.
-                </p>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-2">Check Booking</h4>
-                <p className="text-xs text-gray-600">
-                  Retrieve booking details and status by booking reference.
-                </p>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Select
+              label="Agent"
+              value={agentId}
+              onChange={(e) => setAgentId(e.target.value)}
+              options={[
+                { value: '', label: loadingAgents ? 'Loading agents...' : 'All agents' },
+                ...agents.map((a: any) => ({ value: a.id, label: `${a.companyName} (${a.email})` })),
+              ]}
+            />
+            <Select
+              label="Limit"
+              value={String(limit)}
+              onChange={(e) => setLimit(Number(e.target.value))}
+              options={[
+                { value: '50', label: '50' },
+                { value: '100', label: '100' },
+                { value: '200', label: '200' },
+              ]}
+            />
+            <div className="flex items-end">
+              <Button variant="secondary" onClick={() => refetch()} disabled={loadingBookings}>
+                Refresh
+              </Button>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Bookings ({items.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loadingBookings ? (
+            <Loader />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2">Booking ID</th>
+                    <th className="text-left py-2">Agent</th>
+                    <th className="text-left py-2">Source</th>
+                    <th className="text-left py-2">Agreement</th>
+                    <th className="text-left py-2">Supplier Ref</th>
+                    <th className="text-left py-2">Status</th>
+                    <th className="text-left py-2">Created</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((b: any) => (
+                    <tr key={b.id} className="border-b border-gray-100">
+                      <td className="py-2 font-mono text-xs">{b.id}</td>
+                      <td className="py-2 font-mono text-xs">{b.agentId || '—'}</td>
+                      <td className="py-2 font-mono text-xs">{b.sourceId || '—'}</td>
+                      <td className="py-2">{b.agreementRef || '—'}</td>
+                      <td className="py-2">{b.supplierBookingRef || '—'}</td>
+                      <td className="py-2">
+                        <Badge variant={(b.status || '').toUpperCase() === 'CANCELLED' ? 'danger' : (b.status || '').toUpperCase() === 'CONFIRMED' ? 'success' : 'warning'}>
+                          {(b.status || 'PENDING').toUpperCase()}
+                        </Badge>
+                      </td>
+                      <td className="py-2">{b.createdAt ? new Date(b.createdAt).toLocaleString() : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {items.length === 0 && <p className="text-gray-500 py-4">No bookings found.</p>}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

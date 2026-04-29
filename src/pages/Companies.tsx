@@ -36,6 +36,10 @@ const getInitialFormData = () => ({
   grpcEndpoint: '',
   httpEndpoint: '',
   companyCode: '',
+  registrationBranchName: '',
+  companyAddress: '',
+  companyWebsiteUrl: '',
+  billingCountryCode: '',
   status: 'ACTIVE' as 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED',
 })
 
@@ -55,6 +59,10 @@ const CompanyFormModal: React.FC<CompanyFormModalProps> = ({ company, isOpen, on
           grpcEndpoint: company.grpcEndpoint || '',
           httpEndpoint: company.httpEndpoint || '',
           companyCode: company.companyCode || '',
+          registrationBranchName: company.registrationBranchName || '',
+          companyAddress: company.companyAddress || '',
+          companyWebsiteUrl: company.companyWebsiteUrl || '',
+          billingCountryCode: (company as any).billingCountryCode || '',
           status: company.status || 'ACTIVE',
         })
       } else {
@@ -114,6 +122,10 @@ const CompanyFormModal: React.FC<CompanyFormModalProps> = ({ company, isOpen, on
       dataToSend.grpcEndpoint = formData.grpcEndpoint
     }
 
+    if (formData.type === 'AGENT' && formData.billingCountryCode !== undefined) {
+      dataToSend.billingCountryCode = formData.billingCountryCode.trim() || null
+    }
+
     if (formData.type === 'SOURCE') {
       if (formData.companyCode) {
         dataToSend.companyCode = formData.companyCode
@@ -121,6 +133,9 @@ const CompanyFormModal: React.FC<CompanyFormModalProps> = ({ company, isOpen, on
       if (formData.httpEndpoint) {
         dataToSend.httpEndpoint = formData.httpEndpoint
       }
+      dataToSend.registrationBranchName = formData.registrationBranchName.trim() || null
+      dataToSend.companyAddress = formData.companyAddress.trim() || null
+      dataToSend.companyWebsiteUrl = formData.companyWebsiteUrl.trim() || null
     }
 
     if (company) {
@@ -175,6 +190,27 @@ const CompanyFormModal: React.FC<CompanyFormModalProps> = ({ company, isOpen, on
 
         {formData.type === 'SOURCE' && (
           <>
+            <div className="grid grid-cols-1 gap-4">
+              <Input
+                label="Primary branch name (registration)"
+                placeholder="Main depot / HQ branch"
+                value={formData.registrationBranchName}
+                onChange={(e) => setFormData({ ...formData, registrationBranchName: e.target.value })}
+              />
+              <Input
+                label="Company address"
+                placeholder="Street, city, postal code, country"
+                value={formData.companyAddress}
+                onChange={(e) => setFormData({ ...formData, companyAddress: e.target.value })}
+              />
+              <Input
+                label="Company website URL"
+                placeholder="https://www.example.com"
+                type="url"
+                value={formData.companyWebsiteUrl}
+                onChange={(e) => setFormData({ ...formData, companyWebsiteUrl: e.target.value })}
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Adapter Type</label>
@@ -213,6 +249,16 @@ const CompanyFormModal: React.FC<CompanyFormModalProps> = ({ company, isOpen, on
               />
             </div>
           </>
+        )}
+
+        {formData.type === 'AGENT' && (
+          <Input
+            label="Billing country (ISO 3166-1 alpha-2)"
+            placeholder="e.g. US, IN"
+            value={formData.billingCountryCode}
+            onChange={(e) => setFormData({ ...formData, billingCountryCode: e.target.value.toUpperCase().slice(0, 2) })}
+            helperText="Used for agent plan pricing. Leave blank for default."
+          />
         )}
 
         <div>
@@ -290,6 +336,32 @@ const CompanyDetailModal: React.FC<CompanyDetailModalProps> = ({ company, isOpen
           </div>
           {company.type === 'SOURCE' && (
             <>
+              <div className="col-span-2 border-t border-gray-100 pt-4 mt-1">
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Registration profile</h4>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Primary branch name</label>
+                <p className="text-sm text-gray-900">{company.registrationBranchName || '—'}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Company website</label>
+                {company.companyWebsiteUrl ? (
+                  <a
+                    href={company.companyWebsiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:underline break-all"
+                  >
+                    {company.companyWebsiteUrl}
+                  </a>
+                ) : (
+                  <p className="text-sm text-gray-900">—</p>
+                )}
+              </div>
+              <div className="col-span-2">
+                <label className="text-sm font-medium text-gray-700">Company address</label>
+                <p className="text-sm text-gray-900 whitespace-pre-wrap">{company.companyAddress || '—'}</p>
+              </div>
               <div>
                 <label className="text-sm font-medium text-gray-700">Company Code</label>
                 <p className="text-sm text-gray-900 font-mono">{company.companyCode || 'Not set'}</p>

@@ -5,7 +5,7 @@ import './docs.css';
 import { SdkDownloadButton } from './SdkDownloadButton';
 
 type SdkType = 'javascript' | 'typescript' | 'go' | 'php' | 'python' | 'java' | 'perl';
-type SectionType = 'quick-start' | 'installation' | 'companies' | 'agreements' | 'health' | 'branches' | 'logs' | 'error-handling' | 'configuration' | 'testing' | 'troubleshooting' | 'best-practices' | 'api-reference' | 'api-endpoints';
+type SectionType = 'quick-start' | 'installation' | 'integration-standard' | 'companies' | 'agreements' | 'health' | 'branches' | 'logs' | 'error-handling' | 'configuration' | 'testing' | 'troubleshooting' | 'best-practices' | 'api-reference' | 'api-endpoints';
 
 type DocEndpoint = {
   id: string;
@@ -39,6 +39,13 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
         console.error('Failed to load endpoints:', err);
       });
   }, [role]);
+  const pageSubtitle =
+    role === 'admin'
+      ? activeSdk === 'php'
+        ? 'Admin docs — PHP: use Agent ZIP for CarHireClient; use Source ZIP for supplier OTA + Laravel + gRPC bundle.'
+        : 'Admin console — SDK patterns and examples alongside operator workflows.'
+      : 'Production-ready SDK documentation for Gloria Connect.';
+
   const prefaceText = {
     agent: 'Start here: login → approve agreement → availability → booking',
     source: 'Start here: login → offer agreement → locations → verification',
@@ -48,6 +55,7 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
   const sections: { id: SectionType; label: string }[] = [
     { id: 'quick-start', label: 'Quick Start' },
     { id: 'installation', label: 'Installation' },
+    { id: 'integration-standard', label: 'Integration Standard' },
     { id: 'companies', label: 'Companies' },
     { id: 'agreements', label: 'Agreements' },
     { id: 'health', label: 'Health Monitoring' },
@@ -73,6 +81,26 @@ const SdkGuide: React.FC<{ role?: 'agent' | 'source' | 'admin' }> = ({ role = 'a
   ];
 
   const renderSection = (sectionId: SectionType) => {
+    if (sectionId === 'integration-standard') {
+      return (
+        <section style={{ marginTop: '0', marginBottom: '2rem' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1f2937', marginBottom: '1rem' }}>Car Rental Integration Standard</h2>
+          <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem' }}>
+            Admin should enforce normalized contracts for ListBranches, PriceRequest, BookingRequest, and Cancel/ReservationStatus across all suppliers.
+          </p>
+          <pre className="code-block">{`// Canonical TS SDK operations
+await client.getLocations().listBranches();
+await client.getAvailability().search(criteria);
+await client.getBooking().create(payload, 'idem-key');
+await client.getBooking().cancel('RC60653555IW', 'AG-2026-490');
+
+// Multi-language parity
+// Python: await client.get_booking().cancel(ref, agreement_ref)
+// Go: client.Booking().Cancel(ctx, ref, agreementRef, "")
+// PHP/Java/Perl follow same agreement_ref + supplier_booking_ref keys`}</pre>
+        </section>
+      );
+    }
     if (sectionId === 'api-endpoints') {
       return (
         <section style={{ marginTop: '0', marginBottom: '2rem' }}>
@@ -1866,6 +1894,12 @@ is(scalar(@{$companies->{items}}), 1, 'Should return one company');`,
                       </button>
                       <SdkDownloadButton
                         sdkType={sdk.downloadType}
+                        {...(sdk.id === 'php'
+                          ? {
+                              downloadSlug: 'php-agent' as const,
+                              zipFilename: 'gloria-php-agent-sdk.zip',
+                            }
+                          : {})}
                         variant="icon-only"
                         className="sdk-download-btn"
                       />
@@ -1924,14 +1958,25 @@ is(scalar(@{$companies->{items}}), 1, 'Should return one company');`,
             <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem', color: '#111827' }}>
               {sdks.find(s => s.id === activeSdk)?.name} SDK
             </h1>
-            <p style={{ color: '#6b7280', fontSize: '1rem' }}>
-              Production-ready SDK for integrating with Gloria Connect Admin API
+            <p style={{ color: '#6b7280', fontSize: '1rem', lineHeight: 1.55 }}>
+              {pageSubtitle}
             </p>
           </div>
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             <SdkDownloadButton
               sdkType={sdks.find(s => s.id === activeSdk)?.downloadType || 'nodejs'}
-              label={`Download ${sdks.find(s => s.id === activeSdk)?.name} SDK`}
+              {...(activeSdk === 'php'
+                ? {
+                    downloadSlug: 'php-agent' as const,
+                    zipFilename: 'gloria-php-agent-sdk.zip',
+                    label: 'Download Agent PHP SDK',
+                  }
+                : {})}
+              label={
+                activeSdk === 'php'
+                  ? 'Download Agent PHP SDK'
+                  : `Download ${sdks.find(s => s.id === activeSdk)?.name} SDK`
+              }
               variant="default"
             />
           </div>
@@ -1942,6 +1987,40 @@ is(scalar(@{$companies->{items}}), 1, 'Should return one company');`,
             <p style={{ margin: 0, fontWeight: 600, color: '#334155', fontSize: '0.875rem' }}>
               {prefaceText[role]}
             </p>
+          </div>
+        )}
+
+        {role === 'admin' && activeSdk === 'php' && (
+          <div
+            style={{
+              marginBottom: '2rem',
+              padding: '1.25rem',
+              backgroundColor: '#faf5ff',
+              border: '1px solid #d8b4fe',
+              borderRadius: '0.5rem',
+            }}
+          >
+            <h2 style={{ margin: '0 0 0.5rem 0', fontSize: '1.125rem', color: '#6b21a8' }}>PHP: two different packages</h2>
+            <p style={{ margin: '0 0 1rem 0', fontSize: '0.875rem', color: '#7e22ce', lineHeight: 1.5 }}>
+              <strong>Agent</strong> — broker REST/gRPC client (<code>CarHireClient</code>). <strong>Source</strong> — supplier OTA + Laravel + optional gRPC bridge for{' '}
+              <code>gloria_client_supplier.proto</code>.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center' }}>
+              <SdkDownloadButton
+                sdkType="php"
+                downloadSlug="php-agent"
+                zipFilename="gloria-php-agent-sdk.zip"
+                label="Download Agent PHP SDK"
+                variant="default"
+              />
+              <SdkDownloadButton
+                sdkType="php"
+                downloadSlug="php-source"
+                zipFilename="gloria-php-source-supplier.zip"
+                label="Download Source PHP bundle"
+                variant="default"
+              />
+            </div>
           </div>
         )}
 

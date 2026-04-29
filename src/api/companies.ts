@@ -5,6 +5,9 @@ import { CompanyUpdateForm } from "../lib/validators";
 export interface Company {
   id: string;
   companyName: string;
+  registrationBranchName?: string | null;
+  companyAddress?: string | null;
+  companyWebsiteUrl?: string | null;
   email: string;
   type: "SOURCE" | "AGENT";
   status: "ACTIVE" | "PENDING_VERIFICATION" | "SUSPENDED";
@@ -15,6 +18,7 @@ export interface Company {
   grpcEndpoint?: string | null;
   httpEndpoint?: string | null;
   whitelistedDomains?: string | null;
+  billingCountryCode?: string | null;
   createdAt: string;
   updatedAt: string;
   users?: Array<{
@@ -45,6 +49,9 @@ export const companiesApi = {
       const mapped: Company[] = items.map((it: any) => ({
         id: it.id,
         companyName: it.companyName,
+        registrationBranchName: it.registrationBranchName ?? null,
+        companyAddress: it.companyAddress ?? null,
+        companyWebsiteUrl: it.companyWebsiteUrl ?? null,
         email: it.email,
         type: it.type,
         status: it.status,
@@ -55,6 +62,7 @@ export const companiesApi = {
         grpcEndpoint: it.grpcEndpoint,
         httpEndpoint: it.httpEndpoint,
         whitelistedDomains: it.whitelistedDomains,
+        billingCountryCode: it.billingCountryCode ?? null,
         createdAt: it.createdAt,
         updatedAt: it.updatedAt,
         users: it.users,
@@ -82,6 +90,9 @@ export const companiesApi = {
       .map((it: any) => ({
         id: it.id,
         companyName: it.companyName,
+        registrationBranchName: it.registrationBranchName ?? null,
+        companyAddress: it.companyAddress ?? null,
+        companyWebsiteUrl: it.companyWebsiteUrl ?? null,
         email: it.email,
         type: it.type,
         status: it.status,
@@ -115,11 +126,15 @@ export const companiesApi = {
       .map((it: any) => ({
         id: it.id,
         companyName: it.companyName,
+        registrationBranchName: it.registrationBranchName ?? null,
+        companyAddress: it.companyAddress ?? null,
+        companyWebsiteUrl: it.companyWebsiteUrl ?? null,
         email: it.email,
         type: it.type,
         status: it.status,
         adapterType: it.adapterType,
         grpcEndpoint: it.grpcEndpoint,
+        billingCountryCode: it.billingCountryCode ?? null,
         createdAt: it.createdAt,
         updatedAt: it.updatedAt,
         users: it.users,

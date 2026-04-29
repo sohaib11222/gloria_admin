@@ -39,6 +39,7 @@ import AgentPage from '../pages/AgentPage'
 import NotFound from '../pages/NotFound'
 import BillingPage from '../pages/BillingPage'
 import TransactionsPage from '../pages/TransactionsPage'
+import ReferralsPage from '../pages/ReferralsPage'
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -164,6 +165,14 @@ export const AppRoutes: React.FC = () => {
           element={
             <RequireAgreement>
               <BillingPage />
+            </RequireAgreement>
+          }
+        />
+        <Route
+          path="referrals"
+          element={
+            <RequireAgreement>
+              <ReferralsPage />
             </RequireAgreement>
           }
         />
