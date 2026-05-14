@@ -6,9 +6,11 @@ import { Input } from '../components/ui/Input'
 import { Select } from '../components/ui/Select'
 import { Badge } from '../components/ui/Badge'
 import { Loader } from '../components/ui/Loader'
-import { referralsApi, ReferralLink } from '../api/referrals'
+import { Modal } from '../components/ui/Modal'
+import { referralsApi, ReferralLink, ReferralSignupCompany } from '../api/referrals'
 import toast from 'react-hot-toast'
-import { Link2, Copy, Plus } from 'lucide-react'
+import { Link2, Copy, Plus, Users } from 'lucide-react'
+import { formatDate } from '../lib/utils'
 
 /** Default public register pages (subdomains + Vite base paths /agent, /source). Override via env if needed. */
 const DEFAULT_AGENT_REGISTER_PAGE = 'https://agent.gloriaconnect.com/agent/register'
@@ -171,7 +173,12 @@ export default function ReferralsPage() {
                 </thead>
                 <tbody>
                   {items.map((row: ReferralLink) => (
-                    <ReferralRow key={row.id} row={row} onCopy={copy} onToggleActive={(id, active) => patchMutation.mutate({ id, body: { active } })} />
+                    <ReferralRow
+                      key={row.id}
+                      row={row}
+                      onCopy={copy}
+                      onToggleActive={(id, active) => patchMutation.mutate({ id, body: { active } })}
+                    />
                   ))}
                 </tbody>
               </table>
@@ -180,6 +187,80 @@ export default function ReferralsPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function ReferralSignupsModal({
+  linkId,
+  slug,
+  open,
+  onClose,
+}: {
+  linkId: string
+  slug: string
+  open: boolean
+  onClose: () => void
+}) {
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['admin', 'referral-signups', linkId],
+    queryFn: () => referralsApi.getSignups(linkId),
+    enabled: open,
+  })
+  const items = data?.items ?? []
+
+  return (
+    <Modal
+      isOpen={open}
+      onClose={onClose}
+      title={`Signups — ${slug}`}
+      size="xl"
+    >
+      <div>
+        {isLoading ? (
+          <Loader />
+        ) : isError ? (
+          <div className="text-sm text-red-700 flex flex-wrap items-center gap-2">
+            Could not load signups.
+            <Button type="button" variant="secondary" size="sm" onClick={() => refetch()}>
+              Retry
+            </Button>
+          </div>
+        ) : items.length === 0 ? (
+          <p className="text-gray-600 text-sm">No companies registered with this referral slug yet.</p>
+        ) : (
+          <div className="overflow-x-auto rounded border border-gray-200">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 text-left text-gray-600 border-b border-gray-200">
+                <tr>
+                  <th className="py-2 px-3 font-medium">Company</th>
+                  <th className="py-2 px-3 font-medium">Email</th>
+                  <th className="py-2 px-3 font-medium">Type</th>
+                  <th className="py-2 px-3 font-medium">Account status</th>
+                  <th className="py-2 px-3 font-medium">Approval</th>
+                  <th className="py-2 px-3 font-medium">Code</th>
+                  <th className="py-2 px-3 font-medium">Registered</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((c: ReferralSignupCompany) => (
+                  <tr key={c.id} className="border-b border-gray-100 last:border-b-0">
+                    <td className="py-2 px-3 font-medium text-gray-900">{c.companyName}</td>
+                    <td className="py-2 px-3 text-gray-700">{c.email}</td>
+                    <td className="py-2 px-3">
+                      <Badge variant={c.type === 'AGENT' ? 'info' : 'default'}>{c.type}</Badge>
+                    </td>
+                    <td className="py-2 px-3">{c.status}</td>
+                    <td className="py-2 px-3">{c.approvalStatus}</td>
+                    <td className="py-2 px-3 font-mono text-xs">{c.companyCode || '—'}</td>
+                    <td className="py-2 px-3 text-gray-600 whitespace-nowrap">{formatDate(c.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </Modal>
   )
 }
 
@@ -192,6 +273,7 @@ function ReferralRow({
   onCopy: (t: string) => void
   onToggleActive: (id: string, active: boolean) => void
 }) {
+  const [signupsOpen, setSignupsOpen] = useState(false)
   const urls = useMemo(() => registerUrlExamples(row.slug), [row.slug])
   return (
     <tr className="border-b border-gray-100 align-top">
@@ -223,9 +305,15 @@ function ReferralRow({
         <p className="text-[11px] text-gray-500 mt-2 max-w-[14rem]">{urls.hint}</p>
       </td>
       <td className="py-3">
-        <Button type="button" variant="ghost" size="sm" onClick={() => onToggleActive(row.id, !row.active)}>
-          {row.active ? 'Deactivate' : 'Activate'}
-        </Button>
+        <div className="flex flex-col items-start gap-1">
+          <Button type="button" variant="secondary" size="sm" className="gap-1 justify-start" onClick={() => setSignupsOpen(true)}>
+            <Users className="w-3.5 h-3.5" /> View signups
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={() => onToggleActive(row.id, !row.active)}>
+            {row.active ? 'Deactivate' : 'Activate'}
+          </Button>
+        </div>
+        <ReferralSignupsModal linkId={row.id} slug={row.slug} open={signupsOpen} onClose={() => setSignupsOpen(false)} />
       </td>
     </tr>
   )

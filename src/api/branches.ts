@@ -19,7 +19,9 @@ export interface Branch {
   country?: string | null;
   countryCode?: string | null;
   natoLocode?: string | null;
-  rawJson?: any;
+  pickupTimes?: Record<string, unknown> | null;
+  dropoffTimes?: Record<string, unknown> | null;
+  rawJson?: unknown;
   createdAt: string;
   updatedAt: string;
   source?: {
@@ -72,9 +74,9 @@ export interface CreateBranchRequest {
 
 export interface UpdateBranchRequest {
   name?: string;
-  status?: string;
-  locationType?: string;
-  collectionType?: string;
+  status?: string | null;
+  locationType?: string | null;
+  collectionType?: string | null;
   email?: string | null;
   phone?: string | null;
   latitude?: number | null;
@@ -85,6 +87,9 @@ export interface UpdateBranchRequest {
   country?: string | null;
   countryCode?: string | null;
   natoLocode?: string | null;
+  pickupTimes?: Record<string, unknown> | null;
+  dropoffTimes?: Record<string, unknown> | null;
+  rawJson?: Record<string, unknown> | null;
 }
 
 export const branchesApi = {

@@ -35,10 +35,15 @@ export default function Login() {
       
       // Extract user info from JWT token
       const tokenPayload = JSON.parse(atob(data.access.split('.')[1]))
+      if (tokenPayload.role !== 'ADMIN') {
+        toast.error('Administrator access only. Use the Agent or Source app for this account.')
+        return
+      }
       const user = {
         id: tokenPayload.sub,
         email: tokenPayload.email || 'user@example.com', // Adjust based on your JWT payload
-        type: tokenPayload.type || 'ADMIN',
+        type: 'ADMIN' as const,
+        role: 'ADMIN' as const,
         companyId: tokenPayload.companyId
       }
       

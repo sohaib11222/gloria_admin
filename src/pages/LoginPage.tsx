@@ -10,6 +10,7 @@ import { Input } from '../components/ui/Input'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import toast from 'react-hot-toast'
 import logoImage from '../assets/logo.jpg'
+import { accessTokenIsAdmin } from '../hooks/useAuth'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -33,9 +34,14 @@ export default function LoginPage() {
       const existingUser = localStorage.getItem('user')
       
       if (existingToken && existingUser) {
-        // User is already authenticated, use existing credentials
+        if (!accessTokenIsAdmin()) {
+          localStorage.removeItem('token')
+          localStorage.removeItem('refreshToken')
+          localStorage.removeItem('user')
+          toast.error('Administrator access only. Sign in with an admin account.')
+          return
+        }
         console.log('Using existing authentication')
-        // Authentication state will be automatically detected by useAuth hook
       } else {
         // Make real authentication API call
         console.log('Login attempt:', data.email)
@@ -52,20 +58,43 @@ export default function LoginPage() {
           try {
             const userInfo = await authApi.me()
             console.log('User info:', userInfo)
+            if (userInfo?.role !== 'ADMIN') {
+              localStorage.removeItem('token')
+              localStorage.removeItem('refreshToken')
+              localStorage.removeItem('user')
+              toast.error('Administrator access only. Use the Agent or Source app for this account.')
+              return
+            }
             localStorage.setItem('user', JSON.stringify(userInfo))
           } catch (meError) {
-            console.warn('Failed to get user info, using basic info:', meError)
-            // Fallback to basic user info
-            const user = {
-              id: 'user-from-token',
-              email: data.email,
-              type: 'ADMIN' as const
+            console.warn('Failed to get user info from /auth/me:', meError)
+            let jwtPayload: { role?: string; sub?: string }
+            try {
+              jwtPayload = JSON.parse(atob(response.access.split('.')[1]))
+            } catch {
+              localStorage.removeItem('token')
+              localStorage.removeItem('refreshToken')
+              localStorage.removeItem('user')
+              toast.error('Could not verify your session. Please try again.')
+              return
             }
-            localStorage.setItem('user', JSON.stringify(user))
+            if (jwtPayload.role !== 'ADMIN') {
+              localStorage.removeItem('token')
+              localStorage.removeItem('refreshToken')
+              localStorage.removeItem('user')
+              toast.error('Administrator access only. Use the Agent or Source app for this account.')
+              return
+            }
+            localStorage.setItem(
+              'user',
+              JSON.stringify({
+                id: jwtPayload.sub ?? '',
+                email: data.email,
+                role: 'ADMIN' as const,
+              }),
+            )
           }
-          
-          // Authentication state will be automatically detected by useAuth hook
-          
+
           toast.success('Login successful!')
         } catch (authError: any) {
           console.error('Authentication failed:', authError)
@@ -84,6 +113,9 @@ export default function LoginPage() {
             userMessage = 'Please verify your email address before logging in.'
           } else if (errorCode === 'AUTH_ERROR') {
             userMessage = 'Invalid email or password. Please check your credentials and try again.'
+          } else if (errorCode === 'ADMIN_PORTAL_ONLY') {
+            userMessage =
+              'This account cannot sign in here. Use the Agent or Source portal, or sign in with an administrator account.'
           } else if (errorCode === 'INTERNAL_ERROR' && errorMessage.includes('Access denied')) {
             userMessage = 'Server configuration error. Please contact the administrator.'
           } else if (errorCode === 'INTERNAL_ERROR' && errorMessage.includes('DATABASE_URL')) {

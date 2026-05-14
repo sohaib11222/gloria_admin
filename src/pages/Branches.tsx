@@ -16,6 +16,31 @@ import { branchImportApi } from '../api/whitelist'
 import toast from 'react-hot-toast'
 import { formatDate } from '../lib/utils'
 
+function BranchJsonPanel({ title, value }: { title: string; value: unknown }) {
+  const empty =
+    value == null ||
+    (typeof value === 'object' &&
+      !Array.isArray(value) &&
+      Object.keys(value as object).length === 0)
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+      <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+        {title}
+      </div>
+      <div className="p-3 min-h-[2.5rem]">
+        {empty ? (
+          <span className="text-sm text-gray-400">No data</span>
+        ) : (
+          <pre className="text-xs leading-relaxed bg-gray-950 text-gray-100 rounded-md p-3 overflow-x-auto max-h-72 overflow-y-auto whitespace-pre-wrap break-words font-mono">
+            {JSON.stringify(value, null, 2)}
+          </pre>
+        )}
+      </div>
+    </div>
+  )
+}
+
 interface AddBranchModalProps {
   isOpen: boolean
   onClose: () => void
@@ -652,7 +677,7 @@ export default function Branches() {
             <div>
               <Input
                 label="Search"
-                placeholder="Branch code, name, city..."
+                placeholder="Code, name, city, country, UN/LOCODE, email…"
                 value={filters.search}
                 onChange={(e) => {
                   setFilters({ ...filters, search: e.target.value })
@@ -757,6 +782,9 @@ export default function Branches() {
                         Location
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                        Type / collection
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                         Status
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -778,9 +806,16 @@ export default function Branches() {
                           {branch.source?.companyName || '—'}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500">
-                          {branch.city && branch.country
-                            ? `${branch.city}, ${branch.country}`
-                            : '—'}
+                          {[branch.city, branch.country, branch.countryCode ? `(${branch.countryCode})` : null]
+                            .filter(Boolean)
+                            .join(', ') || '—'}
+                        </td>
+                        <td className="px-6 py-4 text-xs text-gray-600 max-w-[10rem]">
+                          <div className="truncate" title={[branch.locationType, branch.collectionType].filter(Boolean).join(' · ') || undefined}>
+                            {branch.locationType || branch.collectionType
+                              ? [branch.locationType, branch.collectionType].filter(Boolean).join(' · ')
+                              : '—'}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <Badge
@@ -788,8 +823,8 @@ export default function Branches() {
                               branch.status === 'ACTIVE'
                                 ? 'success'
                                 : branch.status === 'INACTIVE'
-                                ? 'error'
-                                : 'secondary'
+                                ? 'danger'
+                                : 'default'
                             }
                           >
                             {branch.status || '—'}
@@ -889,51 +924,59 @@ export default function Branches() {
           setSelectedBranch(null)
         }}
         title={
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg text-white">
+          <div className="flex items-start gap-3 pr-8">
+            <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg text-white shrink-0">
               <MapPin className="w-5 h-5" />
             </div>
-            <span>Branch Details</span>
+            <div className="min-w-0">
+              <div className="text-lg font-semibold text-gray-900">Branch details</div>
+              {selectedBranch ? (
+                <div className="text-sm text-gray-500 font-mono mt-0.5 truncate max-w-[75vw]">
+                  {selectedBranch.branchCode} · {selectedBranch.name}
+                </div>
+              ) : null}
+            </div>
           </div>
         }
-        size="lg"
+        size="full"
       >
         {selectedBranch && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Branch Code</label>
-                <div className="mt-2 text-sm font-mono font-semibold text-gray-900">{selectedBranch.branchCode}</div>
+          <div className="space-y-6 max-w-5xl mx-auto w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Branch code</div>
+                <div className="mt-1 text-sm font-mono font-semibold text-gray-900 break-all">{selectedBranch.branchCode}</div>
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Name</label>
-                <div className="mt-2 text-sm font-medium text-gray-900">{selectedBranch.name}</div>
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 lg:col-span-2">
+                <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Display name</div>
+                <div className="mt-1 text-sm font-medium text-gray-900">{selectedBranch.name}</div>
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Source</label>
-                <div className="mt-2 text-sm text-gray-900">
-                  {selectedBranch.source?.companyName || '—'}
-                </div>
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Source</div>
+                <div className="mt-1 text-sm text-gray-900">{selectedBranch.source?.companyName ?? '—'}</div>
+                {selectedBranch.source?.companyCode ? (
+                  <div className="text-xs text-gray-500 mt-0.5">Code: {selectedBranch.source.companyCode}</div>
+                ) : null}
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</label>
-                <div className="mt-2">
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Status</div>
+                <div className="mt-1">
                   <Badge
                     variant={
                       selectedBranch.status === 'ACTIVE'
                         ? 'success'
                         : selectedBranch.status === 'INACTIVE'
-                        ? 'error'
-                        : 'secondary'
+                        ? 'danger'
+                        : 'default'
                     }
                   >
-                    {selectedBranch.status || '—'}
+                    {selectedBranch.status ?? '—'}
                   </Badge>
                 </div>
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">UN/LOCODE</label>
-                <div className="mt-2">
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">UN/LOCODE</div>
+                <div className="mt-1">
                   {selectedBranch.natoLocode ? (
                     <Badge variant="info">{selectedBranch.natoLocode}</Badge>
                   ) : (
@@ -941,50 +984,92 @@ export default function Branches() {
                   )}
                 </div>
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Location Type</label>
-                <div className="mt-2 text-sm text-gray-900">{selectedBranch.locationType || '—'}</div>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">City</label>
-                <div className="mt-2 text-sm text-gray-900">{selectedBranch.city || '—'}</div>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Country</label>
-                <div className="mt-2 text-sm text-gray-900">{selectedBranch.country || '—'}</div>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 col-span-2">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Address</label>
-                <div className="mt-2 text-sm text-gray-900">{selectedBranch.addressLine || '—'}</div>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</label>
-                <div className="mt-2 text-sm text-gray-900">{selectedBranch.email || '—'}</div>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Phone</label>
-                <div className="mt-2 text-sm text-gray-900">{selectedBranch.phone || '—'}</div>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 col-span-2">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Coordinates</label>
-                <div className="mt-2 text-sm font-mono text-gray-900">
-                  {selectedBranch.latitude && selectedBranch.longitude
-                    ? `${selectedBranch.latitude}, ${selectedBranch.longitude}`
-                    : '—'}
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 sm:col-span-2 lg:col-span-3">
+                <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Internal IDs</div>
+                <div className="mt-1 text-xs font-mono text-gray-700 break-all space-y-0.5">
+                  <div>Branch: {selectedBranch.id}</div>
+                  <div>SourceId: {selectedBranch.sourceId}</div>
+                  {selectedBranch.agreementId ? <div>AgreementId: {selectedBranch.agreementId}</div> : null}
                 </div>
               </div>
             </div>
-            <div className="pt-4 border-t border-gray-200">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-500">Created:</span>{' '}
-                  <span className="font-medium text-gray-900">{formatDate(selectedBranch.createdAt)}</span>
+
+            <div>
+              <h4 className="text-sm font-semibold text-gray-800 mb-2">Classification and contact</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="p-3 bg-white rounded-lg border border-gray-200">
+                  <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Location type</div>
+                  <div className="mt-1 text-sm text-gray-900">{selectedBranch.locationType ?? '—'}</div>
                 </div>
-                <div>
-                  <span className="text-gray-500">Updated:</span>{' '}
-                  <span className="font-medium text-gray-900">{formatDate(selectedBranch.updatedAt)}</span>
+                <div className="p-3 bg-white rounded-lg border border-gray-200">
+                  <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Collection type</div>
+                  <div className="mt-1 text-sm text-gray-900">{selectedBranch.collectionType ?? '—'}</div>
+                </div>
+                <div className="p-3 bg-white rounded-lg border border-gray-200">
+                  <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Email</div>
+                  <div className="mt-1 text-sm text-gray-900 break-all">{selectedBranch.email ?? '—'}</div>
+                </div>
+                <div className="p-3 bg-white rounded-lg border border-gray-200">
+                  <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Phone</div>
+                  <div className="mt-1 text-sm text-gray-900">{selectedBranch.phone ?? '—'}</div>
                 </div>
               </div>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-semibold text-gray-800 mb-2">Address</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-3 bg-white rounded-lg border border-gray-200 sm:col-span-2">
+                  <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Street / address</div>
+                  <div className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{selectedBranch.addressLine ?? '—'}</div>
+                </div>
+                <div className="p-3 bg-white rounded-lg border border-gray-200">
+                  <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">City</div>
+                  <div className="mt-1 text-sm text-gray-900">{selectedBranch.city ?? '—'}</div>
+                </div>
+                <div className="p-3 bg-white rounded-lg border border-gray-200">
+                  <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Postal code</div>
+                  <div className="mt-1 text-sm text-gray-900">{selectedBranch.postalCode ?? '—'}</div>
+                </div>
+                <div className="p-3 bg-white rounded-lg border border-gray-200">
+                  <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Country</div>
+                  <div className="mt-1 text-sm text-gray-900">{selectedBranch.country ?? '—'}</div>
+                </div>
+                <div className="p-3 bg-white rounded-lg border border-gray-200">
+                  <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Country code</div>
+                  <div className="mt-1 text-sm font-mono text-gray-900">{selectedBranch.countryCode ?? '—'}</div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-semibold text-gray-800 mb-2">Geo</h4>
+              <div className="p-3 bg-white rounded-lg border border-gray-200">
+                <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Latitude / longitude</div>
+                <div className="mt-1 text-sm font-mono text-gray-900">
+                  {selectedBranch.latitude != null && selectedBranch.longitude != null
+                    ? `${selectedBranch.latitude}, ${selectedBranch.longitude}`
+                    : selectedBranch.latitude != null || selectedBranch.longitude != null
+                      ? `${selectedBranch.latitude ?? '—'}, ${selectedBranch.longitude ?? '—'}`
+                      : '—'}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <BranchJsonPanel title="Pickup times (JSON)" value={selectedBranch.pickupTimes} />
+              <BranchJsonPanel title="Dropoff times (JSON)" value={selectedBranch.dropoffTimes} />
+            </div>
+
+            <BranchJsonPanel title="Supplier raw payload (rawJson)" value={selectedBranch.rawJson} />
+
+            <div className="pt-2 border-t border-gray-200 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-600">
+              <span>
+                Created: <span className="font-medium text-gray-900">{formatDate(selectedBranch.createdAt)}</span>
+              </span>
+              <span>
+                Updated: <span className="font-medium text-gray-900">{formatDate(selectedBranch.updatedAt)}</span>
+              </span>
             </div>
           </div>
         )}

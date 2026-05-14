@@ -8,6 +8,7 @@ export interface Company {
   registrationBranchName?: string | null;
   companyAddress?: string | null;
   companyWebsiteUrl?: string | null;
+  registrationPhotoUrl?: string | null;
   email: string;
   type: "SOURCE" | "AGENT";
   status: "ACTIVE" | "PENDING_VERIFICATION" | "SUSPENDED";
@@ -52,6 +53,7 @@ export const companiesApi = {
         registrationBranchName: it.registrationBranchName ?? null,
         companyAddress: it.companyAddress ?? null,
         companyWebsiteUrl: it.companyWebsiteUrl ?? null,
+        registrationPhotoUrl: it.registrationPhotoUrl ?? null,
         email: it.email,
         type: it.type,
         status: it.status,
@@ -93,6 +95,7 @@ export const companiesApi = {
         registrationBranchName: it.registrationBranchName ?? null,
         companyAddress: it.companyAddress ?? null,
         companyWebsiteUrl: it.companyWebsiteUrl ?? null,
+        registrationPhotoUrl: it.registrationPhotoUrl ?? null,
         email: it.email,
         type: it.type,
         status: it.status,
@@ -129,6 +132,7 @@ export const companiesApi = {
         registrationBranchName: it.registrationBranchName ?? null,
         companyAddress: it.companyAddress ?? null,
         companyWebsiteUrl: it.companyWebsiteUrl ?? null,
+        registrationPhotoUrl: it.registrationPhotoUrl ?? null,
         email: it.email,
         type: it.type,
         status: it.status,
@@ -157,11 +161,27 @@ export const companiesApi = {
 
   updateCompanyStatus: async (
     id: string,
-    status: "ACTIVE" | "PENDING_VERIFICATION" | "SUSPENDED"
-  ): Promise<Company> => {
+    status: "ACTIVE" | "PENDING_VERIFICATION" | "SUSPENDED",
+    options?: { notifyMessage?: string; notifyByEmail?: boolean }
+  ): Promise<{
+    message?: string;
+    company: Company;
+    emailSent?: boolean;
+    emailError?: string | null;
+  }> => {
     try {
-      const response = await http.patch(MW.companies.updateStatus(id), { status });
-      return response.data;
+      const response = await http.patch(MW.companies.updateStatus(id), {
+        status,
+        ...(options?.notifyMessage !== undefined ? { notifyMessage: options.notifyMessage } : {}),
+        ...(options?.notifyByEmail !== undefined ? { notifyByEmail: options.notifyByEmail } : {}),
+      });
+      const d = response.data;
+      return {
+        message: d.message,
+        company: d.company,
+        emailSent: d.emailSent,
+        emailError: d.emailError ?? null,
+      };
     } catch (error) {
       console.error('Error updating company status:', error);
       throw error;

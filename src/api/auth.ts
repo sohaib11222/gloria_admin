@@ -11,7 +11,9 @@ export interface LoginResponse {
 
 export const authApi = {
   login: async (data: LoginForm): Promise<LoginResponse> => {
-    const response = await http.post('/auth/login', data)
+    const response = await http.post('/auth/login', data, {
+      headers: { 'X-Gloria-Admin-Login': '1' },
+    })
     return response.data
   },
 

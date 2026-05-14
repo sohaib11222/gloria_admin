@@ -70,7 +70,7 @@ export const NAVIGATION_ITEMS = [
   { path: '/location-requests', label: 'Location Requests', icon: 'MapPin' },
   { path: '/unlocodes', label: 'UN/LOCODEs', icon: 'Globe' },
   { path: '/location-validation', label: 'Location Validation', icon: 'FileCheck' },
-  { path: '/availability', label: 'Availability', icon: 'Search' },
+  { path: '/availability', label: 'Availability & pricing', icon: 'LineChart' },
   { path: '/verification', label: 'Verification', icon: 'CheckCircle' },
   { path: '/booking-logs', label: 'Bookings', icon: 'ClipboardList' },
   { path: '/health', label: 'Health', icon: 'HeartPulse' },

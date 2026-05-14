@@ -12,7 +12,15 @@ import { Loader } from '../components/ui/Loader'
 import { companiesApi, Company } from '../api/companies'
 import { branchImportApi } from '../api/whitelist'
 import { formatDate } from '../lib/utils'
+import { uploadsPublicUrl } from '../lib/uploadsPublicUrl'
 import toast from 'react-hot-toast'
+
+function companyStatusLabelAdmin(status: string): string {
+  if (status === 'ACTIVE') return 'Active'
+  if (status === 'PENDING_VERIFICATION') return 'Pending verification'
+  if (status === 'SUSPENDED') return 'Suspended'
+  return status
+}
 
 interface CompanyDetailModalProps {
   company: Company | null
@@ -362,6 +370,25 @@ const CompanyDetailModal: React.FC<CompanyDetailModalProps> = ({ company, isOpen
                 <label className="text-sm font-medium text-gray-700">Company address</label>
                 <p className="text-sm text-gray-900 whitespace-pre-wrap">{company.companyAddress || '—'}</p>
               </div>
+              <div className="col-span-2">
+                <label className="text-sm font-medium text-gray-700">Registration photo</label>
+                {company.registrationPhotoUrl ? (
+                  <a
+                    href={uploadsPublicUrl(company.registrationPhotoUrl) ?? '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-block"
+                  >
+                    <img
+                      src={uploadsPublicUrl(company.registrationPhotoUrl) ?? undefined}
+                      alt="Registration upload"
+                      className="max-h-48 max-w-full rounded border border-gray-200 object-contain bg-gray-50"
+                    />
+                  </a>
+                ) : (
+                  <p className="text-sm text-gray-900 mt-1">—</p>
+                )}
+              </div>
               <div>
                 <label className="text-sm font-medium text-gray-700">Company Code</label>
                 <p className="text-sm text-gray-900 font-mono">{company.companyCode || 'Not set'}</p>
@@ -451,6 +478,13 @@ export default function Companies() {
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED'>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [statusChangeModal, setStatusChangeModal] = useState<{
+    company: Company
+    previousStatus: Company['status']
+    nextStatus: 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED'
+  } | null>(null)
+  const [statusNotifyMessage, setStatusNotifyMessage] = useState('')
+  const [statusNotifyByEmail, setStatusNotifyByEmail] = useState(true)
 
   // Read initial filter values from URL query parameters
   useEffect(() => {
@@ -482,11 +516,38 @@ export default function Companies() {
   })
 
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED' }) =>
-      companiesApi.updateCompanyStatus(id, status),
-    onSuccess: () => {
+    mutationFn: ({
+      id,
+      status,
+      notifyMessage,
+      notifyByEmail,
+    }: {
+      id: string
+      status: 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED'
+      notifyMessage?: string
+      notifyByEmail: boolean
+    }) => companiesApi.updateCompanyStatus(id, status, { notifyMessage, notifyByEmail }),
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['companies'] })
-      toast.success('Company status updated successfully')
+      setStatusChangeModal(null)
+      setStatusNotifyMessage('')
+      setStatusNotifyByEmail(true)
+      toast.success('Company status updated successfully.')
+      if (variables.notifyByEmail) {
+        if (data.emailSent) {
+          if (data.emailError) {
+            toast.success(`Status updated. ${data.emailError}`, { duration: 7000 })
+          } else {
+            toast.success('Notification email sent to company contacts.', { duration: 4500 })
+          }
+        } else {
+          toast.error(
+            data.emailError ||
+              'Status saved, but the notification email could not be sent. Check SMTP / mail API configuration.',
+            { duration: 7000 },
+          )
+        }
+      }
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Failed to update company status')
@@ -582,8 +643,18 @@ export default function Companies() {
     },
   })
 
-  const handleStatusChange = (companyId: string, newStatus: 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED') => {
-    updateStatusMutation.mutate({ id: companyId, status: newStatus })
+  const openStatusChangeModal = (
+    company: Company,
+    nextStatus: 'ACTIVE' | 'PENDING_VERIFICATION' | 'SUSPENDED'
+  ) => {
+    if (nextStatus === company.status) return
+    setStatusNotifyMessage('')
+    setStatusNotifyByEmail(true)
+    setStatusChangeModal({
+      company,
+      previousStatus: company.status,
+      nextStatus,
+    })
   }
 
   const handleCompanyClick = (company: Company) => {
@@ -1029,9 +1100,17 @@ export default function Companies() {
                                 <div className="px-4 py-2">
                                   <label className="text-xs font-semibold text-gray-500 uppercase mb-1 block">Status</label>
                                   <select
-                                    value={company.status}
+                                    value={
+                                      statusChangeModal?.company.id === company.id
+                                        ? statusChangeModal.previousStatus
+                                        : company.status
+                                    }
                                     onChange={(e) => {
-                                      handleStatusChange(company.id, e.target.value as any)
+                                      const next = e.target.value as
+                                        | 'ACTIVE'
+                                        | 'PENDING_VERIFICATION'
+                                        | 'SUSPENDED'
+                                      openStatusChangeModal(company, next)
                                       setOpenMenuId(null)
                                     }}
                                     disabled={updateStatusMutation.isPending}
@@ -1139,6 +1218,89 @@ export default function Companies() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        isOpen={!!statusChangeModal}
+        onClose={() => {
+          if (!updateStatusMutation.isPending) {
+            setStatusChangeModal(null)
+            setStatusNotifyMessage('')
+            setStatusNotifyByEmail(true)
+          }
+        }}
+        title="Update company status"
+      >
+        {statusChangeModal && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-700">
+              <span className="font-medium text-gray-900">{statusChangeModal.company.companyName}</span>
+              <span className="text-gray-600"> — </span>
+              <span className="text-gray-600">{statusChangeModal.company.email}</span>
+            </p>
+            <p className="text-sm text-gray-800">
+              Status will change from{' '}
+              <strong>{companyStatusLabelAdmin(statusChangeModal.previousStatus)}</strong> to{' '}
+              <strong>{companyStatusLabelAdmin(statusChangeModal.nextStatus)}</strong>.
+            </p>
+            <div>
+              <label htmlFor="status-notify-message" className="block text-sm font-medium text-gray-700 mb-1">
+                Message to the company <span className="font-normal text-gray-500">(optional)</span>
+              </label>
+              <textarea
+                id="status-notify-message"
+                rows={5}
+                value={statusNotifyMessage}
+                onChange={(e) => setStatusNotifyMessage(e.target.value)}
+                placeholder="Add context for this change (shown in the email when notifications are enabled)."
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y min-h-[100px]"
+                disabled={updateStatusMutation.isPending}
+              />
+            </div>
+            <label className="flex items-start gap-2 text-sm text-gray-800 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                checked={statusNotifyByEmail}
+                onChange={(e) => setStatusNotifyByEmail(e.target.checked)}
+                disabled={updateStatusMutation.isPending}
+              />
+              <span>
+                Send email to company contacts (primary address and all users on this account). Uses your configured
+                SMTP / SendGrid / Resend settings.
+              </span>
+            </label>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                variant="secondary"
+                type="button"
+                onClick={() => {
+                  setStatusChangeModal(null)
+                  setStatusNotifyMessage('')
+                  setStatusNotifyByEmail(true)
+                }}
+                disabled={updateStatusMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                loading={updateStatusMutation.isPending}
+                onClick={() => {
+                  const msg = statusNotifyMessage.trim()
+                  updateStatusMutation.mutate({
+                    id: statusChangeModal.company.id,
+                    status: statusChangeModal.nextStatus,
+                    notifyByEmail: statusNotifyByEmail,
+                    ...(msg ? { notifyMessage: msg } : {}),
+                  })
+                }}
+              >
+                Save status
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   )

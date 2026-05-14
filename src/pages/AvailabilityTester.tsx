@@ -25,10 +25,11 @@ import { Badge } from '../components/ui/Badge'
 import { Copy as CopyButton } from '../components/ui/Copy'
 import { availabilityApi } from '../api/availability'
 import { AvailabilitySchema, type AvailabilityForm } from '../lib/validators'
-import { formatDate } from '../lib/utils'
+import { cn } from '../lib/utils'
 import { unlocodesApi, type UNLocode } from '../api/unlocodes'
 import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
+import { StoredAvailabilitySamplesPanel } from './StoredAvailabilitySamplesPanel'
 
 interface AvailabilityOffer {
   supplier_offer_ref: string
@@ -45,7 +46,10 @@ interface AvailabilityOffer {
   supplier_name: string
 }
 
+type AvailabilityPageTab = 'live' | 'stored'
+
 export default function AvailabilityTester() {
+  const [pageTab, setPageTab] = useState<AvailabilityPageTab>('live')
   const [requestId, setRequestId] = useState<string | null>(null)
   const [offers, setOffers] = useState<AvailabilityOffer[]>([])
   const [isPolling, setIsPolling] = useState(false)
@@ -232,24 +236,51 @@ export default function AvailabilityTester() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6">
         <div className="flex items-center gap-4 mb-4">
           <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-sm">
             <Search className="w-8 h-8 text-blue-600" />
           </div>
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-              Availability Tester
+          <div className="min-w-0">
+            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              Availability &amp; pricing
             </h1>
-            <p className="mt-2 text-gray-600 font-medium">
-              Test availability requests and view real-time results from all sources
+            <p className="mt-2 text-gray-600 font-medium max-w-3xl">
+              Run live searches across connected sources or review stored supplier samples (vehicle and rate details from
+              the source Pricing tab).
             </p>
           </div>
         </div>
+
+        <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 shadow-sm">
+          <button
+            type="button"
+            onClick={() => setPageTab('live')}
+            className={cn(
+              'px-4 py-2 text-sm font-medium rounded-md transition-colors',
+              pageTab === 'live' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+            )}
+          >
+            Live availability test
+          </button>
+          <button
+            type="button"
+            onClick={() => setPageTab('stored')}
+            className={cn(
+              'px-4 py-2 text-sm font-medium rounded-md transition-colors',
+              pageTab === 'stored' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+            )}
+          >
+            Stored samples &amp; pricing
+          </button>
+        </div>
       </div>
 
-      {/* Statistics Cards */}
-      {offers.length > 0 && (
+      {pageTab === 'stored' ? (
+        <StoredAvailabilitySamplesPanel />
+      ) : null}
+
+      {pageTab === 'live' && offers.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="transform transition-all duration-300 hover:shadow-lg border-2 border-blue-100">
             <CardContent className="p-5">
@@ -317,6 +348,7 @@ export default function AvailabilityTester() {
         </div>
       )}
 
+      {pageTab === 'live' && (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Request Form */}
         <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100 shadow-lg">
@@ -622,6 +654,7 @@ export default function AvailabilityTester() {
           </CardContent>
         </Card>
       </div>
+      )}
     </div>
   )
 }

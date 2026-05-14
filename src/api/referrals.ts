@@ -26,6 +26,17 @@ export interface PatchReferralLinkBody {
   restrictToType?: ReferralRestrict
 }
 
+export interface ReferralSignupCompany {
+  id: string
+  companyName: string
+  email: string
+  type: 'AGENT' | 'SOURCE'
+  status: string
+  approvalStatus: string
+  companyCode: string | null
+  createdAt: string
+}
+
 export const referralsApi = {
   list: async (): Promise<{ items: ReferralLink[] }> => {
     const res = await http.get('/admin/referral-links')
@@ -37,6 +48,10 @@ export const referralsApi = {
   },
   patch: async (id: string, body: PatchReferralLinkBody) => {
     const res = await http.patch(`/admin/referral-links/${id}`, body)
+    return res.data
+  },
+  getSignups: async (id: string): Promise<{ items: ReferralSignupCompany[] }> => {
+    const res = await http.get(`/admin/referral-links/${id}/signups`)
     return res.data
   },
 }

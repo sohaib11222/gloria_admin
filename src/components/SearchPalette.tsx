@@ -18,7 +18,7 @@ const searchItems: SearchItem[] = [
   { id: 'sources', label: 'Sources', category: 'Navigation', path: '/sources', icon: '🔌' },
   { id: 'agreements', label: 'Agreements', category: 'Navigation', path: '/agreements-management', icon: '📄' },
   { id: 'locations', label: 'Locations', category: 'Navigation', path: '/locations', icon: '📍' },
-  { id: 'availability', label: 'Availability Test', category: 'Tools', path: '/availability', icon: '🔍' },
+  { id: 'availability', label: 'Availability & pricing', category: 'Tools', path: '/availability', icon: '📈' },
   { id: 'bookings', label: 'Booking Logs', category: 'Logs', path: '/booking-logs', icon: '📝' },
   { id: 'health', label: 'Health Monitoring', category: 'Monitoring', path: '/health', icon: '❤️' },
   { id: 'activity', label: 'Activity & Audit', category: 'Logs', path: '/activity', icon: '📊' },
