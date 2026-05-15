@@ -2,8 +2,25 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/jpeg" href="/logo.jpg" />
-    <link rel="apple-touch-icon" href="/logo.jpg" />
+    <link rel="icon" href="%BASE_URL%favicon.ico" sizes="any" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="%BASE_URL%favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="%BASE_URL%favicon-16x16.png"
+    />
+    <link rel="shortcut icon" href="%BASE_URL%favicon.ico" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="%BASE_URL%apple-touch-icon.png"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="referrer" content="unsafe-url" />
     <title>Gloria Connect Admin</title>
@@ -11,11 +28,11 @@
       // Set referrerPolicy globally for all requests
       if (window.fetch) {
         const originalFetch = window.fetch;
-        window.fetch = function(...args) {
+        window.fetch = function (...args) {
           const [url, options = {}] = args;
           return originalFetch(url, {
             ...options,
-            referrerPolicy: 'unsafe-url'
+            referrerPolicy: "unsafe-url",
           });
         };
       }
