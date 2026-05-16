@@ -1,660 +1,769 @@
-import React, { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
-import { 
-  Search, 
-  Copy, 
-  Clock, 
-  CheckCircle, 
-  XCircle,
-  Car,
-  MapPin,
-  Calendar,
-  Building2,
-  RefreshCw,
-  TrendingUp,
-  DollarSign,
-  Package
-} from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
-import { Button } from '../components/ui/Button'
-import { Input } from '../components/ui/Input'
-import { Select } from '../components/ui/Select'
-import { Badge } from '../components/ui/Badge'
-import { Copy as CopyButton } from '../components/ui/Copy'
-import { availabilityApi } from '../api/availability'
-import { AvailabilitySchema, type AvailabilityForm } from '../lib/validators'
-import { cn } from '../lib/utils'
-import { unlocodesApi, type UNLocode } from '../api/unlocodes'
-import { useQuery } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
-import { StoredAvailabilitySamplesPanel } from './StoredAvailabilitySamplesPanel'
+import React, { useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import {
+	Building2,
+	Calendar,
+	Car,
+	CheckCircle,
+	Clock,
+	DollarSign,
+	MapPin,
+	Package,
+	RefreshCw,
+	Search,
+	XCircle,
+} from "lucide-react";
+import { Badge } from "../components/ui/Badge";
+import { Button } from "../components/ui/Button";
+import { Copy as CopyButton } from "../components/ui/Copy";
+import { Input } from "../components/ui/Input";
+import { Select } from "../components/ui/Select";
+import { availabilityApi } from "../api/availability";
+import { unlocodesApi } from "../api/unlocodes";
+import { AvailabilitySchema, type AvailabilityForm } from "../lib/validators";
+import { cn } from "../lib/utils";
+import { StoredAvailabilitySamplesPanel } from "./StoredAvailabilitySamplesPanel";
 
 interface AvailabilityOffer {
-  supplier_offer_ref: string
-  source_id: string
-  agreement_ref: string
-  pickup_location: string
-  dropoff_location: string
-  vehicle_class: string
-  vehicle_make_model: string
-  rate_plan_code: string
-  total_price: number
-  currency: string
-  availability_status: string
-  supplier_name: string
+	supplier_offer_ref: string;
+	source_id: string;
+	agreement_ref: string;
+	pickup_location: string;
+	dropoff_location: string;
+	vehicle_class: string;
+	vehicle_make_model: string;
+	rate_plan_code: string;
+	total_price: number;
+	currency: string;
+	availability_status: string;
+	supplier_name: string;
 }
 
-type AvailabilityPageTab = 'live' | 'stored'
+type AvailabilityPageTab = "live" | "stored";
+type StatTone = "slate" | "blue" | "emerald" | "amber" | "red";
+
+function StatCard({
+	label,
+	value,
+	helper,
+	icon,
+	tone = "slate",
+}: {
+	label: string;
+	value: React.ReactNode;
+	helper: React.ReactNode;
+	icon: React.ReactNode;
+	tone?: StatTone;
+}) {
+	const tones: Record<StatTone, string> = {
+		slate: "border-slate-200 bg-slate-50 text-slate-700",
+		blue: "border-blue-200 bg-blue-50 text-blue-700",
+		emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
+		amber: "border-amber-200 bg-amber-50 text-amber-700",
+		red: "border-red-200 bg-red-50 text-red-700",
+	};
+
+	return (
+		<div className="rounded-md border border-slate-200 bg-white p-5">
+			<div className="flex items-start justify-between gap-4">
+				<div>
+					<p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+						{label}
+					</p>
+					<div className="mt-3 text-3xl font-semibold tracking-tight text-slate-950">
+						{value}
+					</div>
+				</div>
+				<span
+					className={cn(
+						"inline-flex h-10 w-10 items-center justify-center rounded-md border",
+						tones[tone],
+					)}
+				>
+					{icon}
+				</span>
+			</div>
+			<div className="mt-4 border-t border-slate-100 pt-3 text-sm text-slate-600">
+				{helper}
+			</div>
+		</div>
+	);
+}
+
+function EmptyState({
+	title,
+	description,
+	icon,
+}: {
+	title: string;
+	description: string;
+	icon: React.ReactNode;
+}) {
+	return (
+		<div className="flex min-h-72 flex-col items-center justify-center px-6 py-12 text-center">
+			<span className="inline-flex h-16 w-16 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-slate-400">
+				{icon}
+			</span>
+			<h3 className="mt-4 text-base font-semibold text-slate-950">{title}</h3>
+			<p className="mt-1 max-w-md text-sm leading-6 text-slate-500">
+				{description}
+			</p>
+		</div>
+	);
+}
+
+function statusVariant(
+	status: string,
+): "success" | "warning" | "danger" | "default" {
+	const normalized = status?.toUpperCase();
+	if (normalized === "AVAILABLE" || normalized === "COMPLETE") return "success";
+	if (
+		normalized === "ERROR" ||
+		normalized === "FAILED" ||
+		normalized === "TIMEOUT"
+	)
+		return "danger";
+	if (normalized) return "warning";
+	return "default";
+}
 
 export default function AvailabilityTester() {
-  const [pageTab, setPageTab] = useState<AvailabilityPageTab>('live')
-  const [requestId, setRequestId] = useState<string | null>(null)
-  const [offers, setOffers] = useState<AvailabilityOffer[]>([])
-  const [isPolling, setIsPolling] = useState(false)
-  const [pollingStatus, setPollingStatus] = useState<string>('')
-  const [locationSearch, setLocationSearch] = useState({ pickup: '', dropoff: '' })
+	const [pageTab, setPageTab] = useState<AvailabilityPageTab>("live");
+	const [requestId, setRequestId] = useState<string | null>(null);
+	const [offers, setOffers] = useState<AvailabilityOffer[]>([]);
+	const [isPolling, setIsPolling] = useState(false);
+	const [pollingStatus, setPollingStatus] = useState<string>("");
+	const [locationSearch, setLocationSearch] = useState({
+		pickup: "",
+		dropoff: "",
+	});
 
-  // Fetch all UN/LOCODEs for dropdown
-  const { data: locationsData, isLoading: isLoadingLocations } = useQuery({
-    queryKey: ['unlocodes', 'all'],
-    queryFn: async () => {
-      // Fetch all locations with a high limit
-      const result = await unlocodesApi.list({ limit: 1000 })
-      return result.items
-    },
-  })
+	const { data: locationsData, isLoading: isLoadingLocations } = useQuery({
+		queryKey: ["unlocodes", "all"],
+		queryFn: async () => {
+			const result = await unlocodesApi.list({ limit: 1000 });
+			return result.items;
+		},
+	});
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    setValue,
-    watch,
-  } = useForm<AvailabilityForm>({
-    resolver: zodResolver(AvailabilitySchema),
-  })
+	const {
+		register,
+		handleSubmit,
+		formState: { errors },
+		reset,
+		setValue,
+		watch,
+	} = useForm<AvailabilityForm>({
+		resolver: zodResolver(AvailabilitySchema),
+	});
 
-  const pickupUnlocode = watch('pickup_unlocode')
-  const dropoffUnlocode = watch('dropoff_unlocode')
+	const pickupUnlocode = watch("pickup_unlocode");
+	const dropoffUnlocode = watch("dropoff_unlocode");
 
-  // Filter locations based on search
-  const filteredPickupLocations = locationsData?.filter((loc) => {
-    if (!locationSearch.pickup) return true
-    const search = locationSearch.pickup.toLowerCase()
-    return (
-      loc.unlocode.toLowerCase().includes(search) ||
-      loc.place.toLowerCase().includes(search) ||
-      loc.country.toLowerCase().includes(search) ||
-      (loc.iataCode && loc.iataCode.toLowerCase().includes(search))
-    )
-  }) || []
+	const filteredPickupLocations = useMemo(() => {
+		const search = locationSearch.pickup.toLowerCase();
+		return (locationsData || []).filter((loc) => {
+			if (!search) return true;
+			return (
+				loc.unlocode.toLowerCase().includes(search) ||
+				loc.place.toLowerCase().includes(search) ||
+				loc.country.toLowerCase().includes(search) ||
+				Boolean(loc.iataCode && loc.iataCode.toLowerCase().includes(search))
+			);
+		});
+	}, [locationSearch.pickup, locationsData]);
 
-  const filteredDropoffLocations = locationsData?.filter((loc) => {
-    if (!locationSearch.dropoff) return true
-    const search = locationSearch.dropoff.toLowerCase()
-    return (
-      loc.unlocode.toLowerCase().includes(search) ||
-      loc.place.toLowerCase().includes(search) ||
-      loc.country.toLowerCase().includes(search) ||
-      (loc.iataCode && loc.iataCode.toLowerCase().includes(search))
-    )
-  }) || []
+	const filteredDropoffLocations = useMemo(() => {
+		const search = locationSearch.dropoff.toLowerCase();
+		return (locationsData || []).filter((loc) => {
+			if (!search) return true;
+			return (
+				loc.unlocode.toLowerCase().includes(search) ||
+				loc.place.toLowerCase().includes(search) ||
+				loc.country.toLowerCase().includes(search) ||
+				Boolean(loc.iataCode && loc.iataCode.toLowerCase().includes(search))
+			);
+		});
+	}, [locationSearch.dropoff, locationsData]);
 
-  // Create options for Select components
-  const pickupOptions = [
-    { value: '', label: '-- Select Pickup Location --' },
-    ...filteredPickupLocations.map((loc) => ({
-      value: loc.unlocode,
-      label: `${loc.unlocode} - ${loc.place}, ${loc.country}${loc.iataCode ? ` (${loc.iataCode})` : ''}`,
-    })),
-  ]
+	const pickupOptions = [
+		{ value: "", label: "Select pickup location" },
+		...filteredPickupLocations.map((loc) => ({
+			value: loc.unlocode,
+			label: `${loc.unlocode} — ${loc.place}, ${loc.country}${loc.iataCode ? ` (${loc.iataCode})` : ""}`,
+		})),
+	];
 
-  const dropoffOptions = [
-    { value: '', label: '-- Select Dropoff Location --' },
-    ...filteredDropoffLocations.map((loc) => ({
-      value: loc.unlocode,
-      label: `${loc.unlocode} - ${loc.place}, ${loc.country}${loc.iataCode ? ` (${loc.iataCode})` : ''}`,
-    })),
-  ]
+	const dropoffOptions = [
+		{ value: "", label: "Select dropoff location" },
+		...filteredDropoffLocations.map((loc) => ({
+			value: loc.unlocode,
+			label: `${loc.unlocode} — ${loc.place}, ${loc.country}${loc.iataCode ? ` (${loc.iataCode})` : ""}`,
+		})),
+	];
 
-  const submitMutation = useMutation({
-    mutationFn: availabilityApi.submit,
-    onSuccess: (data) => {
-      setRequestId(data.request_id)
-      setOffers([])
-      setIsPolling(true)
-      setPollingStatus('Starting availability search...')
-      toast.success('Availability request submitted')
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to submit availability request')
-    },
-  })
+	const submitMutation = useMutation({
+		mutationFn: availabilityApi.submit,
+		onSuccess: (data) => {
+			setRequestId(data.request_id);
+			setOffers([]);
+			setIsPolling(true);
+			setPollingStatus("Starting availability search");
+			toast.success("Availability request submitted");
+		},
+		onError: (error: any) => {
+			toast.error(
+				error.response?.data?.message ||
+					"Failed to submit availability request",
+			);
+		},
+	});
 
-  const pollMutation = useMutation({
-    mutationFn: (params: { requestId: string; sinceSeq?: number; waitMs?: number }) =>
-      availabilityApi.poll(params),
-    onSuccess: (data) => {
-      if (data.offers && data.offers.length > 0) {
-        setOffers(prev => [...prev, ...data.offers])
-      }
-      
-      setPollingStatus(data.status)
-      
-      if (data.complete) {
-        setIsPolling(false)
-        toast.success('Availability search completed')
-      }
-    },
-    onError: (error: any) => {
-      setIsPolling(false)
-      setPollingStatus('Error')
-      toast.error('Polling failed')
-    },
-  })
+	const pollMutation = useMutation({
+		mutationFn: (params: {
+			requestId: string;
+			sinceSeq?: number;
+			waitMs?: number;
+		}) => availabilityApi.poll(params),
+		onSuccess: (data) => {
+			if (data.offers && data.offers.length > 0) {
+				setOffers((prev) => [...prev, ...data.offers]);
+			}
 
-  // Polling effect
-  useEffect(() => {
-    if (!isPolling || !requestId) return
+			setPollingStatus(data.status);
 
-    const poll = async () => {
-      try {
-        await pollMutation.mutateAsync({
-          requestId,
-          sinceSeq: offers.length,
-          waitMs: 1500,
-        })
-      } catch (error) {
-        // Error handled in mutation
-      }
-    }
+			if (data.complete) {
+				setIsPolling(false);
+				toast.success("Availability search completed");
+			}
+		},
+		onError: () => {
+			setIsPolling(false);
+			setPollingStatus("ERROR");
+			toast.error("Polling failed");
+		},
+	});
 
-    const interval = setInterval(poll, 2000)
-    return () => clearInterval(interval)
-  }, [isPolling, requestId, offers.length])
+	useEffect(() => {
+		if (!isPolling || !requestId) return;
 
-  // Timeout after 120 seconds
-  useEffect(() => {
-    if (!isPolling) return
+		const poll = async () => {
+			try {
+				await pollMutation.mutateAsync({
+					requestId,
+					sinceSeq: offers.length,
+					waitMs: 1500,
+				});
+			} catch {
+				// Mutation handles UI and toast state.
+			}
+		};
 
-    const timeout = setTimeout(() => {
-      setIsPolling(false)
-      setPollingStatus('Timeout')
-      toast.error('Availability search timed out after 120 seconds')
-    }, 120000)
+		const interval = setInterval(poll, 2000);
+		return () => clearInterval(interval);
+	}, [isPolling, requestId, offers.length]);
 
-    return () => clearTimeout(timeout)
-  }, [isPolling])
+	useEffect(() => {
+		if (!isPolling) return;
 
-  const onSubmit = (data: AvailabilityForm) => {
-    // Convert datetime-local format to ISO-8601 format
-    const payload = {
-      ...data,
-      pickup_iso: new Date(data.pickup_iso).toISOString(),
-      dropoff_iso: new Date(data.dropoff_iso).toISOString(),
-      driver_age: 30, // Default driver age
-      residency_country: 'US', // Default residency
-      vehicle_classes: [], // Empty by default
-    }
-    submitMutation.mutate(payload)
-  }
+		const timeout = setTimeout(() => {
+			setIsPolling(false);
+			setPollingStatus("TIMEOUT");
+			toast.error("Availability search timed out after 120 seconds");
+		}, 120000);
 
-  const handleReset = () => {
-    setRequestId(null)
-    setOffers([])
-    setIsPolling(false)
-    setPollingStatus('')
-    setLocationSearch({ pickup: '', dropoff: '' })
-    reset()
-  }
+		return () => clearTimeout(timeout);
+	}, [isPolling]);
 
-  const vehicleClassOptions = [
-    { value: 'ECONOMY', label: 'Economy' },
-    { value: 'COMPACT', label: 'Compact' },
-    { value: 'INTERMEDIATE', label: 'Intermediate' },
-    { value: 'STANDARD', label: 'Standard' },
-    { value: 'FULL_SIZE', label: 'Full Size' },
-    { value: 'PREMIUM', label: 'Premium' },
-    { value: 'LUXURY', label: 'Luxury' },
-    { value: 'MINIVAN', label: 'Minivan' },
-    { value: 'SUV', label: 'SUV' },
-    { value: 'CONVERTIBLE', label: 'Convertible' },
-  ]
+	const onSubmit = (data: AvailabilityForm) => {
+		const payload = {
+			...data,
+			pickup_iso: new Date(data.pickup_iso).toISOString(),
+			dropoff_iso: new Date(data.dropoff_iso).toISOString(),
+			driver_age: 30,
+			residency_country: "US",
+			vehicle_classes: [],
+		};
+		submitMutation.mutate(payload);
+	};
 
-  const stats = {
-    total: offers.length,
-    available: offers.filter(o => o.availability_status === 'AVAILABLE').length,
-    unavailable: offers.filter(o => o.availability_status !== 'AVAILABLE').length,
-    avgPrice: offers.length > 0 
-      ? offers.reduce((sum, o) => sum + o.total_price, 0) / offers.length 
-      : 0,
-  }
+	const handleReset = () => {
+		setRequestId(null);
+		setOffers([]);
+		setIsPolling(false);
+		setPollingStatus("");
+		setLocationSearch({ pickup: "", dropoff: "" });
+		reset();
+	};
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl shadow-sm">
-            <Search className="w-8 h-8 text-blue-600" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-              Availability &amp; pricing
-            </h1>
-            <p className="mt-2 text-gray-600 font-medium max-w-3xl">
-              Run live searches across connected sources or review stored supplier samples (vehicle and rate details from
-              the source Pricing tab).
-            </p>
-          </div>
-        </div>
+	const stats = {
+		total: offers.length,
+		available: offers.filter(
+			(offer) => offer.availability_status === "AVAILABLE",
+		).length,
+		unavailable: offers.filter(
+			(offer) => offer.availability_status !== "AVAILABLE",
+		).length,
+		avgPrice:
+			offers.length > 0
+				? offers.reduce((sum, offer) => sum + offer.total_price, 0) /
+					offers.length
+				: 0,
+	};
 
-        <div className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1 shadow-sm">
-          <button
-            type="button"
-            onClick={() => setPageTab('live')}
-            className={cn(
-              'px-4 py-2 text-sm font-medium rounded-md transition-colors',
-              pageTab === 'live' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-            )}
-          >
-            Live availability test
-          </button>
-          <button
-            type="button"
-            onClick={() => setPageTab('stored')}
-            className={cn(
-              'px-4 py-2 text-sm font-medium rounded-md transition-colors',
-              pageTab === 'stored' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'
-            )}
-          >
-            Stored samples &amp; pricing
-          </button>
-        </div>
-      </div>
+	const currentStatus = isPolling ? "Polling" : pollingStatus || "Idle";
 
-      {pageTab === 'stored' ? (
-        <StoredAvailabilitySamplesPanel />
-      ) : null}
+	return (
+		<div className="space-y-6">
+			<section className="overflow-hidden rounded-md border border-slate-200 bg-white">
+				<div className="grid grid-cols-1 xl:grid-cols-3">
+					<div className="border-b border-slate-200 p-6 xl:col-span-2 xl:border-b-0 xl:border-r">
+						<div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+							<div className="flex items-start gap-4">
+								<span className="inline-flex h-12 w-12 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-slate-700">
+									<Search className="h-6 w-6" />
+								</span>
+								<div>
+									<p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+										Network operations
+									</p>
+									<h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
+										Availability & pricing
+									</h1>
+									<p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+										Run a live availability search across connected sources or
+										review stored source pricing samples in a structured admin
+										view.
+									</p>
+								</div>
+							</div>
+							<div className="inline-flex rounded-md border border-slate-200 bg-slate-50 p-1">
+								<button
+									type="button"
+									onClick={() => setPageTab("live")}
+									className={cn(
+										"rounded px-3 py-2 text-sm font-semibold transition",
+										pageTab === "live"
+											? "bg-white text-slate-950 shadow-sm"
+											: "text-slate-600 hover:text-slate-950",
+									)}
+								>
+									Live test
+								</button>
+								<button
+									type="button"
+									onClick={() => setPageTab("stored")}
+									className={cn(
+										"rounded px-3 py-2 text-sm font-semibold transition",
+										pageTab === "stored"
+											? "bg-white text-slate-950 shadow-sm"
+											: "text-slate-600 hover:text-slate-950",
+									)}
+								>
+									Stored samples
+								</button>
+							</div>
+						</div>
 
-      {pageTab === 'live' && offers.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="transform transition-all duration-300 hover:shadow-lg border-2 border-blue-100">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Total Offers</p>
-                  <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    {stats.total}
-                  </p>
-                </div>
-                <div className="p-3 bg-blue-100 rounded-xl">
-                  <Package className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+						<div className="mt-6 rounded-md border border-blue-200 bg-blue-50 p-4">
+							<div className="flex items-start gap-3">
+								<Clock className="mt-0.5 h-5 w-5 flex-none text-blue-700" />
+								<div>
+									<p className="text-sm font-semibold text-blue-950">
+										How to use this page
+									</p>
+									<p className="mt-1 text-sm leading-6 text-blue-800">
+										Choose pickup and dropoff locations, set dates, submit the
+										request, then watch live source offers populate in the
+										results panel.
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
 
-          <Card className="transform transition-all duration-300 hover:shadow-lg border-2 border-green-100">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Available</p>
-                  <p className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                    {stats.available}
-                  </p>
-                </div>
-                <div className="p-3 bg-green-100 rounded-xl">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+					<aside className="bg-slate-50/70 p-6">
+						<h2 className="text-sm font-semibold text-slate-950">
+							Current request
+						</h2>
+						<div className="mt-4 space-y-3">
+							<div className="rounded-md border border-slate-200 bg-white p-3">
+								<p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+									Status
+								</p>
+								<Badge variant={statusVariant(pollingStatus)} className="mt-2">
+									{currentStatus}
+								</Badge>
+							</div>
+							<div className="rounded-md border border-slate-200 bg-white p-3">
+								<p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+									Request ID
+								</p>
+								<p className="mt-2 break-all font-mono text-xs text-slate-700">
+									{requestId || "No request submitted"}
+								</p>
+							</div>
+						</div>
+					</aside>
+				</div>
+			</section>
 
-          <Card className="transform transition-all duration-300 hover:shadow-lg border-2 border-yellow-100">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Unavailable</p>
-                  <p className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent">
-                    {stats.unavailable}
-                  </p>
-                </div>
-                <div className="p-3 bg-yellow-100 rounded-xl">
-                  <XCircle className="w-6 h-6 text-yellow-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+			{pageTab === "stored" ? <StoredAvailabilitySamplesPanel /> : null}
 
-          <Card className="transform transition-all duration-300 hover:shadow-lg border-2 border-purple-100">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Avg Price</p>
-                  <p className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    {stats.avgPrice > 0 ? `$${stats.avgPrice.toFixed(2)}` : '—'}
-                  </p>
-                </div>
-                <div className="p-3 bg-purple-100 rounded-xl">
-                  <DollarSign className="w-6 h-6 text-purple-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+			{pageTab === "live" && (
+				<>
+					<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+						<StatCard
+							label="Total offers"
+							value={stats.total}
+							helper="Offers returned by connected sources"
+							icon={<Package className="h-5 w-5" />}
+							tone="blue"
+						/>
+						<StatCard
+							label="Available"
+							value={stats.available}
+							helper="Offers marked as available"
+							icon={<CheckCircle className="h-5 w-5" />}
+							tone="emerald"
+						/>
+						<StatCard
+							label="Unavailable"
+							value={stats.unavailable}
+							helper="Returned but not currently bookable"
+							icon={<XCircle className="h-5 w-5" />}
+							tone={stats.unavailable > 0 ? "amber" : "slate"}
+						/>
+						<StatCard
+							label="Average price"
+							value={stats.avgPrice > 0 ? `$${stats.avgPrice.toFixed(2)}` : "—"}
+							helper="Average visible offer total"
+							icon={<DollarSign className="h-5 w-5" />}
+							tone="slate"
+						/>
+					</div>
 
-      {pageTab === 'live' && (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Request Form */}
-        <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white rounded-lg shadow-sm">
-                <Search className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <CardTitle className="text-xl font-bold text-gray-900">Availability Request</CardTitle>
-                <p className="text-sm text-gray-600 mt-1">Search for available vehicles across all sources</p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-blue-600" />
-                    Pickup Location (UN/LOCODE)
-                  </label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                    <input
-                      type="text"
-                      placeholder="Search locations..."
-                      value={locationSearch.pickup}
-                      onChange={(e) => setLocationSearch({ ...locationSearch, pickup: e.target.value })}
-                      className="block w-full pl-10 pr-3 py-2 border-2 border-gray-300 rounded-lg shadow-sm bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 sm:text-sm hover:border-gray-400 mb-2"
-                    />
-                  </div>
-                  <Select
-                    options={pickupOptions}
-                    error={errors.pickup_unlocode?.message}
-                    value={pickupUnlocode || ''}
-                    onChange={(e) => {
-                      setValue('pickup_unlocode', e.target.value)
-                      if (e.target.value) {
-                        setLocationSearch({ ...locationSearch, pickup: '' })
-                      }
-                    }}
-                    disabled={isLoadingLocations}
-                  />
-                  {isLoadingLocations && (
-                    <p className="text-xs text-gray-500 flex items-center gap-1">
-                      <Clock className="w-3 h-3 animate-spin" />
-                      Loading locations...
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-purple-600" />
-                    Dropoff Location (UN/LOCODE)
-                  </label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                    <input
-                      type="text"
-                      placeholder="Search locations..."
-                      value={locationSearch.dropoff}
-                      onChange={(e) => setLocationSearch({ ...locationSearch, dropoff: e.target.value })}
-                      className="block w-full pl-10 pr-3 py-2 border-2 border-gray-300 rounded-lg shadow-sm bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 sm:text-sm hover:border-gray-400 mb-2"
-                    />
-                  </div>
-                  <Select
-                    options={dropoffOptions}
-                    error={errors.dropoff_unlocode?.message}
-                    value={dropoffUnlocode || ''}
-                    onChange={(e) => {
-                      setValue('dropoff_unlocode', e.target.value)
-                      if (e.target.value) {
-                        setLocationSearch({ ...locationSearch, dropoff: '' })
-                      }
-                    }}
-                    disabled={isLoadingLocations}
-                  />
-                  {isLoadingLocations && (
-                    <p className="text-xs text-gray-500 flex items-center gap-1">
-                      <Clock className="w-3 h-3 animate-spin" />
-                      Loading locations...
-                    </p>
-                  )}
-                </div>
-              </div>
+					<div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+						<section className="rounded-md border border-slate-200 bg-white">
+							<div className="border-b border-slate-200 px-5 py-4">
+								<div className="flex items-start gap-3">
+									<span className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-slate-700">
+										<Search className="h-5 w-5" />
+									</span>
+									<div>
+										<h2 className="text-base font-semibold text-slate-950">
+											Availability request
+										</h2>
+										<p className="mt-1 text-sm leading-6 text-slate-500">
+											Search for vehicles using UN/LOCODE locations and rental
+											dates.
+										</p>
+									</div>
+								</div>
+							</div>
+							<div className="p-5">
+								<form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+									<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+										<div>
+											<label className="mb-1 flex items-center gap-2 text-sm font-medium text-slate-700">
+												<MapPin className="h-4 w-4 text-slate-500" />
+												Pickup location
+											</label>
+											<div className="relative mb-2">
+												<Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+												<input
+													type="text"
+													placeholder="Search pickup location"
+													value={locationSearch.pickup}
+													onChange={(event) =>
+														setLocationSearch({
+															...locationSearch,
+															pickup: event.target.value,
+														})
+													}
+													className="block w-full rounded-md border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+												/>
+											</div>
+											<Select
+												options={pickupOptions}
+												error={errors.pickup_unlocode?.message}
+												value={pickupUnlocode || ""}
+												onChange={(event) => {
+													setValue("pickup_unlocode", event.target.value);
+													if (event.target.value)
+														setLocationSearch({
+															...locationSearch,
+															pickup: "",
+														});
+												}}
+												disabled={isLoadingLocations}
+												className="rounded-md border-slate-300 shadow-none focus:ring-blue-100"
+											/>
+										</div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-green-600" />
-                    Pickup Date & Time
-                  </label>
-                  <Input
-                    type="datetime-local"
-                    error={errors.pickup_iso?.message}
-                    {...register('pickup_iso')}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-red-600" />
-                    Dropoff Date & Time
-                  </label>
-                  <Input
-                    type="datetime-local"
-                    error={errors.dropoff_iso?.message}
-                    {...register('dropoff_iso')}
-                  />
-                </div>
-              </div>
+										<div>
+											<label className="mb-1 flex items-center gap-2 text-sm font-medium text-slate-700">
+												<MapPin className="h-4 w-4 text-slate-500" />
+												Dropoff location
+											</label>
+											<div className="relative mb-2">
+												<Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+												<input
+													type="text"
+													placeholder="Search dropoff location"
+													value={locationSearch.dropoff}
+													onChange={(event) =>
+														setLocationSearch({
+															...locationSearch,
+															dropoff: event.target.value,
+														})
+													}
+													className="block w-full rounded-md border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+												/>
+											</div>
+											<Select
+												options={dropoffOptions}
+												error={errors.dropoff_unlocode?.message}
+												value={dropoffUnlocode || ""}
+												onChange={(event) => {
+													setValue("dropoff_unlocode", event.target.value);
+													if (event.target.value)
+														setLocationSearch({
+															...locationSearch,
+															dropoff: "",
+														});
+												}}
+												disabled={isLoadingLocations}
+												className="rounded-md border-slate-300 shadow-none focus:ring-blue-100"
+											/>
+										</div>
+									</div>
 
-              <div className="flex space-x-3 pt-2">
-                <Button
-                  type="submit"
-                  loading={submitMutation.isPending}
-                  disabled={isPolling}
-                  className="flex-1 shadow-md hover:shadow-lg transition-all duration-200"
-                >
-                  <Search className="h-4 w-4 mr-2" />
-                  Search Availability
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleReset}
-                  disabled={isPolling}
-                  className="shadow-md hover:shadow-lg transition-all duration-200"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Reset
-                </Button>
-              </div>
-            </form>
+									{isLoadingLocations && (
+										<div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+											<Clock className="mr-2 inline h-4 w-4 animate-spin text-slate-400" />
+											Loading location catalog…
+										</div>
+									)}
 
-            {/* Status */}
-            {requestId && (
-              <div className="mt-6 p-5 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-xl border-2 border-blue-200 shadow-sm">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Building2 className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-blue-900">Request ID</p>
-                      <code className="text-xs text-blue-700 font-mono font-semibold">{requestId}</code>
-                    </div>
-                  </div>
-                  <CopyButton text={requestId} />
-                </div>
-                <div className="flex items-center space-x-3 bg-white rounded-lg p-3 border border-blue-100">
-                  {isPolling ? (
-                    <>
-                      <Clock className="h-5 w-5 text-blue-600 animate-spin" />
-                      <div>
-                        <span className="text-sm font-semibold text-blue-700">{pollingStatus}</span>
-                        <p className="text-xs text-blue-600">Searching for availability...</p>
-                      </div>
-                    </>
-                  ) : pollingStatus === 'COMPLETE' ? (
-                    <>
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <div>
-                        <span className="text-sm font-semibold text-green-700">Complete</span>
-                        <p className="text-xs text-green-600">Search finished successfully</p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="h-5 w-5 text-red-600" />
-                      <div>
-                        <span className="text-sm font-semibold text-red-700">{pollingStatus}</span>
-                        <p className="text-xs text-red-600">Search encountered an issue</p>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+									<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+										<div>
+											<label className="mb-1 flex items-center gap-2 text-sm font-medium text-slate-700">
+												<Calendar className="h-4 w-4 text-slate-500" />
+												Pickup date & time
+											</label>
+											<Input
+												type="datetime-local"
+												error={errors.pickup_iso?.message}
+												className="rounded-md border-slate-300 shadow-none focus:ring-blue-100"
+												{...register("pickup_iso")}
+											/>
+										</div>
+										<div>
+											<label className="mb-1 flex items-center gap-2 text-sm font-medium text-slate-700">
+												<Calendar className="h-4 w-4 text-slate-500" />
+												Dropoff date & time
+											</label>
+											<Input
+												type="datetime-local"
+												error={errors.dropoff_iso?.message}
+												className="rounded-md border-slate-300 shadow-none focus:ring-blue-100"
+												{...register("dropoff_iso")}
+											/>
+										</div>
+									</div>
 
-        {/* Results */}
-        <Card className="transform transition-all duration-300 hover:shadow-xl border-2 border-gray-100 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-white rounded-lg shadow-sm">
-                  <Package className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-bold text-gray-900">
-                    Results
-                    {offers.length > 0 && (
-                      <Badge variant="info" className="ml-2 font-semibold">
-                        {offers.length} {offers.length === 1 ? 'offer' : 'offers'}
-                      </Badge>
-                    )}
-                  </CardTitle>
-                  <p className="text-sm text-gray-600 mt-1">Real-time availability offers from sources</p>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-6">
-            {offers.length > 0 ? (
-              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-                {offers.map((offer, index) => (
-                  <div 
-                    key={index} 
-                    className="p-5 border-2 border-gray-200 rounded-xl bg-gradient-to-br from-white to-gray-50/50 hover:shadow-lg hover:border-blue-300 transition-all duration-200"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-start gap-3">
-                        <div className={`p-2 rounded-lg ${
-                          offer.availability_status === 'AVAILABLE' 
-                            ? 'bg-green-100' 
-                            : 'bg-yellow-100'
-                        }`}>
-                          <Car className={`w-5 h-5 ${
-                            offer.availability_status === 'AVAILABLE' 
-                              ? 'text-green-600' 
-                              : 'text-yellow-600'
-                          }`} />
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-gray-900 text-lg">
-                            {offer.vehicle_make_model || 'Unknown Vehicle'}
-                          </h4>
-                          <p className="text-sm text-gray-600 font-medium mt-1">{offer.vehicle_class}</p>
-                          <p className="text-xs text-gray-500 mt-1">{offer.supplier_name}</p>
-                        </div>
-                      </div>
-                      <Badge 
-                        variant={offer.availability_status === 'AVAILABLE' ? 'success' : 'warning'}
-                        size="md"
-                        className="font-bold"
-                      >
-                        {offer.availability_status}
-                      </Badge>
-                    </div>
+									<div className="flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row">
+										<Button
+											type="submit"
+											loading={submitMutation.isPending}
+											disabled={isPolling}
+											className="rounded-md shadow-none sm:flex-1"
+										>
+											<Search className="mr-2 h-4 w-4" />
+											Search availability
+										</Button>
+										<Button
+											type="button"
+											variant="secondary"
+											onClick={handleReset}
+											disabled={isPolling}
+											className="rounded-md border-slate-300 shadow-none"
+										>
+											<RefreshCw className="mr-2 h-4 w-4" />
+											Reset
+										</Button>
+									</div>
+								</form>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                      <div className="flex items-center space-x-2 p-2 bg-blue-50 rounded-lg">
-                        <MapPin className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-500 font-semibold uppercase">Route</p>
-                          <p className="text-sm text-gray-700 font-medium truncate">
-                            {offer.pickup_location} → {offer.dropoff_location}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2 p-2 bg-purple-50 rounded-lg">
-                        <TrendingUp className="h-4 w-4 text-purple-600 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-500 font-semibold uppercase">Rate Plan</p>
-                          <p className="text-sm text-gray-700 font-medium truncate">{offer.rate_plan_code || 'N/A'}</p>
-                        </div>
-                      </div>
-                    </div>
+								{requestId && (
+									<div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4">
+										<div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+											<div className="flex min-w-0 items-start gap-3">
+												<span className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600">
+													<Building2 className="h-4 w-4" />
+												</span>
+												<div className="min-w-0">
+													<p className="text-sm font-semibold text-slate-950">
+														Submitted request
+													</p>
+													<code className="mt-1 block break-all font-mono text-xs text-slate-600">
+														{requestId}
+													</code>
+												</div>
+											</div>
+											<CopyButton text={requestId} label="Copy ID" />
+										</div>
+										<div className="mt-4 flex items-center gap-3 rounded-md border border-slate-200 bg-white p-3">
+											{isPolling ? (
+												<Clock className="h-5 w-5 animate-spin text-blue-600" />
+											) : pollingStatus === "COMPLETE" ? (
+												<CheckCircle className="h-5 w-5 text-emerald-600" />
+											) : (
+												<XCircle className="h-5 w-5 text-red-600" />
+											)}
+											<div>
+												<p className="text-sm font-semibold text-slate-950">
+													{isPolling
+														? pollingStatus
+														: pollingStatus || "Waiting"}
+												</p>
+												<p className="text-xs text-slate-500">
+													{isPolling
+														? "Collecting source responses."
+														: "Request status is no longer polling."}
+												</p>
+											</div>
+										</div>
+									</div>
+								)}
+							</div>
+						</section>
 
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                      <div>
-                        <p className="text-xs text-gray-500 font-semibold uppercase mb-1">Total Price</p>
-                        <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                          {offer.currency} {offer.total_price.toFixed(2)}
-                        </span>
-                        {offer.supplier_offer_ref && (
-                          <p className="text-xs text-gray-500 mt-1 font-mono">
-                            Ref: {offer.supplier_offer_ref}
-                          </p>
-                        )}
-                      </div>
-                      <CopyButton 
-                        text={JSON.stringify(offer, null, 2)} 
-                        label="Copy JSON"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : requestId ? (
-              <div className="text-center py-16">
-                <div className="p-4 bg-gray-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                  <Search className="h-10 w-10 text-gray-400" />
-                </div>
-                <p className="text-gray-500 text-lg font-semibold mb-2">No offers found</p>
-                <p className="text-sm text-gray-400 max-w-md mx-auto">
-                  The request completed but no availability offers were returned. Try adjusting your search criteria.
-                </p>
-              </div>
-            ) : (
-              <div className="text-center py-16">
-                <div className="p-4 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                  <Search className="h-10 w-10 text-blue-600" />
-                </div>
-                <p className="text-gray-500 text-lg font-semibold mb-2">No offers yet</p>
-                <p className="text-sm text-gray-400 max-w-md mx-auto">
-                  Submit an availability request using the form to see real-time results from all connected sources.
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-      )}
-    </div>
-  )
+						<section className="rounded-md border border-slate-200 bg-white">
+							<div className="border-b border-slate-200 px-5 py-4">
+								<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+									<div className="flex items-start gap-3">
+										<span className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-slate-700">
+											<Package className="h-5 w-5" />
+										</span>
+										<div>
+											<h2 className="text-base font-semibold text-slate-950">
+												Results
+											</h2>
+											<p className="mt-1 text-sm leading-6 text-slate-500">
+												Real-time availability offers returned by sources.
+											</p>
+										</div>
+									</div>
+									<Badge variant="info" className="w-fit">
+										{offers.length} {offers.length === 1 ? "offer" : "offers"}
+									</Badge>
+								</div>
+							</div>
+							<div className="p-5">
+								{offers.length > 0 ? (
+									<div className="max-h-[680px] space-y-4 overflow-y-auto pr-1">
+										{offers.map((offer, index) => (
+											<article
+												key={`${offer.supplier_offer_ref || index}`}
+												className="rounded-md border border-slate-200 bg-white p-4 hover:bg-slate-50"
+											>
+												<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+													<div className="flex min-w-0 items-start gap-3">
+														<span className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-slate-700">
+															<Car className="h-5 w-5" />
+														</span>
+														<div className="min-w-0">
+															<h3 className="truncate text-base font-semibold text-slate-950">
+																{offer.vehicle_make_model || "Unknown vehicle"}
+															</h3>
+															<p className="mt-1 text-sm text-slate-500">
+																{offer.vehicle_class ||
+																	"Vehicle class not provided"}{" "}
+																· {offer.supplier_name || "Unknown supplier"}
+															</p>
+														</div>
+													</div>
+													<Badge
+														variant={
+															offer.availability_status === "AVAILABLE"
+																? "success"
+																: "warning"
+														}
+														size="sm"
+														className="w-fit"
+													>
+														{offer.availability_status || "Unknown"}
+													</Badge>
+												</div>
+
+												<div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+													<div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+														<p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+															Route
+														</p>
+														<p
+															className="mt-1 truncate text-sm font-medium text-slate-800"
+															title={`${offer.pickup_location} → ${offer.dropoff_location}`}
+														>
+															{offer.pickup_location} → {offer.dropoff_location}
+														</p>
+													</div>
+													<div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+														<p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+															Rate plan
+														</p>
+														<p className="mt-1 truncate text-sm font-medium text-slate-800">
+															{offer.rate_plan_code || "N/A"}
+														</p>
+													</div>
+												</div>
+
+												<div className="mt-4 flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-end sm:justify-between">
+													<div>
+														<p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+															Total price
+														</p>
+														<p className="mt-1 text-2xl font-semibold tracking-tight text-slate-950">
+															{offer.currency}{" "}
+															{Number(offer.total_price || 0).toFixed(2)}
+														</p>
+														{offer.supplier_offer_ref ? (
+															<p className="mt-1 font-mono text-xs text-slate-500">
+																Ref: {offer.supplier_offer_ref}
+															</p>
+														) : null}
+													</div>
+													<CopyButton
+														text={JSON.stringify(offer, null, 2)}
+														label="Copy JSON"
+													/>
+												</div>
+											</article>
+										))}
+									</div>
+								) : requestId ? (
+									<EmptyState
+										title="No offers found"
+										description="The request completed but no offers were returned. Try adjusting dates, route, or source coverage."
+										icon={<Search className="h-8 w-8" />}
+									/>
+								) : (
+									<EmptyState
+										title="No offers yet"
+										description="Submit an availability request to see live supplier responses and pricing here."
+										icon={<Package className="h-8 w-8" />}
+									/>
+								)}
+							</div>
+						</section>
+					</div>
+				</>
+			)}
+		</div>
+	);
 }

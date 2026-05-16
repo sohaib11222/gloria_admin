@@ -1,184 +1,352 @@
-import React, { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Search, ArrowRight } from 'lucide-react'
-import { cn } from '../lib/utils'
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowRight, Search, X } from "lucide-react";
+import { cn } from "../lib/utils";
 
 interface SearchItem {
-  id: string
-  label: string
-  category: string
-  path: string
-  icon?: string
+	id: string;
+	label: string;
+	category: string;
+	path: string;
+	icon?: string;
+	description?: string;
 }
 
 const searchItems: SearchItem[] = [
-  { id: 'dashboard', label: 'Dashboard', category: 'Navigation', path: '/dashboard', icon: '📊' },
-  { id: 'companies', label: 'Companies', category: 'Navigation', path: '/companies', icon: '🏢' },
-  { id: 'agents', label: 'Agents', category: 'Navigation', path: '/agents', icon: '👥' },
-  { id: 'sources', label: 'Sources', category: 'Navigation', path: '/sources', icon: '🔌' },
-  { id: 'agreements', label: 'Agreements', category: 'Navigation', path: '/agreements-management', icon: '📄' },
-  { id: 'locations', label: 'Locations', category: 'Navigation', path: '/locations', icon: '📍' },
-  { id: 'availability', label: 'Availability & pricing', category: 'Tools', path: '/availability', icon: '📈' },
-  { id: 'bookings', label: 'Booking Logs', category: 'Logs', path: '/booking-logs', icon: '📝' },
-  { id: 'health', label: 'Health Monitoring', category: 'Monitoring', path: '/health', icon: '❤️' },
-  { id: 'activity', label: 'Activity & Audit', category: 'Logs', path: '/activity', icon: '📊' },
-  { id: 'logs', label: 'System Logs', category: 'Logs', path: '/logs', icon: '📋' },
-  { id: 'metrics', label: 'Metrics', category: 'Monitoring', path: '/metrics', icon: '📈' },
-  { id: 'verification', label: 'Verification', category: 'Tools', path: '/verification', icon: '✅' },
-  { id: 'docs', label: 'API Reference', category: 'Documentation', path: '/docs-fullscreen', icon: '📖' },
-  { id: 'integrations', label: 'Integrations', category: 'Settings', path: '/integrations', icon: '🔧' },
-  { id: 'settings', label: 'Settings', category: 'Settings', path: '/settings', icon: '⚙️' },
-]
+	{
+		id: "dashboard",
+		label: "Dashboard",
+		category: "Navigation",
+		path: "/dashboard",
+		icon: "📊",
+		description: "Overview and activity summary",
+	},
+	{
+		id: "companies",
+		label: "Companies",
+		category: "Navigation",
+		path: "/companies",
+		icon: "🏢",
+		description: "Manage source and agent companies",
+	},
+	{
+		id: "agents",
+		label: "Agents",
+		category: "Navigation",
+		path: "/agents",
+		icon: "👥",
+		description: "Agent company configuration",
+	},
+	{
+		id: "sources",
+		label: "Sources",
+		category: "Navigation",
+		path: "/sources",
+		icon: "🔌",
+		description: "Supplier/source configuration",
+	},
+	{
+		id: "agreements",
+		label: "Agreements",
+		category: "Navigation",
+		path: "/agreements-management",
+		icon: "📄",
+		description: "Agreement lifecycle management",
+	},
+	{
+		id: "locations",
+		label: "Locations",
+		category: "Navigation",
+		path: "/locations",
+		icon: "📍",
+		description: "Location and branch data",
+	},
+	{
+		id: "availability",
+		label: "Availability & pricing",
+		category: "Tools",
+		path: "/availability",
+		icon: "📈",
+		description: "Run live availability tests",
+	},
+	{
+		id: "bookings",
+		label: "Booking Logs",
+		category: "Logs",
+		path: "/booking-logs",
+		icon: "📝",
+		description: "Booking request history",
+	},
+	{
+		id: "health",
+		label: "Health Monitoring",
+		category: "Monitoring",
+		path: "/health",
+		icon: "❤️",
+		description: "System and source health",
+	},
+	{
+		id: "activity",
+		label: "Activity & Audit",
+		category: "Logs",
+		path: "/activity",
+		icon: "📊",
+		description: "Audit activity timeline",
+	},
+	{
+		id: "logs",
+		label: "System Logs",
+		category: "Logs",
+		path: "/logs",
+		icon: "📋",
+		description: "Request and response traces",
+	},
+	{
+		id: "metrics",
+		label: "Metrics",
+		category: "Monitoring",
+		path: "/metrics",
+		icon: "📈",
+		description: "Prometheus metrics viewer",
+	},
+	{
+		id: "verification",
+		label: "Verification",
+		category: "Tools",
+		path: "/verification",
+		icon: "✅",
+		description: "Connectivity verification tools",
+	},
+	{
+		id: "docs",
+		label: "API Reference",
+		category: "Documentation",
+		path: "/docs-fullscreen",
+		icon: "📖",
+		description: "Open documentation center",
+	},
+	{
+		id: "integrations",
+		label: "Integrations",
+		category: "Settings",
+		path: "/integrations",
+		icon: "🔧",
+		description: "API keys and integration access",
+	},
+	{
+		id: "settings",
+		label: "Settings",
+		category: "Settings",
+		path: "/settings",
+		icon: "⚙️",
+		description: "System configuration",
+	},
+];
 
-export const SearchPalette: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-  const navigate = useNavigate()
-  const [query, setQuery] = useState('')
-  const [selectedIndex, setSelectedIndex] = useState(0)
+export const SearchPalette: React.FC<{
+	isOpen: boolean;
+	onClose: () => void;
+}> = ({ isOpen, onClose }) => {
+	const navigate = useNavigate();
+	const [query, setQuery] = useState("");
+	const [selectedIndex, setSelectedIndex] = useState(0);
 
-  useEffect(() => {
-    if (!isOpen) {
-      setQuery('')
-      setSelectedIndex(0)
-    }
-  }, [isOpen])
+	useEffect(() => {
+		if (!isOpen) {
+			setQuery("");
+			setSelectedIndex(0);
+		}
+	}, [isOpen]);
 
-  const filteredItems = useMemo(() => {
-    if (!query.trim()) return searchItems.slice(0, 8) // Show top 8 when no query
+	const filteredItems = useMemo(() => {
+		if (!query.trim()) return searchItems.slice(0, 8);
 
-    const lowerQuery = query.toLowerCase()
-    return searchItems.filter(item => 
-      item.label.toLowerCase().includes(lowerQuery) ||
-      item.category.toLowerCase().includes(lowerQuery)
-    )
-  }, [query])
+		const lowerQuery = query.toLowerCase();
+		return searchItems.filter(
+			(item) =>
+				item.label.toLowerCase().includes(lowerQuery) ||
+				item.category.toLowerCase().includes(lowerQuery) ||
+				item.description?.toLowerCase().includes(lowerQuery),
+		);
+	}, [query]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      setSelectedIndex(prev => (prev + 1) % filteredItems.length)
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setSelectedIndex(prev => (prev - 1 + filteredItems.length) % filteredItems.length)
-    } else if (e.key === 'Enter') {
-      e.preventDefault()
-      const selectedItem = filteredItems[selectedIndex]
-      if (selectedItem) {
-        navigate(selectedItem.path)
-        onClose()
-      }
-    } else if (e.key === 'Escape') {
-      onClose()
-    }
-  }
+	useEffect(() => {
+		if (selectedIndex >= filteredItems.length) setSelectedIndex(0);
+	}, [filteredItems.length, selectedIndex]);
 
-  const groupedItems = useMemo(() => {
-    const groups: Record<string, SearchItem[]> = {}
-    filteredItems.forEach(item => {
-      if (!groups[item.category]) {
-        groups[item.category] = []
-      }
-      groups[item.category].push(item)
-    })
-    return groups
-  }, [filteredItems])
+	const openItem = (item: SearchItem) => {
+		if (item.id === "docs") {
+			const docsUrl = `${window.location.origin}/admin/docs-fullscreen`;
+			window.open(docsUrl, "_blank", "noopener,noreferrer");
+		} else {
+			navigate(item.path);
+		}
+		onClose();
+	};
 
-  if (!isOpen) return null
+	const handleKeyDown = (event: React.KeyboardEvent) => {
+		if (event.key === "ArrowDown") {
+			event.preventDefault();
+			if (filteredItems.length > 0)
+				setSelectedIndex((prev) => (prev + 1) % filteredItems.length);
+		} else if (event.key === "ArrowUp") {
+			event.preventDefault();
+			if (filteredItems.length > 0)
+				setSelectedIndex(
+					(prev) => (prev - 1 + filteredItems.length) % filteredItems.length,
+				);
+		} else if (event.key === "Enter") {
+			event.preventDefault();
+			const selectedItem = filteredItems[selectedIndex];
+			if (selectedItem) openItem(selectedItem);
+		} else if (event.key === "Escape") {
+			onClose();
+		}
+	};
 
-  return (
-    <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm z-50" onClick={onClose} />
-      
-      {/* Palette */}
-      <div className="fixed left-1/2 top-1/4 -translate-x-1/2 w-full max-w-2xl z-50 transform transition-all duration-200 ease-out">
-        <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden">
-          {/* Search input */}
-          <div className="px-4 py-4 border-b border-gray-200 bg-gray-50">
-            <div className="flex items-center gap-3">
-              <Search className="h-5 w-5 text-gray-400 flex-shrink-0" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Search pages, agreements, logs..."
-                className="flex-1 outline-none text-base bg-white border border-gray-300 rounded-md px-3 py-2 text-gray-900 placeholder-gray-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-opacity-20 transition-all"
-                autoFocus
-              />
-              <kbd className="px-2 py-1 text-xs font-semibold text-gray-600 bg-white border border-gray-300 rounded shadow-sm flex-shrink-0">ESC</kbd>
-            </div>
-          </div>
+	const groupedItems = useMemo(() => {
+		const groups: Record<string, SearchItem[]> = {};
+		filteredItems.forEach((item) => {
+			if (!groups[item.category]) groups[item.category] = [];
+			groups[item.category].push(item);
+		});
+		return groups;
+	}, [filteredItems]);
 
-          {/* Results */}
-          <div className="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-            {filteredItems.length === 0 ? (
-              <div className="px-4 py-12 text-center">
-                <p className="text-gray-500 text-sm">No results found</p>
-                <p className="text-gray-400 text-xs mt-1">Try a different search term</p>
-              </div>
-            ) : (
-              <div className="py-2">
-                {Object.entries(groupedItems).map(([category, items]) => (
-                  <div key={category}>
-                    <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide bg-gray-50 border-b border-gray-100">
-                      {category}
-                    </div>
-                    {items.map((item) => {
-                      const globalIdx = filteredItems.indexOf(item)
-                      const isSelected = selectedIndex === globalIdx
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={() => {
-                            if (item.id === 'docs') {
-                              // Open docs in new tab
-                              // Base path is always /admin to match vite.config.js and React Router basename
-                              const basePath = '/admin'
-                              const docsUrl = `${window.location.origin}${basePath}/docs-fullscreen`
-                              window.open(docsUrl, '_blank', 'noopener,noreferrer')
-                            } else {
-                              navigate(item.path)
-                            }
-                            onClose()
-                          }}
-                          onMouseEnter={() => setSelectedIndex(globalIdx)}
-                          className={cn(
-                            'w-full px-4 py-3 flex items-center gap-3 text-left transition-colors duration-150',
-                            isSelected 
-                              ? 'bg-blue-50 border-l-2 border-blue-600' 
-                              : 'hover:bg-gray-50 border-l-2 border-transparent'
-                          )}
-                        >
-                          <span className="text-xl flex-shrink-0">{item.icon}</span>
-                          <span className={cn(
-                            'flex-1 text-sm font-medium',
-                            isSelected ? 'text-blue-900' : 'text-gray-900'
-                          )}>
-                            {item.label}
-                          </span>
-                          <ArrowRight className={cn(
-                            'h-4 w-4 flex-shrink-0 transition-colors',
-                            isSelected ? 'text-blue-600' : 'text-gray-400'
-                          )} />
-                        </button>
-                      )
-                    })}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+	if (!isOpen) return null;
 
-          {/* Footer hint */}
-          <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-600">Navigate with <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-700 bg-white rounded border border-gray-300 shadow-sm">↑</kbd> <kbd className="px-1.5 py-0.5 text-xs font-semibold text-gray-700 bg-white rounded border border-gray-300 shadow-sm">↓</kbd> and press Enter</span>
-              <kbd className="px-2 py-1 text-xs font-semibold text-gray-700 bg-white rounded border border-gray-300 shadow-sm">↵</kbd>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  )
-}
+	return (
+		<>
+			<div
+				className="fixed inset-0 z-[80] bg-slate-950/25 backdrop-blur-[2px]"
+				onClick={onClose}
+				aria-hidden="true"
+			/>
 
+			<div
+				className="fixed left-1/2 top-24 z-[90] w-[calc(100vw-2rem)] max-w-2xl -translate-x-1/2"
+				role="dialog"
+				aria-modal="true"
+				aria-label="Quick search"
+			>
+				<div className="overflow-hidden rounded-md border border-slate-200 bg-white shadow-2xl shadow-slate-950/20">
+					<div className="border-b border-slate-200 bg-slate-50 px-4 py-4">
+						<div className="flex items-center gap-3">
+							<span className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500">
+								<Search className="h-5 w-5" />
+							</span>
+							<div className="relative min-w-0 flex-1">
+								<input
+									type="text"
+									value={query}
+									onChange={(event) => setQuery(event.target.value)}
+									onKeyDown={handleKeyDown}
+									placeholder="Search pages, agreements, logs..."
+									className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+									autoFocus
+								/>
+								{query && (
+									<button
+										type="button"
+										onClick={() => setQuery("")}
+										className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+										aria-label="Clear search"
+									>
+										<X className="h-4 w-4" />
+									</button>
+								)}
+							</div>
+							<kbd className="hidden rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-500 shadow-sm sm:inline-flex">
+								ESC
+							</kbd>
+						</div>
+					</div>
+
+					<div className="max-h-[26rem] overflow-y-auto">
+						{filteredItems.length === 0 ? (
+							<div className="px-4 py-12 text-center">
+								<p className="text-sm font-semibold text-slate-700">
+									No results found
+								</p>
+								<p className="mt-1 text-xs text-slate-500">
+									Try another page name, category, or workflow.
+								</p>
+							</div>
+						) : (
+							<div className="py-2">
+								{Object.entries(groupedItems).map(([category, items]) => (
+									<div key={category} className="py-1">
+										<div className="px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+											{category}
+										</div>
+										{items.map((item) => {
+											const globalIdx = filteredItems.indexOf(item);
+											const isSelected = selectedIndex === globalIdx;
+											return (
+												<button
+													key={item.id}
+													type="button"
+													onClick={() => openItem(item)}
+													onMouseEnter={() => setSelectedIndex(globalIdx)}
+													className={cn(
+														"flex w-full items-center gap-3 border-l-2 px-4 py-3 text-left transition-colors",
+														isSelected
+															? "border-blue-600 bg-blue-50"
+															: "border-transparent hover:bg-slate-50",
+													)}
+												>
+													<span className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-md border border-slate-200 bg-white text-lg">
+														{item.icon}
+													</span>
+													<span className="min-w-0 flex-1">
+														<span
+															className={cn(
+																"block truncate text-sm font-semibold",
+																isSelected ? "text-blue-950" : "text-slate-900",
+															)}
+														>
+															{item.label}
+														</span>
+														{item.description ? (
+															<span className="mt-0.5 block truncate text-xs text-slate-500">
+																{item.description}
+															</span>
+														) : null}
+													</span>
+													<ArrowRight
+														className={cn(
+															"h-4 w-4 flex-none",
+															isSelected ? "text-blue-600" : "text-slate-400",
+														)}
+													/>
+												</button>
+											);
+										})}
+									</div>
+								))}
+							</div>
+						)}
+					</div>
+
+					<div className="border-t border-slate-200 bg-slate-50 px-4 py-3">
+						<div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+							<span>
+								Navigate with{" "}
+								<kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-semibold text-slate-600">
+									↑
+								</kbd>{" "}
+								<kbd className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-semibold text-slate-600">
+									↓
+								</kbd>{" "}
+								and press Enter
+							</span>
+							<kbd className="rounded border border-slate-200 bg-white px-2 py-1 font-semibold text-slate-600">
+								↵
+							</kbd>
+						</div>
+					</div>
+				</div>
+			</div>
+		</>
+	);
+};

@@ -1,129 +1,205 @@
-import React, { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { cn } from '../../lib/utils'
-import { NAVIGATION_ITEMS } from '../../lib/constants'
-import * as Icons from 'lucide-react'
-import { Menu, X } from 'lucide-react'
-import logoImage from '../../assets/logo.jpg'
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { cn } from "../../lib/utils";
+import { NAVIGATION_ITEMS } from "../../lib/constants";
+import * as Icons from "lucide-react";
+import { ExternalLink, ShieldCheck, X } from "lucide-react";
+import logoImage from "../../assets/logo.jpg";
 
 interface SidebarProps {
-  mobileOpen?: boolean
-  onMobileToggle?: () => void
+	mobileOpen?: boolean;
+	onMobileToggle?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileToggle }) => {
-  const location = useLocation()
-  const navigate = useNavigate()
+const NAVIGATION_SECTIONS = [
+	{
+		label: "Overview",
+		paths: ["/dashboard", "/companies", "/agents", "/sources"],
+	},
+	{
+		label: "Network operations",
+		paths: [
+			"/agreements-management",
+			"/locations",
+			"/branches",
+			"/location-requests",
+			"/unlocodes",
+			"/location-validation",
+			"/availability",
+			"/verification",
+			"/booking-logs",
+		],
+	},
+	{
+		label: "Commercial",
+		paths: ["/billing", "/referrals", "/transactions", "/support"],
+	},
+	{
+		label: "Administration",
+		paths: [
+			"/health",
+			"/activity",
+			"/integrations",
+			"/ip-whitelist",
+			"/logs",
+			"/metrics",
+			"/docs",
+			"/settings",
+		],
+	},
+];
 
-  return (
-    <>
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={onMobileToggle}
-        />
-      )}
+const itemByPath = new Map(NAVIGATION_ITEMS.map((item) => [item.path, item]));
 
-      {/* Sidebar */}
-      <div
-        className={cn(
-          'fixed lg:static inset-y-0 left-0 z-50',
-          'w-64 bg-white border-r border-gray-200',
-          'transform transition-transform duration-200 ease-in-out',
-          'flex flex-col h-screen lg:h-auto',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        )}
-      >
-        <div className="flex items-center px-6 py-4 border-b border-gray-200 bg-gray-900">
-          <div className="flex items-center space-x-3">
-            <img 
-              src={logoImage} 
-              alt="Gloria Connect" 
-              className="h-10 w-auto object-contain"
-            />
-            <div>
-              <h1 className="text-lg font-semibold text-white tracking-tight">Gloria Connect</h1>
-              <p className="text-xs text-gray-400 font-medium">Platform</p>
-            </div>
-          </div>
-          {onMobileToggle && (
-            <button
-              onClick={onMobileToggle}
-              className="lg:hidden ml-auto p-2 text-gray-400 hover:bg-gray-800 rounded transition-colors"
-              aria-label="Close menu"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
-        </div>
-        
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-          {NAVIGATION_ITEMS.map((item) => {
-            const Icon = Icons[item.icon as keyof typeof Icons] as React.ComponentType<{ className?: string }>
-            const isActive = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)
-            
-          // Open docs in new tab
-          if (item.path === '/docs') {
-            const handleDocsClick = (e: React.MouseEvent) => {
-              e.preventDefault()
-              onMobileToggle?.()
-              // Construct the full URL for docs-fullscreen
-              // Base path is always /admin to match vite.config.js and React Router basename
-              const basePath = '/admin'
-              const docsPath = `${basePath}/docs-fullscreen`
-              const docsUrl = `${window.location.origin}${docsPath}`
-              window.open(docsUrl, '_blank', 'noopener,noreferrer')
-            }
-            return (
-              <button
-                key={item.path}
-                onClick={handleDocsClick}
-                className={cn(
-                  'flex items-center px-3 py-2 text-sm font-medium rounded w-full text-left',
-                  'transition-colors duration-150',
-                  'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                )}
-              >
-                <Icon className={cn(
-                  'mr-3 h-5 w-5',
-                  'text-gray-500'
-                )} />
-                {item.label}
-                <svg className="ml-auto h-3 w-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </button>
-            )
-          }
-            
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={onMobileToggle}
-                className={cn(
-                  'flex items-center px-3 py-2 text-sm font-medium rounded',
-                  'transition-colors duration-150',
-                  isActive
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                )}
-              >
-                <Icon className={cn(
-                  'mr-3 h-5 w-5',
-                  isActive 
-                    ? 'text-white' 
-                    : 'text-gray-500'
-                )} />
-                <span className={isActive ? 'font-semibold' : 'font-medium'}>
-                  {item.label}
-                </span>
-              </Link>
-            )
-          })}
-        </nav>
-      </div>
-    </>
-  )
-}
+export const Sidebar: React.FC<SidebarProps> = ({
+	mobileOpen = false,
+	onMobileToggle,
+}) => {
+	const location = useLocation();
+
+	return (
+		<>
+			{mobileOpen && (
+				<div
+					className="fixed inset-0 z-[60] bg-slate-950/45 backdrop-blur-sm lg:hidden"
+					onClick={onMobileToggle}
+					aria-hidden="true"
+				/>
+			)}
+
+			<aside
+				className={cn(
+					"fixed inset-y-0 left-0 z-[70] flex h-screen w-72 flex-col overflow-hidden border-r border-white/10 bg-slate-950 text-slate-200 shadow-2xl shadow-slate-950/30",
+					"transform transition-transform duration-200 ease-in-out lg:static lg:z-auto lg:translate-x-0 lg:shadow-none",
+					mobileOpen ? "translate-x-0" : "-translate-x-full",
+				)}
+			>
+				<div className="flex h-16 items-center gap-3 border-b border-white/10 bg-slate-950 px-5">
+					<div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-white/20">
+						<img
+							src={logoImage}
+							alt="Gloria Connect"
+							className="h-full w-full object-cover"
+						/>
+					</div>
+					<div className="min-w-0 flex-1">
+						<h1 className="truncate text-base font-bold tracking-tight text-white">
+							Gloria Connect
+						</h1>
+						<p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
+							Admin console
+						</p>
+					</div>
+					{onMobileToggle && (
+						<button
+							onClick={onMobileToggle}
+							className="rounded-xl p-2 text-slate-400 transition hover:bg-white/10 hover:text-white lg:hidden"
+							aria-label="Close menu"
+						>
+							<X className="h-5 w-5" />
+						</button>
+					)}
+				</div>
+
+				<nav className="flex-1 space-y-6 overflow-y-auto px-3 py-5 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+					{NAVIGATION_SECTIONS.map((section) => {
+						const items = section.paths
+							.map((path) => itemByPath.get(path))
+							.filter(Boolean);
+
+						return (
+							<div key={section.label} className="space-y-1.5">
+								<p className="px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+									{section.label}
+								</p>
+
+								{items.map((item) => {
+									if (!item) return null;
+
+									const Icon = Icons[
+										item.icon as keyof typeof Icons
+									] as React.ComponentType<{ className?: string }>;
+									const isActive =
+										item.path === "/dashboard"
+											? location.pathname === "/dashboard" ||
+												location.pathname === "/"
+											: location.pathname.startsWith(item.path);
+
+									if (item.path === "/docs") {
+										const handleDocsClick = (e: React.MouseEvent) => {
+											e.preventDefault();
+											onMobileToggle?.();
+											const docsUrl = `${window.location.origin}/admin/docs-fullscreen`;
+											window.open(docsUrl, "_blank", "noopener,noreferrer");
+										};
+
+										return (
+											<button
+												key={item.path}
+												onClick={handleDocsClick}
+												className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white"
+											>
+												<Icon className="h-5 w-5 flex-none text-slate-500 transition group-hover:text-slate-200" />
+												<span className="min-w-0 flex-1 truncate">
+													{item.label}
+												</span>
+												<ExternalLink className="h-3.5 w-3.5 flex-none text-slate-600 transition group-hover:text-slate-300" />
+											</button>
+										);
+									}
+
+									return (
+										<Link
+											key={item.path}
+											to={item.path}
+											onClick={onMobileToggle}
+											className={cn(
+												"group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition",
+												isActive
+													? "bg-white text-slate-950 shadow-lg shadow-slate-950/20"
+													: "text-slate-300 hover:bg-white/10 hover:text-white",
+											)}
+										>
+											{isActive && (
+												<span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-blue-600" />
+											)}
+											<Icon
+												className={cn(
+													"h-5 w-5 flex-none transition",
+													isActive
+														? "text-blue-600"
+														: "text-slate-500 group-hover:text-slate-200",
+												)}
+											/>
+											<span className="min-w-0 flex-1 truncate">
+												{item.label}
+											</span>
+										</Link>
+									);
+								})}
+							</div>
+						);
+					})}
+				</nav>
+
+				<div className="border-t border-white/10 p-4">
+					<div className="rounded-2xl bg-white/[0.06] p-4 ring-1 ring-white/10">
+						<div className="flex items-center gap-3">
+							<span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-400/20">
+								<ShieldCheck className="h-5 w-5" />
+							</span>
+							<div className="min-w-0">
+								<p className="text-sm font-semibold text-white">
+									Protected workspace
+								</p>
+								<p className="mt-0.5 text-xs leading-5 text-slate-400">
+									Monitor companies, agents, sources, and system health.
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</aside>
+		</>
+	);
+};
